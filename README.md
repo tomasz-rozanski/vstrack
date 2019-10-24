@@ -1,7 +1,13 @@
+[![release-badge]][latest-release]
+
+[release-badge]: https://img.shields.io/github/v/release/Rosto75/vstrack?include_prereleases
+[latest-release]: https://github.com/Rosto75/vstrack/releases/latest
+
 # VSTrack (Vagrant Story Tracker)
 [about-vstrack]: #about-vstrack
 
-***VSTrack*** is a small command-line tool for [Vagrant Story][vagrant-game] players, streamers, and speedrunners. 
+***VSTrack*** is a simple but powerful tool for [Vagrant Story][vagrant-game] players, streamers, and speed-runners. 
+
 
 It collects a bunch of useful data from the runnig game, and stores it in standard `.txt` files. This gives you an easy access to information that is often burried behind multiple levels of UI, or not available to the player at all.
 
