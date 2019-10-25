@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <psapi.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <tchar.h>
 #include <tlhelp32.h>
 
@@ -21,6 +22,7 @@ BOOL DEBUG;
 #include "includes/vst_time.h"
 #include "includes/vst_player.h"
 #include "includes/vst_location.h"
+#include "includes/vst_debug.h"
 
 // Main
 int
@@ -119,17 +121,24 @@ wmain(int argc, wchar_t *argv[])
   SetConsoleHandles();
   cls(hStdout);
 
-  GetConsoleWindowSize(hStdout, &conSizeX, &conSizeY);
+  GetConsoleWindowSize(
+      hStdout, &conSizeX, &conSizeY, &conMaxSizeX, &conMaxSizeY);
+
+  chiBuffer = AllocateBackBuffer(conMaxSizeX, conMaxSizeY);
+
+  WriteDebugInfo();
 
   do
   {
+    GetConsoleWindowSize(
+        hStdout, &conSizeX, &conSizeY, &conMaxSizeX, &conMaxSizeY);
     cls(hBackBuffer);
 
     SetCursorPosition(hStdout, 0, 0);
     SetCursorPosition(hBackBuffer, 0, 0);
 
     sprintf(szBuffer, "============================\n"
-                      "== VSTracker v0.1.2-alpha ==\n"
+                      "== VSTracker v0.1.3-alpha ==\n"
                       "============================\n");
     WriteToBackBuffer();
 
