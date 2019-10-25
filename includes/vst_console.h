@@ -5,6 +5,8 @@ COORD coordScreen, coord;
 CONSOLE_SCREEN_BUFFER_INFO csbi;
 HANDLE hStdout, hStdin, hStderr, hBackBuffer;
 SHORT conSizeX, conSizeY;
+SHORT conMinSizeX, conMinSizeY;
+SHORT conMaxSizeX, conMaxSizeY;
 CONSOLE_CURSOR_INFO cciOldCursor, cciNewCursor;
 TCHAR szBuffer[1024];
 DWORD dwBytesWritten;
@@ -12,10 +14,22 @@ DWORD dwBytesWritten;
 // Double-buffering structs
 SMALL_RECT srctReadRect;
 SMALL_RECT srctWriteRect;
-CHAR_INFO chiBuffer[4800]; // 120 x 40
+CHAR_INFO *chiBuffer = NULL;
 COORD coordBufSize;
 COORD coordBufCoord;
+
+COORD coordLargestWindowSize;
+
 BOOL fSuccess;
+
+void *
+AllocateBackBuffer(SHORT conMaxSizeX, SHORT conMaxSizeY)
+{
+  void *chiBuffer =
+      (void *) malloc(sizeof(CHAR_INFO) * conMaxSizeX * conMaxSizeY);
+
+  return chiBuffer;
+}
 
 void
 SetConsoleHandles()
@@ -43,12 +57,18 @@ SetCursorPosition(HANDLE hConsole, DWORD PositionX, DWORD PositionY)
 }
 
 void
-GetConsoleWindowSize(HANDLE hConsole, SHORT *conSizeX, SHORT *conSizeY)
+GetConsoleWindowSize(HANDLE hConsole, SHORT *conSizeX, SHORT *conSizeY,
+    SHORT *conMaxSizeX, SHORT *conMaxSizeY)
 {
   GetConsoleScreenBufferInfo(hConsole, &csbi);
 
   *conSizeX = csbi.srWindow.Right - csbi.srWindow.Left;
   *conSizeY = csbi.srWindow.Bottom - csbi.srWindow.Top;
+
+  coordLargestWindowSize = GetLargestConsoleWindowSize(hConsole);
+
+  *conMaxSizeX = coordLargestWindowSize.X;
+  *conMaxSizeY = coordLargestWindowSize.Y;
 }
 
 void
@@ -76,12 +96,12 @@ CopyFromBackBuffer()
   // Set the source rectangle.
   srctReadRect.Top = 0;
   srctReadRect.Left = 0;
-  srctReadRect.Bottom = conSizeY - 1;
-  srctReadRect.Right = conSizeX - 1;
+  srctReadRect.Bottom = conMaxSizeY - 1;
+  srctReadRect.Right = conMaxSizeX - 1;
 
   // The temporary buffer size
-  coordBufSize.Y = conSizeY;
-  coordBufSize.X = conSizeX;
+  coordBufSize.Y = conMaxSizeY;
+  coordBufSize.X = conMaxSizeX;
 
   // The top left destination cell of the temporary buffer
   // is row 0, col 0.
@@ -103,9 +123,9 @@ CopyFromBackBuffer()
 
   // Set the destination rectangle.
   srctWriteRect.Top = 0;
-  srctWriteRect.Left = 1;
-  srctWriteRect.Bottom = conSizeY - 1;
-  srctWriteRect.Right = conSizeX;
+  srctWriteRect.Left = 0;
+  srctWriteRect.Bottom = conMaxSizeY - 1;
+  srctWriteRect.Right = conMaxSizeX - 1;
 
   // Copy the temporary buffer to the new screen buffer.
   fSuccess = WriteConsoleOutput(hStdout, // screen buffer to write to
@@ -135,7 +155,8 @@ cls(HANDLE hConsole)
     return;
   }
 
-  dwConSize = csbi.dwSize.X * csbi.dwSize.Y;
+  dwConSize = csbi.dwMaximumWindowSize.X * csbi.dwMaximumWindowSize.Y;
+  // dwConSize = csbi.dwSize.X * csbi.dwSize.Y;
 
   // Fill the entire screen with blanks
   if (!FillConsoleOutputCharacter( //
@@ -183,6 +204,16 @@ WriteDebugMessage(HANDLE hConsole)
   sprintf(szBuffer, "Debug mode is %s. Press \"D\" to toggle.\n",
       DEBUG ? "ON" : "OFF");
   WriteToBackBuffer();
+}
+
+void
+WriteDebugLog(TCHAR *message)
+{
+  FILE *fpDebugInfo = fopen("debug/debug.log", "a");
+
+  fprintf(fpDebugInfo, message);
+
+  fclose(fpDebugInfo);
 }
 
 #endif
