@@ -99,9 +99,15 @@ wmain(int argc, wchar_t *argv[])
   // Display this info when DEBUG is ON.
   // Create separate function for this.
 
-  // moduleDllBase = GetModuleDllBase(processID, szModuleName);
-  // fprintf(stdout, "moduleDllBase: 0x%08x\n", moduleDllBase);
+  mkdir("debug");
 
+  FILE *fpDebugInfo = fopen("debug/debug.log", "w");
+
+  processBaseAddress = GetModuleDllBase(processID, szModuleName);
+  fprintf(fpDebugInfo, "processBaseAddress: 0x%08x\n", processBaseAddress);
+
+  fclose(fpDebugInfo);
+  // exit(1);
   // PrintProcessInfo(processID);
   // PrintProcessNameAndID(processID);
   // PrintProcessVersion(processID);
@@ -123,7 +129,7 @@ wmain(int argc, wchar_t *argv[])
     SetCursorPosition(hBackBuffer, 0, 0);
 
     sprintf(szBuffer, "============================\n"
-                      "== VSTracker v0.1.1-alpha ==\n"
+                      "== VSTracker v0.1.2-alpha ==\n"
                       "============================\n");
     WriteToBackBuffer();
 

@@ -6,7 +6,7 @@
 #define LDR_IS_RESOURCE(handle)                                                \
   (LDR_IS_IMAGEMAPPING(handle) || LDR_IS_DATAFILE(handle))
 
-SIZE_T moduleDllBase;
+SIZE_T processBaseAddress;
 SIZE_T PSX_TO_EMU;
 
 DWORD dwPriorityClassValue[6] = { ABOVE_NORMAL_PRIORITY_CLASS,
@@ -436,7 +436,7 @@ DWORD
 ReadGameMemory(DWORD processID, SIZE_T Offset, SIZE_T BytesToRead, void *Value)
 {
   SIZE_T BytesActuallyRead = -1;
-  SIZE_T FinalOffset = Offset - PSX_TO_EMU;
+  SIZE_T FinalOffset = Offset - PSX_TO_EMU + processBaseAddress;
 
   // fprintf(stdout, "FinalOffset: 0x%02x - 0x%02x = 0x%02x\n", Offset,
   // PSX_TO_EMU, FinalOffset);
