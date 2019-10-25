@@ -96,20 +96,18 @@ wmain(int argc, wchar_t *argv[])
     Sleep(1000);
   };
 
-  /*
-  Display this info when DEBUG is ON.
-  Create separate function for this.
+  // Display this info when DEBUG is ON.
+  // Create separate function for this.
 
-    moduleDllBase = GetModuleDllBase(processID, szModuleName);
+  // moduleDllBase = GetModuleDllBase(processID, szModuleName);
+  // fprintf(stdout, "moduleDllBase: 0x%08x\n", moduleDllBase);
 
-    fprintf(stdout, "moduleDllBase: %i\n", moduleDllBase);
+  // PrintProcessInfo(processID);
+  // PrintProcessNameAndID(processID);
+  // PrintProcessVersion(processID);
 
-    PrintProcessInfo(processID);
-    PrintProcessNameAndID(processID);
-    PrintProcessVersion(processID);
+  // PrintModuleFileName(processID);
 
-    PrintModuleFileName(processID);
-  */
   mkdir("game_stats");
 
   SetConsoleHandles();
@@ -124,9 +122,9 @@ wmain(int argc, wchar_t *argv[])
     SetCursorPosition(hStdout, 0, 0);
     SetCursorPosition(hBackBuffer, 0, 0);
 
-    sprintf(szBuffer, "==========================\n"
-                      "== VSTracker v0.1-alpha ==\n"
-                      "==========================\n");
+    sprintf(szBuffer, "============================\n"
+                      "== VSTracker v0.1.1-alpha ==\n"
+                      "============================\n");
     WriteToBackBuffer();
 
     ReadPlayTime(&PlayTimeCurrent);
