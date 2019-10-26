@@ -108,21 +108,11 @@ void
 WriteRecordTimeToFile(
     playtime *RecordTime, TCHAR szFolderName[128], TCHAR FileName[128])
 {
-  SYSTEMTIME stLocalTime;
-  TCHAR szLocalTime[64];
   TCHAR szFullPath[MAX_PATH];
 
-  GetLocalTime(&stLocalTime);
+  WriteTimeStampFileString();
 
-  sprintf(szLocalTime, "%04d-%02d-%02d-%02d-%02d-%02d", //
-      stLocalTime.wYear, //
-      stLocalTime.wMonth, //
-      stLocalTime.wDay, //
-      stLocalTime.wHour, //
-      stLocalTime.wMinute, //
-      stLocalTime.wSecond);
-
-  sprintf(szFullPath, "%s/%s-%s", szFolderName, szLocalTime, FileName);
+  sprintf(szFullPath, "%s/%s-%s", szFolderName, szTimeStampFile, FileName);
 
   UINT8 Seconds = RecordTime->Time.Seconds;
   UINT8 Minutes = RecordTime->Time.Minutes;

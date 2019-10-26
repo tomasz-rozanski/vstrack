@@ -14,6 +14,7 @@ DWORD processID;
 DWORD processVersion;
 BOOL DEBUG;
 
+#include "includes/vst_utils.h"
 #include "includes/vst_console.h"
 #include "includes/vst_process.h"
 #include "includes/vst_emulation.h"
