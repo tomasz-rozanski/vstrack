@@ -98,25 +98,15 @@ wmain(int argc, wchar_t *argv[])
     Sleep(1000);
   };
 
-  // Display this info when DEBUG is ON.
-  // Create separate function for this.
-
+  // Setup the folders
   mkdir("debug");
+  mkdir("game_stats");
+  mkdir("game_stats/records");
 
-  FILE *fpDebugInfo = fopen("debug/debug.log", "w");
-
-  processBaseAddress = GetModuleDllBase(processID, szModuleName);
-  fprintf(fpDebugInfo, "processBaseAddress: 0x%08x\n", processBaseAddress);
-
-  fclose(fpDebugInfo);
-  // exit(1);
   // PrintProcessInfo(processID);
   // PrintProcessNameAndID(processID);
   // PrintProcessVersion(processID);
-
   // PrintModuleFileName(processID);
-
-  mkdir("game_stats");
 
   SetConsoleHandles();
   cls(hStdout);
@@ -138,7 +128,7 @@ wmain(int argc, wchar_t *argv[])
     SetCursorPosition(hBackBuffer, 0, 0);
 
     sprintf(szBuffer, "============================\n"
-                      "== VSTracker v0.1.3-alpha ==\n"
+                      "== VSTracker v0.1.4-alpha ==\n"
                       "============================\n");
     WriteToBackBuffer();
 

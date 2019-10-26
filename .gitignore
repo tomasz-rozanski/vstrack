@@ -91,6 +91,8 @@ Generated\ Files/
 *.txt
 temp
 game_stats/
+game_stats/records/
+debug/
 
 # Batch files
 shell.bat

@@ -346,29 +346,6 @@ ReadLastBossHealth(UINT16 *BossHP)
 }
 
 void
-LastBossHandleIt()
-{
-  printf("\n\n== LAST BOSS FIGHT IS ON ==\n\n");
-
-  ReadLastBossHealth(&LastBossHP);
-
-  if (LastBossHP > 0)
-  {
-    fprintf(stdout, "Guildenstern's HP: %i\n", LastBossHP);
-  }
-  else
-  {
-    fprintf(stdout, "Guildenstern is dead. Good Job!!!\n");
-    ReadPlayTime(&RecordTime);
-
-    WriteRecordTimeToFile(&RecordTime, _T("game_stats/record-time.txt"));
-    Sleep(5000);
-
-    GameOver = TRUE;
-  }
-}
-
-void
 LastBossHandleIt2()
 {
   sprintf(szBuffer, "\n= LAST BOSS FIGHT IS ON =\n");
@@ -387,7 +364,8 @@ LastBossHandleIt2()
     WriteToBackBuffer();
 
     ReadPlayTime(&RecordTime);
-    WriteRecordTimeToFile(&RecordTime, _T("game_stats/record-time.txt"));
+    WriteRecordTimeToFile(
+        &RecordTime, _T("game_stats/records"), _T("record-time.txt"));
 
     CopyFromBackBuffer();
 

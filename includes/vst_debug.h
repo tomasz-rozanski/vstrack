@@ -6,6 +6,10 @@ WriteDebugInfo(void)
 {
   TCHAR szBuffer[1024];
 
+  processBaseAddress = GetModuleDllBase(processID, szModuleName);
+  sprintf(szBuffer, "processBaseAddress: 0x%08x\n", processBaseAddress);
+  WriteDebugLog(szBuffer);
+
   // Maximum window dimensions
   sprintf(
       szBuffer, "conMaxSizeX: %i, conMaxSizeY: %i\n", conMaxSizeX, conMaxSizeY);

@@ -209,8 +209,18 @@ WriteDebugMessage(HANDLE hConsole)
 void
 WriteDebugLog(TCHAR *message)
 {
-  FILE *fpDebugInfo = fopen("debug/debug.log", "a");
+  SYSTEMTIME stLocalTime;
 
+  GetLocalTime(&stLocalTime);
+
+  FILE *fpDebugInfo = fopen("debug/debug.log", "a");
+  fprintf(fpDebugInfo, "%04d-%02d-%02d %02d:%02d:%02d: ", //
+      stLocalTime.wYear, //
+      stLocalTime.wMonth, //
+      stLocalTime.wDay, //
+      stLocalTime.wHour, //
+      stLocalTime.wMinute, //
+      stLocalTime.wSecond);
   fprintf(fpDebugInfo, message);
 
   fclose(fpDebugInfo);

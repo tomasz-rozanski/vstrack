@@ -105,13 +105,30 @@ WritePlayTimeToFile(playtime *PlayTime, TCHAR FileName[MAX_PATH])
 }
 
 void
-WriteRecordTimeToFile(playtime *RecordTime, TCHAR FileName[MAX_PATH])
+WriteRecordTimeToFile(
+    playtime *RecordTime, TCHAR szFolderName[128], TCHAR FileName[128])
 {
+  SYSTEMTIME stLocalTime;
+  TCHAR szLocalTime[64];
+  TCHAR szFullPath[MAX_PATH];
+
+  GetLocalTime(&stLocalTime);
+
+  sprintf(szLocalTime, "%04d-%02d-%02d-%02d-%02d-%02d", //
+      stLocalTime.wYear, //
+      stLocalTime.wMonth, //
+      stLocalTime.wDay, //
+      stLocalTime.wHour, //
+      stLocalTime.wMinute, //
+      stLocalTime.wSecond);
+
+  sprintf(szFullPath, "%s/%s-%s", szFolderName, szLocalTime, FileName);
+
   UINT8 Seconds = RecordTime->Time.Seconds;
   UINT8 Minutes = RecordTime->Time.Minutes;
   UINT8 Hours = RecordTime->Time.Hours;
 
-  FILE *fpRecordTime = fopen(FileName, "w");
+  FILE *fpRecordTime = fopen(szFullPath, "w");
 
   // Standard time (seconds accuracy)
   fprintf(fpRecordTime, "Record Time\n%02i:%02i:%02i", Hours, Minutes, Seconds);
