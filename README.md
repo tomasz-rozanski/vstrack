@@ -71,6 +71,13 @@ I encourage you to use the following labels:
 
 To build *VSTrack* use **Visual Studio 2019** or **Build Tools for Visual Studio 2019**. You can build executable from command line, using the `build.bat` script from the project folder, but first make sure to set all required envirorment variables, by calling `vcvars32.bat`. You'll find this script somewhere within the installation folders of the tools mentioned above. 
 
+## Known Issues
+[known-issues]: #known-issues
+
+- If the *VSTrack* is running before the game loaded, it will stop as soon as the game cinematic starts to play.
+  - **The workaround**: start *VSTrack* a few seconds after starting the "New Game" mode, or right after loading the game from a save file. 
+
+
 ## Acknowledgements
 [acknowledgements]: #acknowledgements
 
