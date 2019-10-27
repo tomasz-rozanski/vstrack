@@ -15,7 +15,7 @@
  * 6  cuboid
  * 7  rhombohedron
  * Shape angle (bits 3-7):
- * ncrement by 360°/32,
+ * increment by 360°/32,
  * center is casting position,
  * direction is upward, incrementing backward
  */
@@ -354,6 +354,14 @@ WriteBladeInfo(DWORD processID)
   BytesRead = ReadGameMemory(
       processID, OFFSET_EQUIPPED_WEAPON_BLADE, BytesToRead, &BladeInfo);
 
+  // Check for out-of-bound indexes
+  if (BladeInfo.NamesListPosition > 511 || //
+      BladeInfo.ListPosition > 90 || //
+      BladeInfo.Category > 10)
+  {
+    return;
+  }
+
   FILE *fpBladeInfoExt = fopen("game_stats/blade-full.txt", "w");
 
   // Check if weapon is eqipped
@@ -443,6 +451,15 @@ WriteBladeInfoShort(DWORD processID)
   BytesRead = ReadGameMemory(
       processID, OFFSET_EQUIPPED_WEAPON_BLADE, BytesToRead, &BladeInfo);
 
+  // Check for out-of-bound indexes
+  if (BladeInfo.NamesListPosition > 511 || //
+      BladeInfo.ListPosition > 90 || //
+      BladeInfo.Material > 7 || //
+      BladeInfo.Category > 10)
+  {
+    return;
+  }
+
   FILE *fpBladeInfoShort = fopen("game_stats/blade-short.txt", "w");
 
   // Check if weapon is eqipped
@@ -504,6 +521,19 @@ WriteWeaponInfo(DWORD processID)
       processID, OFFSET_EQUIPPED_WEAPON_GEM_SLOT2, BytesToRead, &Gem2Info);
   BytesRead = ReadGameMemory(
       processID, OFFSET_EQUIPPED_WEAPON_GEM_SLOT3, BytesToRead, &Gem3Info);
+
+  // Check for out-of-bound indexes
+  if (BladeInfo.NamesListPosition > 511 || //
+      BladeInfo.ListPosition > 90 || //
+      BladeInfo.Category > 10 || //
+      BladeInfo.Material > 7 || //
+      GripInfo.ListPosition > 31 || //
+      Gem1Info.ListPosition > 62 || //
+      Gem2Info.ListPosition > 62 || //
+      Gem3Info.ListPosition > 62)
+  {
+    return;
+  }
 
   FILE *fpWeaponInfo = fopen("game_stats/weapon-full.txt", "w");
 
@@ -683,6 +713,16 @@ WriteShieldInfo(DWORD processID)
   BytesRead = ReadGameMemory(
       processID, OFFSET_EQUIPPED_SHIELD_GEM_SLOT3, BytesToRead, &Gem3Info);
 
+  // Check for out-of-bound indexes
+  if (ShieldInfo.ListPosition > 80 || //
+      ShieldInfo.Material > 7 || //
+      Gem1Info.ListPosition > 62 || //
+      Gem2Info.ListPosition > 62 || //
+      Gem3Info.ListPosition > 62)
+  {
+    return;
+  }
+
   FILE *fpShieldInfoExt = fopen("game_stats/shield-full.txt", "w");
 
   // Check if shield is eqipped. If not, write the warning and skip the rest.
@@ -826,6 +866,13 @@ WriteShieldInfoShort(DWORD processID)
   BytesRead = ReadGameMemory(
       processID, OFFSET_EQUIPPED_SHIELD, BytesToRead, &ShieldInfo);
 
+  // Check for out-of-bound indexes
+  if (ShieldInfo.ListPosition > 80 || //
+      ShieldInfo.Material > 7)
+  {
+    return;
+  }
+
   FILE *fpShieldInfoShort = fopen("game_stats/shield-short.txt", "w");
 
   // Check if shield is eqipped. If not, write the warning and skip the rest.
@@ -880,6 +927,13 @@ WriteGloveInfo(DWORD processID, int which_glove)
       which_glove ? "left" : "right");
 
   BytesRead = ReadGameMemory(processID, offset, BytesToRead, &GloveInfo);
+
+  // Check for out-of-bound indexes
+  if (GloveInfo.ListPosition > 80 || //
+      GloveInfo.Material > 7)
+  {
+    return;
+  }
 
   FILE *fpGloveInfoExt = fopen(FileName, "w");
 
@@ -965,6 +1019,13 @@ WriteGloveInfoShort(DWORD processID, int which_glove)
 
   BytesRead = ReadGameMemory(processID, offset, BytesToRead, &GloveInfo);
 
+  // Check for out-of-bound indexes
+  if (GloveInfo.ListPosition > 80 || //
+      GloveInfo.Material > 7)
+  {
+    return;
+  }
+
   FILE *fpGloveInfoShort = fopen(FileName, "w");
 
   // Check if a glove is eqipped. If not, write the warning and skip the rest.
@@ -1014,6 +1075,13 @@ WriteHeadArmorInfo(DWORD processID)
 
   BytesRead =
       ReadGameMemory(processID, OFFSET_EQUIPPED_HEAD, BytesToRead, &HeadInfo);
+
+  // Check for out-of-bound indexes
+  if (HeadInfo.ListPosition > 80 || //
+      HeadInfo.Material > 7)
+  {
+    return;
+  }
 
   FILE *fpHeadInfoExt = fopen("game_stats/armor-head-full.txt", "w");
 
@@ -1092,6 +1160,13 @@ WriteHeadArmorInfoShort(DWORD processID)
   BytesRead =
       ReadGameMemory(processID, OFFSET_EQUIPPED_HEAD, BytesToRead, &HeadInfo);
 
+  // Check for out-of-bound indexes
+  if (HeadInfo.ListPosition > 80 || //
+      HeadInfo.Material > 7)
+  {
+    return;
+  }
+
   FILE *fpHeadInfoShort = fopen("game_stats/armor-head-short.txt", "w");
 
   // Check if a head armor is eqipped.
@@ -1140,6 +1215,13 @@ WriteBodyArmorInfo(DWORD processID)
 
   BytesRead =
       ReadGameMemory(processID, OFFSET_EQUIPPED_BODY, BytesToRead, &BodyInfo);
+
+  // Check for out-of-bound indexes
+  if (BodyInfo.ListPosition > 80 || //
+      BodyInfo.Material > 7)
+  {
+    return;
+  }
 
   FILE *fpBodyInfoExt = fopen("game_stats/armor-body-full.txt", "w");
 
@@ -1219,6 +1301,13 @@ WriteBodyArmorInfoShort(DWORD processID)
   BytesRead =
       ReadGameMemory(processID, OFFSET_EQUIPPED_BODY, BytesToRead, &BodyInfo);
 
+  // Check for out-of-bound indexes
+  if (BodyInfo.ListPosition > 80 || //
+      BodyInfo.Material > 7)
+  {
+    return;
+  }
+
   FILE *fpBodyInfoShort = fopen("game_stats/armor-body-short.txt", "w");
 
   // Check if a body armor is eqipped. If not, write the warning and skip the
@@ -1268,6 +1357,13 @@ WriteLegsArmorInfo(DWORD processID)
 
   BytesRead =
       ReadGameMemory(processID, OFFSET_EQUIPPED_LEGS, BytesToRead, &LegsInfo);
+
+  // Check for out-of-bound indexes
+  if (LegsInfo.ListPosition > 80 || //
+      LegsInfo.Material > 7)
+  {
+    return;
+  }
 
   FILE *fpLegsInfoExt = fopen("game_stats/armor-legs-full.txt", "w");
 
@@ -1346,6 +1442,13 @@ WriteLegsArmorInfoShort(DWORD processID)
   BytesRead =
       ReadGameMemory(processID, OFFSET_EQUIPPED_LEGS, BytesToRead, &LegsInfo);
 
+  // Check for out-of-bound indexes
+  if (LegsInfo.ListPosition > 80 || //
+      LegsInfo.Material > 7)
+  {
+    return;
+  }
+
   FILE *fpLegsInfoShort = fopen("game_stats/armor-legs-short.txt", "w");
 
   // Check if a leg armor is eqipped.
@@ -1394,6 +1497,12 @@ WriteNecklaceInfo(DWORD processID)
 
   BytesRead =
       ReadGameMemory(processID, OFFSET_EQUIPPED_NECK, BytesToRead, &NeckInfo);
+
+  // Check for out-of-bound indexes
+  if (NeckInfo.NamesListPosition > 31)
+  {
+    return;
+  }
 
   FILE *fpNeckInfoExt = fopen("game_stats/accessory.txt", "w");
 

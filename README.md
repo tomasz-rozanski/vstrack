@@ -74,8 +74,7 @@ To build *VSTrack* use **Visual Studio 2019** or **Build Tools for Visual Studio
 ## Known Issues
 [known-issues]: #known-issues
 
-- If the *VSTrack* is running before the game loaded, it will stop as soon as the game cinematic starts to play.
-  - **The workaround**: start *VSTrack* a few seconds after starting the "New Game" mode, or right after loading the game from a save file. 
+Everything's fine. Really.
 
 
 ## Acknowledgements

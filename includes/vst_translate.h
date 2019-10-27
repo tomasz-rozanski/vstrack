@@ -42,7 +42,7 @@ GetWeaponName(DWORD processID, char *WeaponName)
       processID, OFFSET_EQUIPPED_WEAPON_BLADE, BytesToRead, &BladeInfo);
 
   // Check if weapon is eqipped
-  if (BladeInfo.ListPosition == 0)
+  if (BladeInfo.ListPosition == 0 || BladeInfo.ListPosition > 511)
   {
     return;
   }

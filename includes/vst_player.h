@@ -241,12 +241,12 @@ PrintPlayerStats2(void)
   BytesRead = ReadGameMemory(processID, OFFSET_PLAYER_STATUS_EFFECTS,
       sizeof(status_effect), &StatusEffects);
 
-  UINT8 STR_Original = PlayerStats.STR_Original;
-  UINT8 STR_Equipped = PlayerStats.STR_Equipped;
-  UINT8 INT_Original = PlayerStats.INT_Original;
-  UINT8 INT_Equipped = PlayerStats.INT_Equipped;
-  UINT8 AGL_Original = PlayerStats.AGL_Original;
-  UINT8 AGL_Equipped = PlayerStats.AGL_Equipped;
+  UINT16 STR_Original = PlayerStats.STR_Original;
+  UINT16 STR_Equipped = PlayerStats.STR_Equipped;
+  UINT16 INT_Original = PlayerStats.INT_Original;
+  UINT16 INT_Equipped = PlayerStats.INT_Equipped;
+  UINT16 AGL_Original = PlayerStats.AGL_Original;
+  UINT16 AGL_Equipped = PlayerStats.AGL_Equipped;
 
   char STR_Buff = ' ';
   char INT_Buff = ' ';
@@ -334,6 +334,37 @@ PrintPlayerStats2(void)
     sprintf(szBuffer, "\n");
     WriteToBackBuffer();
   }
+}
+
+BOOL
+CheckPlayerStats(void)
+{
+  player_stats PlayerStats;
+
+  DWORD BytesRead;
+
+  BytesRead = ReadGameMemory(
+      processID, OFFSET_PLAYER_HP_CURRENT, sizeof(player_stats), &PlayerStats);
+
+  UINT16 HP_Current = PlayerStats.HP_Current;
+  UINT16 HP_Maximum = PlayerStats.HP_Maximum;
+  UINT16 MP_Current = PlayerStats.MP_Current;
+  UINT16 MP_Maximum = PlayerStats.MP_Maximum;
+  UINT16 Risk = PlayerStats.Risk;
+  UINT16 STR_Original = PlayerStats.STR_Original;
+  UINT16 INT_Original = PlayerStats.INT_Original;
+  UINT16 AGL_Original = PlayerStats.AGL_Original;
+
+  // Check for invalid data
+  if (HP_Current == 0 || HP_Current > 999 || HP_Maximum > 999 ||
+      MP_Current == 0 || MP_Current > 999 || MP_Maximum > 999 ||
+      STR_Original > 999 || INT_Original > 999 || AGL_Original > 999 ||
+      Risk > 100)
+  {
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 DWORD

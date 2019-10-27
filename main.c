@@ -128,52 +128,61 @@ wmain(int argc, wchar_t *argv[])
     SetCursorPosition(hStdout, 0, 0);
     SetCursorPosition(hBackBuffer, 0, 0);
 
-    sprintf(szBuffer, "============================\n"
-                      "== VSTracker v0.1.4-alpha ==\n"
-                      "============================\n");
-    WriteToBackBuffer();
-
-    ReadPlayTime(&PlayTimeCurrent);
-    PrintPlayTimeShort2(&PlayTimeCurrent);
-    WritePlayTimeToFile(&PlayTimeCurrent, _T("game_stats//play-time.txt"));
-
-    // Check player's location
-    ReadLocation(&Location);
-    GetAreaAndRoomName(&Location, szAreaName, szRoomName);
-    PrintLocation2(&Location, szAreaName, szRoomName);
-    WriteLocationIntoFile(&Location, szAreaName, szRoomName);
-
     // Write player stats into the file
-    WritePlayerStats();
-    PrintPlayerStats2();
 
-    GetWeaponName(processID, GlobalWeaponName);
+    if (CheckPlayerStats())
+    {
+      ReadPlayTime(&PlayTimeCurrent);
+      PrintPlayTimeShort2(&PlayTimeCurrent);
+      WritePlayTimeToFile(&PlayTimeCurrent, _T("game_stats//play-time.txt"));
 
-    // Write equipment stats into files
-    WriteWeaponInfo(processID);
+      // Check player's location
+      ReadLocation(&Location);
+      GetAreaAndRoomName(&Location, szAreaName, szRoomName);
+      PrintLocation2(&Location, szAreaName, szRoomName);
+      WriteLocationIntoFile(&Location, szAreaName, szRoomName);
 
-    WriteBladeInfo(processID);
-    WriteBladeInfoShort(processID);
+      PrintPlayerStats2();
+      WritePlayerStats();
 
-    WriteShieldInfo(processID);
-    WriteShieldInfoShort(processID);
+      GetWeaponName(processID, GlobalWeaponName);
 
-    WriteGloveInfo(processID, RIGHT_GLOVE);
-    WriteGloveInfoShort(processID, RIGHT_GLOVE);
+      // Write equipment stats into files
+      WriteWeaponInfo(processID);
 
-    WriteGloveInfo(processID, LEFT_GLOVE);
-    WriteGloveInfoShort(processID, LEFT_GLOVE);
+      WriteBladeInfo(processID);
+      WriteBladeInfoShort(processID);
 
-    WriteHeadArmorInfo(processID);
-    WriteHeadArmorInfoShort(processID);
+      WriteShieldInfo(processID);
+      WriteShieldInfoShort(processID);
 
-    WriteBodyArmorInfo(processID);
-    WriteBodyArmorInfoShort(processID);
+      WriteGloveInfo(processID, RIGHT_GLOVE);
+      WriteGloveInfoShort(processID, RIGHT_GLOVE);
 
-    WriteLegsArmorInfo(processID);
-    WriteLegsArmorInfoShort(processID);
+      WriteGloveInfo(processID, LEFT_GLOVE);
+      WriteGloveInfoShort(processID, LEFT_GLOVE);
 
-    WriteNecklaceInfo(processID);
+      WriteHeadArmorInfo(processID);
+      WriteHeadArmorInfoShort(processID);
+
+      WriteBodyArmorInfo(processID);
+      WriteBodyArmorInfoShort(processID);
+
+      WriteLegsArmorInfo(processID);
+      WriteLegsArmorInfoShort(processID);
+
+      WriteNecklaceInfo(processID);
+    }
+    else
+    {
+      sprintf(szBuffer, "============================\n"
+                        "== VSTracker v0.1.6-alpha ==\n"
+                        "============================\n");
+      WriteToBackBuffer();
+
+      sprintf(szBuffer, "\nWaiting for the game to load ...\n");
+      WriteToBackBuffer();
+    }
 
     // Handle last boss
     if (IsThisTheLastBossRoom(&Location))
