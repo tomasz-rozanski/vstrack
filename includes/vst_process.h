@@ -1,38 +1,55 @@
 #ifndef _VST_PROCESS_H
 #define _VST_PROCESS_H
 
-#define LDR_IS_DATAFILE(handle) (((ULONG_PTR)(handle)) & (ULONG_PTR) 1)
-#define LDR_IS_IMAGEMAPPING(handle) (((ULONG_PTR)(handle)) & (ULONG_PTR) 2)
-#define LDR_IS_RESOURCE(handle)                                                \
-  (LDR_IS_IMAGEMAPPING(handle) || LDR_IS_DATAFILE(handle))
-
-SIZE_T processBaseAddress;
-SIZE_T PSX_TO_EMU;
-
-DWORD dwPriorityClassValue[6] = { ABOVE_NORMAL_PRIORITY_CLASS,
+u32 PriorityClassValue[6] = { ABOVE_NORMAL_PRIORITY_CLASS,
   BELOW_NORMAL_PRIORITY_CLASS, HIGH_PRIORITY_CLASS, IDLE_PRIORITY_CLASS,
   NORMAL_PRIORITY_CLASS, REALTIME_PRIORITY_CLASS };
 
-TCHAR *szPriorityClassName[6] = { TEXT("ABOVE_NORMAL_PRIORITY_CLASS"),
-  TEXT("BELOW_NORMAL_PRIORITY_CLASS"), TEXT("HIGH_PRIORITY_CLASS"),
-  TEXT("IDLE_PRIORITY_CLASS"), TEXT("NORMAL_PRIORITY_CLASS"),
-  TEXT("REALTIME_PRIORITY_CLASS") };
+char *szPriorityClassName[6] = { "ABOVE_NORMAL_PRIORITY_CLASS",
+  "BELOW_NORMAL_PRIORITY_CLASS", "HIGH_PRIORITY_CLASS", "IDLE_PRIORITY_CLASS",
+  "NORMAL_PRIORITY_CLASS", "REALTIME_PRIORITY_CLASS" };
 
-TCHAR szModuleName[MAX_PATH] = TEXT("");
-TCHAR szExeName[MAX_PATH] = TEXT("");
-
-SIZE_T
-GetModuleDllBase(DWORD processID, TCHAR *szModuleName)
+void
+ChangePageProtection(u32 processID, void *lpAddress, usize Size)
 {
-  DWORD dwDesiredAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ;
+  u32 flNewProtect = PAGE_READWRITE;
+  u32 flOldProtect;
+
+  HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processID);
+
+  VirtualProtectEx(hProcess, lpAddress, Size, flNewProtect, &flOldProtect);
+}
+
+usize
+GetRegionSize(u32 processID, const void *lpAddress)
+{
+  u32 DesiredAccess = PROCESS_QUERY_INFORMATION;
+  HANDLE hProcess = OpenProcess(DesiredAccess, FALSE, processID);
+
+  if (hProcess)
+  {
+    MEMORY_BASIC_INFORMATION mbiBuffer = { 0 };
+    if (VirtualQueryEx(hProcess, lpAddress, &mbiBuffer, sizeof(mbiBuffer)))
+    {
+      u32 Protect = mbiBuffer.Protect;
+      return mbiBuffer.RegionSize;
+    }
+  }
+  return -1;
+}
+
+u64
+GetModuleDllBase(u32 processID, char *szModuleName)
+{
+  u32 DesiredAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ;
   HANDLE hProcess;
   HMODULE hModule;
   MODULEINFO modinfo = { 0 };
-  DWORD cbNeeded;
+  u32 cbNeeded;
 
-  SIZE_T lpBaseOfDll;
+  u64 lpBaseOfDll;
 
-  hProcess = OpenProcess(dwDesiredAccess, FALSE, processID);
+  hProcess = OpenProcess(DesiredAccess, FALSE, processID);
 
   if (NULL != hProcess)
   {
@@ -40,59 +57,57 @@ GetModuleDllBase(DWORD processID, TCHAR *szModuleName)
     {
       if (GetModuleInformation(hProcess, hModule, &modinfo, sizeof(modinfo)))
       {
-        lpBaseOfDll = (SIZE_T) modinfo.lpBaseOfDll;
+        lpBaseOfDll = (u64) modinfo.lpBaseOfDll;
       }
       else
       {
-        printf("ERROR: Couldn't read module info structure.\n");
+        fprintf(stderr, "ERROR: Couldn't read module info structure.\n");
       }
     }
     CloseHandle(hProcess);
   }
   else
   {
-    printf("ERROR: Couldn't open the process.\n");
+    fprintf(stderr, "ERROR: Couldn't open the process.\n");
   }
   return lpBaseOfDll;
 }
 
-DWORD
-FindProcessIdByName(
-    DWORD *dwProcessesList, DWORD dwProcessesNumber, TCHAR *szModuleName)
+u32
+FindProcessIdByName(u32 *ProcessesList, u32 ProcessesNumber, char *szModuleName)
 {
-  TCHAR szProcessName[MAX_PATH] = TEXT("");
-  TCHAR lpFilename[MAX_PATH] = TEXT("");
+  char szProcessName[MAX_PATH] = "";
+  char lpFilename[MAX_PATH] = "";
   HMODULE hMods[1024];
   HANDLE hProcess;
-  TCHAR szBuffer[64];
-  DWORD cModules;
-  DWORD processID = -1;
-  DWORD dwDesiredAcces = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ;
+  char szBuffer[64];
+  u32 cModules;
+  u32 processID = -1;
+  u32 DesiredAcces = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ;
 
-  for (int i = 0; i < dwProcessesNumber; i++)
+  for (int i = 0; i < ProcessesNumber; i++)
   {
 
-    processID = *dwProcessesList++;
+    processID = *ProcessesList++;
 
-    hProcess = OpenProcess(dwDesiredAcces, FALSE, processID);
+    hProcess = OpenProcess(DesiredAcces, FALSE, processID);
 
     // Get the process name.
     if (NULL != hProcess)
     {
       HMODULE hMod;
-      DWORD cbNeeded;
+      u32 cbNeeded;
 
       if (EnumProcessModules(hProcess, hMods, sizeof(hMods), &cbNeeded))
       {
         for (int i = 0; i < (cbNeeded / sizeof(HMODULE)); ++i)
         {
-          /* code */
           GetModuleBaseName(hProcess, hMods[i], szProcessName,
-              sizeof(szProcessName) / sizeof(TCHAR));
+              sizeof(szProcessName) / sizeof(char));
           // GetModuleFileNameEx(hProcess, hMods[i], lpFilename, MAX_PATH);
 
-          // _tprintf(TEXT("%d %s\n"), processID, szProcessName);
-          // _tprintf(TEXT("%d %s\n"), processID, lpFilename);
+          // _tprintf("%d %s\n", processID, szProcessName);
+          // _tprintf("%d %s\n", processID, lpFilename);
 
           if (strcmp(szProcessName, szModuleName) == 0)
           {
@@ -112,9 +127,9 @@ FindProcessIdByName(
 }
 
 void
-PrintProcessNameAndID(DWORD processID)
+PrintProcessNameAndID(u32 processID)
 {
-  TCHAR szProcessName[MAX_PATH] = TEXT("<unknown>");
+  char szProcessName[MAX_PATH] = "<unknown>";
 
   // Get a handle to the process.
   HANDLE hProcess = OpenProcess(
@@ -124,48 +139,47 @@ PrintProcessNameAndID(DWORD processID)
   if (NULL != hProcess)
   {
     HMODULE hMod;
-    DWORD cbNeeded;
+    u32 cbNeeded;
 
     if (EnumProcessModules(hProcess, &hMod, sizeof(hMod), &cbNeeded))
     {
       GetModuleBaseName(
-          hProcess, hMod, szProcessName, sizeof(szProcessName) / sizeof(TCHAR));
+          hProcess, hMod, szProcessName, sizeof(szProcessName) / sizeof(char));
     }
   }
 
   // Print the process name and ID.
-  _tprintf(TEXT("%s (PID: %u)\n"), szProcessName, processID);
+  fprintf(stderr, "%s (PID: %u)\n", szProcessName, processID);
 
   // Release the handle to the process.
   CloseHandle(hProcess);
 }
 
-DWORD
-ReadMemoryValue(DWORD processID, SIZE_T offset, SIZE_T BytesToRead)
+u32
+ReadMemoryValue(u32 processID, usize offset, usize BytesToRead)
 {
-  DWORD Value = -1;
+  u32 Value = -1;
   // Get a handle to the process.
-  HANDLE hProcess = OpenProcess(
-      PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processID);
+  HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processID);
 
   // Get the process name.
   if (NULL != hProcess)
   {
-    SIZE_T NumberOfBytesActuallyRead = -1;
+    usize NumberOfBytesActuallyRead = -1;
 
-    if (ReadProcessMemory(hProcess, (LPCVOID) offset, &Value, BytesToRead,
+    if (ReadProcessMemory(hProcess, (const void *) offset, &Value, BytesToRead,
             &NumberOfBytesActuallyRead))
     {
       if (BytesToRead > NumberOfBytesActuallyRead)
       {
-        _tprintf(TEXT("ERROR: Not all bytes read from memory.\n"));
+        fprintf(stderr, "ERROR: Not all bytes read from memory.\n");
       }
       CloseHandle(hProcess);
     }
     else
     {
-      _tprintf(TEXT(
-          "ERROR (ReadMemoryValue): Couldn't read from the process memory\n"));
+      fprintf(stderr,
+          "ERROR (ReadMemoryValue): Couldn't read from the process memory\n");
     }
   }
 
@@ -173,17 +187,65 @@ ReadMemoryValue(DWORD processID, SIZE_T offset, SIZE_T BytesToRead)
   return Value;
 }
 
-DWORD
-_GetProcessMemory(
-    DWORD processID, SIZE_T Offset, SIZE_T BytesToRead, void *Value)
+u8
+ReadByteFromProcessMemory(u32 processID, usize offset)
 {
-  SIZE_T BytesActuallyRead = -1;
-  SIZE_T FinalOffset = Offset - PSX_TO_EMU;
-
-  // fprintf(stdout, "FinalOffset: 0x%02x - 0x%02x = 0x%02x\n", Offset,
-  // PSX_TO_EMU,
-  //     FinalOffset);
+  u8 Value = 0;
   // Get a handle to the process.
+  HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processID);
+
+  // Get the process name.
+  if (NULL != hProcess)
+  {
+    usize NumberOfBytesActuallyRead = -1;
+
+    if (ReadProcessMemory(hProcess, (const void *) offset, &Value, 1,
+            &NumberOfBytesActuallyRead))
+    {
+    }
+    else
+    {
+      fprintf(stderr,
+          "ERROR (ReadMemoryValue): Couldn't read from the process memory\n");
+    }
+  }
+
+  CloseHandle(hProcess);
+  return Value;
+}
+
+u32
+ReadMemoryValue2(u32 processID, usize offset, usize BytesToRead, void *Value)
+{
+  usize BytesActuallyRead = -1;
+  // Get a handle to the process.
+  HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processID);
+
+  // Get the process name.
+  if (NULL != hProcess)
+  {
+
+    u8 *pvalue = Value;
+    for (int i = 0; i < BytesToRead; ++i)
+    {
+      ReadProcessMemory(hProcess, (const void *) offset++, (void *) pvalue++, 1,
+          &BytesActuallyRead);
+    }
+  }
+
+  // CloseHandle(hProcess);
+  return BytesActuallyRead;
+}
+
+u32
+_GetProcessMemory(u32 processID, usize Offset, usize BytesToRead, void *Value)
+{
+  usize BytesActuallyRead = -1;
+  usize FinalOffset = Offset - PSX_TO_EMU + processBaseAddress;
+
+  // Get a handle to the process.
+  fprintf(stderr, "GetProcessMemory - Offset: 0x%llx\n", FinalOffset);
+
   HANDLE hProcess = OpenProcess(
       PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processID);
 
@@ -192,20 +254,20 @@ _GetProcessMemory(
   // Get the process name.
   if (NULL != hProcess)
   {
-    if (ReadProcessMemory(hProcess, (LPCVOID) FinalOffset, Value, BytesToRead,
-            &BytesActuallyRead))
+    if (ReadProcessMemory(hProcess, (const void *) FinalOffset, Value,
+            BytesToRead, &BytesActuallyRead))
     {
       if (BytesToRead > BytesActuallyRead)
       {
-        _tprintf(TEXT(
-            "ERROR (GetProcessMemory): Not all bytes read from memory.\n"));
+        fprintf(stderr,
+            "ERROR (GetProcessMemory): Not all bytes read from memory.\n");
       }
       CloseHandle(hProcess);
     }
     else
     {
-      _tprintf(TEXT(
-          "ERROR (GetProcessMemory): Couldn't read from the process memory\n"));
+      fprintf(stderr,
+          "ERROR (GetProcessMemory): Couldn't read from the process memory\n");
       exit(1);
     }
   }
@@ -213,35 +275,75 @@ _GetProcessMemory(
   return BytesActuallyRead;
 }
 
+void *
+GetProcessMemory2(u32 processID, usize Offset, usize BytesToRead)
+{
+  usize BytesActuallyRead = -1;
+  usize FinalOffset = Offset - PSX_TO_EMU + processBaseAddress;
+
+  // Get a handle to the process.
+
+  u8 *buffer = (u8 *) malloc(BytesToRead);
+  fprintf(stderr, "GetProcessMemory - Offset: 0x%llx\n", FinalOffset);
+
+  HANDLE hProcess = OpenProcess(
+      PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processID);
+
+  // fprintf(stdout, "hProcess: %i\n", hProcess);
+
+  // Get the process name.
+  if (NULL != hProcess)
+  {
+    if (ReadProcessMemory(hProcess, (const void *) FinalOffset, buffer,
+            BytesToRead, &BytesActuallyRead))
+    {
+      if (BytesToRead > BytesActuallyRead)
+      {
+        fprintf(stderr,
+            "ERROR (GetProcessMemory): Not all bytes read from memory.\n");
+      }
+      CloseHandle(hProcess);
+    }
+    else
+    {
+      fprintf(stderr,
+          "ERROR (GetProcessMemory): Couldn't read from the process memory\n");
+      exit(1);
+    }
+  }
+  // CloseHandle(hProcess);
+  return buffer;
+}
+
 void
 PrintMemoryValue(
-    DWORD processID, SIZE_T offset, SIZE_T BytesToRead, TCHAR *szDescription)
+    u32 processID, usize offset, usize BytesToRead, char *szDescription)
 {
-  TCHAR szBuffer[1024] = TEXT("");
+  char szBuffer[1024] = "";
 
   // Make sure to change Value size depending from the BytesToRead
-  short Value = -1;
+  i16 Value = -1;
 
   if (_GetProcessMemory(processID, offset, BytesToRead, &Value))
   {
-    _tprintf(TEXT("Value of %s: %d\n"), szDescription, Value);
+    fprintf(stdout, "Value of %s: %d\n", szDescription, Value);
   }
   else
   {
-    _tprintf("ERROR (PrintMemoryValue): Couldn't read the Value\n");
+    fprintf(stderr, "ERROR (PrintMemoryValue): Couldn't read the Value\n");
   }
 }
 
 void
-PrintProcessInfo(DWORD processID)
+PrintProcessInfo(u32 processID)
 {
-  DWORD dwDesiredAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ;
+  u32 DesiredAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ;
   HANDLE hProcess;
   HMODULE hModule;
   MODULEINFO modinfo;
-  DWORD cbNeeded;
+  u32 cbNeeded;
 
-  hProcess = OpenProcess(dwDesiredAccess, FALSE, processID);
+  hProcess = OpenProcess(DesiredAccess, FALSE, processID);
 
   if (NULL != hProcess)
   {
@@ -249,17 +351,17 @@ PrintProcessInfo(DWORD processID)
     {
       if (GetModuleInformation(hProcess, hModule, &modinfo, sizeof(modinfo)))
       {
-        LPVOID lpBaseOfDll = modinfo.lpBaseOfDll;
-        DWORD SizeOfImage = modinfo.SizeOfImage;
-        LPVOID EntryPoint = modinfo.EntryPoint;
+        void *lpBaseOfDll = modinfo.lpBaseOfDll;
+        u32 SizeOfImage = modinfo.SizeOfImage;
+        void *EntryPoint = modinfo.EntryPoint;
 
-        printf("Base of DLL: %p\n", lpBaseOfDll);
-        printf("Size of Image: %d\n", SizeOfImage);
-        printf("Entry Point: %p\n", EntryPoint);
+        fprintf(stdout, "Base of DLL: %p\n", lpBaseOfDll);
+        fprintf(stdout, "Size of Image: %d\n", SizeOfImage);
+        fprintf(stdout, "Entry Point: %p\n", EntryPoint);
       }
       else
       {
-        printf(
+        fprintf(stderr,
             "ERROR (PrintProcessInfo): Couldn't read module info structure.\n");
       }
     }
@@ -267,26 +369,27 @@ PrintProcessInfo(DWORD processID)
   }
   else
   {
-    printf("ERROR (PrintProcessInfo): Couldn't open the process.\n");
+    fprintf(stderr, "ERROR (PrintProcessInfo): Couldn't open the process.\n");
   }
 }
 
 void
-PrintPriorityClass(DWORD processID)
+PrintPriorityClass(u32 processID)
 {
-  DWORD dwDesiredAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ;
-  DWORD dwPriorityClass;
+  u32 DesiredAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ;
+  u32 PriorityClass;
   HANDLE hProcess;
 
-  hProcess = OpenProcess(dwDesiredAccess, FALSE, processID);
+  hProcess = OpenProcess(DesiredAccess, FALSE, processID);
 
-  dwPriorityClass = GetPriorityClass(hProcess);
+  PriorityClass = GetPriorityClass(hProcess);
 
   for (int i = 0; i < 6; i++)
   {
-    if (dwPriorityClass == dwPriorityClassValue[i])
+    if (PriorityClass == PriorityClassValue[i])
     {
-      printf("Process priority class is: %s\n", szPriorityClassName[i]);
+      fprintf(
+          stdout, "Process priority class is: %s\n", szPriorityClassName[i]);
       break;
     }
   }
@@ -295,49 +398,49 @@ PrintPriorityClass(DWORD processID)
 }
 
 void
-PrintModuleFileName(DWORD processID)
+PrintModuleFileName(u32 processID)
 {
-  printf("Process ID: %d\n", processID);
+  fprintf(stdout, "Process ID: %d\n", processID);
 
   HANDLE hProcess;
   HMODULE hModules[32];
   HMODULE hModule;
-  TCHAR lpFilename[MAX_PATH] = TEXT("");
-  TCHAR szBaseName[MAX_PATH] = TEXT("");
-  DWORD cbNeeded;
-  DWORD dwDesiredAccess = PROCESS_VM_READ | PROCESS_QUERY_INFORMATION;
+  char lpFilename[MAX_PATH] = "";
+  char szBaseName[MAX_PATH] = "";
+  u32 cbNeeded;
+  u32 DesiredAccess = PROCESS_VM_READ | PROCESS_QUERY_INFORMATION;
 
-  hProcess = OpenProcess(dwDesiredAccess, FALSE, processID);
+  hProcess = OpenProcess(DesiredAccess, FALSE, processID);
 
   if (NULL != hProcess)
   {
     if (EnumProcessModules(hProcess, hModules, sizeof(hModules), &cbNeeded))
     {
-      GetModuleBaseName(hProcess, hModules[0], szBaseName,
-          sizeof(szBaseName) / sizeof(TCHAR));
+      GetModuleBaseName(
+          hProcess, hModules[0], szBaseName, sizeof(szBaseName) / sizeof(char));
 
       GetModuleFileNameEx(hProcess, hModules[0], lpFilename, MAX_PATH);
-      _tprintf("Base name: %s File name: %s\n", szBaseName, lpFilename);
+      fprintf(stdout, "Base name: %s File name: %s\n", szBaseName, lpFilename);
     }
     CloseHandle(hProcess);
   }
 }
 
 void
-PrintProcessVersion(DWORD processID)
+PrintProcessVersion(u32 processID)
 {
-  DWORD dwVersion = GetProcessVersion(processID);
+  u32 Version = GetProcessVersion(processID);
 
-  short unsigned major, minor;
+  u16 major, minor;
 
-  major = (dwVersion & 0xFFFF0000) >> 16;
-  minor = dwVersion & 0x0000FFFF;
+  major = (Version & 0xFFFF0000) >> 16;
+  minor = Version & 0x0000FFFF;
 
-  printf("Version: %i.%i\n", major, minor);
+  fprintf(stdout, "Version: %i.%i\n", major, minor);
 }
 
 BOOL
-GetProcessIdFromName(DWORD *processID, TCHAR *szModuleName)
+GetProcessIdFromName(u32 *processID, char *szModuleName)
 {
   HANDLE hProcess = CreateToolhelp32Snapshot(
       TH32CS_SNAPPROCESS | TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, 0);
@@ -388,7 +491,7 @@ GetProcessIdFromName(DWORD *processID, TCHAR *szModuleName)
 }
 
 BOOL
-GetProcessIdFromName2(DWORD *processID, TCHAR *szModuleName)
+GetProcessIdFromName2(u32 *processID, char *szModuleName)
 {
   HANDLE hProcess = CreateToolhelp32Snapshot(
       TH32CS_SNAPPROCESS | TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, 0);
@@ -432,32 +535,40 @@ GetProcessIdFromName2(DWORD *processID, TCHAR *szModuleName)
   return FALSE;
 }
 
-DWORD
-ReadGameMemory(DWORD processID, SIZE_T Offset, SIZE_T BytesToRead, void *Value)
+u32
+ReadGameMemory(u32 processID, usize Offset, usize BytesToRead, void *Value)
 {
-  SIZE_T BytesActuallyRead = -1;
-  SIZE_T FinalOffset = Offset - PSX_TO_EMU + processBaseAddress;
+  usize BytesActuallyRead = -1;
+  usize FinalOffset =
+      (usize)((usize) Offset - (usize) PSX_TO_EMU + (usize) processBaseAddress);
 
-  // fprintf(stdout, "FinalOffset: 0x%02x - 0x%02x = 0x%02x\n", Offset,
-  // PSX_TO_EMU, FinalOffset);
+  Toolhelp32ReadProcessMemory(
+      processID, (usize *) FinalOffset, Value, BytesToRead, &BytesActuallyRead);
 
-  Toolhelp32ReadProcessMemory(processID, (LPCVOID) FinalOffset, (LPVOID) Value,
-      BytesToRead, &BytesActuallyRead);
-
-  //   if (BytesToRead > BytesActuallyRead)
-  //   {
-  //     _tprintf(
-  //         TEXT("ERROR (ReadGameMemory): Not all bytes read from
-  //         memory.\n"));
-  //   }
-  // }
-  // else
-  // {
-  //   _tprintf(TEXT(
-  //       "ERROR (ReadGameMemory): Couldn't read from the process
-  //       memory\n"));
-  // }
   return BytesActuallyRead;
+}
+
+void *
+ReadGameMemory2(u32 processID, usize Offset, usize BytesToRead)
+{
+
+  usize FinalOffset =
+      (usize) Offset - (usize) PSX_TO_EMU + (usize) processBaseAddress;
+
+  void *pValue = (void *) malloc(BytesToRead);
+
+  HANDLE hProcess = OpenProcess(
+      PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processID);
+
+  if (NULL != hProcess)
+  {
+    ReadProcessMemory(
+        hProcess, (const void *) FinalOffset, pValue, BytesToRead, NULL);
+  }
+
+  // CloseHandle(hProcess);
+
+  return pValue;
 }
 
 void PrintHeapList(processID)
@@ -480,7 +591,7 @@ void PrintHeapList(processID)
 
         do
         {
-          fprintf(stdout, "Block size: %i\n", he32.dwBlockSize);
+          fprintf(stdout, "Block size: %I64i\n", he32.dwBlockSize);
 
           he32.dwSize = sizeof(HEAPENTRY32);
         } while (Heap32Next(&he32));
@@ -494,7 +605,7 @@ void PrintHeapList(processID)
 }
 
 BOOL
-ListProcessModules(DWORD dwPID)
+ListProcessModules(u32 dwPID)
 {
   HANDLE hModuleSnap = INVALID_HANDLE_VALUE;
   MODULEENTRY32 me32;
@@ -504,7 +615,7 @@ ListProcessModules(DWORD dwPID)
       CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, dwPID);
   if (hModuleSnap == INVALID_HANDLE_VALUE)
   {
-    // printError(TEXT("CreateToolhelp32Snapshot (of modules)"));
+    // printError("CreateToolhelp32Snapshot (of modules)");
     return (FALSE);
   }
   me32.dwSize = sizeof(MODULEENTRY32);
@@ -513,7 +624,7 @@ ListProcessModules(DWORD dwPID)
   //  and exit if unsuccessful
   if (!Module32First(hModuleSnap, &me32))
   {
-    // printError(TEXT("Module32First"));  // Show cause of failure
+    // printError("Module32First");  // Show cause of failure
     CloseHandle(hModuleSnap); // Must clean up the snapshot object!
     return (FALSE);
   }
@@ -522,25 +633,77 @@ ListProcessModules(DWORD dwPID)
   //  and display information about each module
   do
   {
-    _tprintf(TEXT("\n\n     MODULE NAME:     %s"), me32.szModule);
-    _tprintf(TEXT("\n     executable     = %s"), me32.szExePath);
-    _tprintf(TEXT("\n     process ID     = 0x%08X"), me32.th32ProcessID);
-    _tprintf(TEXT("\n     ref count (g)  =     0x%04X"), me32.GlblcntUsage);
-    _tprintf(TEXT("\n     ref count (p)  =     0x%04X"), me32.ProccntUsage);
-    _tprintf(TEXT("\n     base address   = 0x%08X"), (DWORD) me32.modBaseAddr);
-    _tprintf(TEXT("\n     base size      = %d"), me32.modBaseSize);
+    if (strcmp(me32.szModule, szModuleName) == 0)
+    {
+
+      fprintf(stdout, "\n\n     MODULE NAME:     %s\n", me32.szModule);
+      fprintf(stdout, "     executable     = %s\n", me32.szExePath);
+      fprintf(stdout, "     process ID     = 0x%08X\n", me32.th32ProcessID);
+      fprintf(stdout, "     ref count (g)  =     0x%04X\n", me32.GlblcntUsage);
+      fprintf(stdout, "     ref count (p)  =     0x%04X\n", me32.ProccntUsage);
+      fprintf(stdout, "     base address   = 0x%p\n", me32.modBaseAddr);
+      fprintf(stdout, "     base size      = %d\n", me32.modBaseSize);
+    }
 
   } while (Module32Next(hModuleSnap, &me32));
 
-  _tprintf(TEXT("\n"));
+  fprintf(stdout, "\n");
 
   //  Do not forget to clean up the snapshot object.
   CloseHandle(hModuleSnap);
   return (TRUE);
 }
 
+u64
+FindDllAddress(u32 dwPID, char *szModulName)
+{
+  HANDLE hModuleSnap = INVALID_HANDLE_VALUE;
+  MODULEENTRY32 me32;
+
+  //  Take a snapshot of all modules in the specified process.
+  hModuleSnap =
+      CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, dwPID);
+  if (hModuleSnap == INVALID_HANDLE_VALUE)
+  {
+    // printError("CreateToolhelp32Snapshot (of modules)");
+    return (FALSE);
+  }
+  me32.dwSize = sizeof(MODULEENTRY32);
+
+  //  Retrieve information about the first module,
+  //  and exit if unsuccessful
+  if (!Module32First(hModuleSnap, &me32))
+  {
+    // printError("Module32First");  // Show cause of failure
+    CloseHandle(hModuleSnap); // Must clean up the snapshot object!
+    return (FALSE);
+  }
+
+  //  Now walk the module list of the process,
+  //  and display information about each module
+  do
+  {
+    if (strcmp(szModuleName, me32.szModule) == 0)
+    {
+      return (u64) me32.modBaseAddr;
+    }
+    // _tprintf("\n\n     MODULE NAME:     %s\n", me32.szModule);
+    // _tprintf("     executable     = %s\n", me32.szExePath);
+    // _tprintf("     process ID     = 0x%08X\n", me32.th32ProcessID);
+    // _tprintf("     ref count (g)  =     0x%04X\n", me32.GlblcntUsage);
+    // _tprintf("     ref count (p)  =     0x%04X\n", me32.ProccntUsage);
+    // _tprintf("     base address   = 0x%p\n", me32.modBaseAddr);
+    // _tprintf("     base size      = %d\n", me32.modBaseSize);
+
+  } while (Module32Next(hModuleSnap, &me32));
+
+  //  Do not forget to clean up the snapshot object.
+  CloseHandle(hModuleSnap);
+  return (0);
+}
+
 BOOL
-ListProcessThreads(DWORD dwPID)
+ListProcessThreads(u32 dwPID)
 {
   HANDLE hThreadSnap = INVALID_HANDLE_VALUE;
   THREADENTRY32 te32 = { sizeof(THREADENTRY32) };
@@ -549,7 +712,7 @@ ListProcessThreads(DWORD dwPID)
   hThreadSnap = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
   if (hThreadSnap == INVALID_HANDLE_VALUE)
   {
-    // printError(TEXT("CreateToolhelp32Snapshot (of modules)"));
+    // printError("CreateToolhelp32Snapshot (of modules)");
     return (FALSE);
   }
 
@@ -557,7 +720,7 @@ ListProcessThreads(DWORD dwPID)
   //  and exit if unsuccessful
   if (!Thread32First(hThreadSnap, &te32))
   {
-    // printError(TEXT("Module32First"));  // Show cause of failure
+    // printError("Module32First");  // Show cause of failure
     CloseHandle(hThreadSnap); // Must clean up the snapshot object!
     return (FALSE);
   }
@@ -569,15 +732,15 @@ ListProcessThreads(DWORD dwPID)
     if (te32.th32OwnerProcessID == dwPID)
     {
 
-      _tprintf(TEXT("\n\n     THREAD ID:     %i"), te32.th32ThreadID);
-      _tprintf(TEXT("\n     dwSize:     %i"), te32.dwSize);
-      _tprintf(TEXT("\n     Base Priority     = %i"), te32.tpBasePri);
-      _tprintf(TEXT("\n     Delta Priority    = %i"), te32.tpDeltaPri);
+      fprintf(stdout, "\n\n     THREAD ID:     %i", te32.th32ThreadID);
+      fprintf(stdout, "\n     dwSize:     %i", te32.dwSize);
+      fprintf(stdout, "\n     Base Priority     = %i", te32.tpBasePri);
+      fprintf(stdout, "\n     Delta Priority    = %i", te32.tpDeltaPri);
     }
 
   } while (Thread32Next(hThreadSnap, &te32));
 
-  _tprintf(TEXT("\n"));
+  fprintf(stdout, "\n");
 
   //  Do not forget to clean up the snapshot object.
   CloseHandle(hThreadSnap);
@@ -585,7 +748,7 @@ ListProcessThreads(DWORD dwPID)
 }
 
 HANDLE
-GetProcessHandle(TCHAR *ProcessName, DWORD *ReturnedProcessId)
+GetProcessHandle(char *ProcessName, u32 *ReturnedProcessId)
 {
   PROCESSENTRY32 pe32 = { sizeof(PROCESSENTRY32) };
   HANDLE hSnap;
@@ -622,10 +785,10 @@ GetProcessHandle(TCHAR *ProcessName, DWORD *ReturnedProcessId)
   return 0;
 }
 
-ULONG
-GetModuleBase(TCHAR *ModuleName, DWORD ProcessId)
+usize
+GetModuleBase(char *ModuleName, u32 ProcessId)
 {
-  _tprintf(_T("Searching for %s\n"), ModuleName);
+  fprintf(stdout, "Searching for %s\n", ModuleName);
 
   MODULEENTRY32 me32 = { sizeof(MODULEENTRY32) };
 
@@ -641,9 +804,9 @@ GetModuleBase(TCHAR *ModuleName, DWORD ProcessId)
   {
     if (!ModuleName || strcmp(me32.szModule, ModuleName) == 0)
     {
-      _tprintf("I found the DLL!!!\n");
+      fprintf(stdout, "I found the DLL!!!\n");
       CloseHandle(hSnap);
-      return (ULONG) me32.modBaseAddr;
+      return (usize) me32.modBaseAddr;
     }
 
     bModule = Module32Next(hSnap, &me32);
@@ -655,7 +818,7 @@ GetModuleBase(TCHAR *ModuleName, DWORD ProcessId)
 }
 
 HRSRC
-GetModuleResource(HANDLE RemoteProcessHandle, TCHAR *szResourceName)
+GetModuleResource(HANDLE RemoteProcessHandle, char *szResourceName)
 {
   HRSRC hResource =
       FindResource(RemoteProcessHandle, szResourceName, RT_RCDATA);
@@ -664,30 +827,68 @@ GetModuleResource(HANDLE RemoteProcessHandle, TCHAR *szResourceName)
 }
 
 void
-EnumProcessModules2(DWORD processID)
+EnumProcessModules2(u32 processID)
 {
   HANDLE hProcess;
-  DWORD dwDesiredAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ;
+  u32 DesiredAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ;
 
-  hProcess = OpenProcess(dwDesiredAccess, FALSE, processID);
+  hProcess = OpenProcess(DesiredAccess, FALSE, processID);
 
   HMODULE hmArray[256];
-  DWORD cb = sizeof(hmArray);
-  DWORD cbNeeded;
-  DWORD dwFilterFlag = LIST_MODULES_32BIT | LIST_MODULES_64BIT;
-  TCHAR szModulName[MAX_PATH];
+  u32 cb = sizeof(hmArray);
+  u32 cbNeeded;
+  u32 dwFilterFlag = LIST_MODULES_32BIT | LIST_MODULES_64BIT;
+  char szModulName[MAX_PATH];
 
   EnumProcessModulesEx(hProcess, hmArray, cb, &cbNeeded, dwFilterFlag);
 
-  _tprintf("cb: %i, cbNeeded: %i", cb, cbNeeded);
+  fprintf(stdout, "cb: %i, cbNeeded: %i", cb, cbNeeded);
 
   int cbSize = cbNeeded / sizeof(HMODULE);
 
   for (int i = 0; i < cbSize; ++i)
   {
     GetModuleFileNameEx(hProcess, hmArray[i], szModulName, MAX_PATH);
-    _tprintf(_T("Module name: %s"), szModuleName);
+    fprintf(stdout, "Module name: %s\n", szModuleName);
   }
+}
+
+BOOL
+EnableDebugPrivilege(void)
+{
+  // Get the privilege value for `SeDebugPrivilege`
+  LUID luidDebugPrivilege;
+  LUID luidProfilePrivilege;
+
+  if (!LookupPrivilegeValue(NULL, SE_DEBUG_NAME, &luidDebugPrivilege))
+  {
+    ErrorExit("LookupPrivilegeValue");
+  }
+
+  // Fill up the TOKEN_PRIVILEGES structure
+  TOKEN_PRIVILEGES tkPrivs;
+
+  tkPrivs.PrivilegeCount = 1; // Modify 2 privileges
+  tkPrivs.Privileges[0].Luid =
+      luidDebugPrivilege; // we want to modify `SeDebugPrivilege`
+  tkPrivs.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED; // enable it
+
+  HANDLE hCurrentProcess = GetCurrentProcess();
+  HANDLE hProcessToken;
+
+  if (!OpenProcessToken(
+          hCurrentProcess, TOKEN_ADJUST_PRIVILEGES, &hProcessToken))
+  {
+    ErrorExit("OpenProcessToken");
+  }
+
+  // Let's enable Debug privileges in the token
+  if (!AdjustTokenPrivileges(hProcessToken, FALSE, &tkPrivs, 0, NULL, NULL))
+  {
+    ErrorExit("AdjustTokenPrivileges");
+  }
+
+  return TRUE;
 }
 
 #endif

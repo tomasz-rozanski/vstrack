@@ -4,19 +4,20 @@
 void
 WriteDebugInfo(void)
 {
-  TCHAR szBuffer[1024];
+  char szBuffer[1024];
 
-  processBaseAddress = GetModuleDllBase(processID, szModuleName);
-  sprintf(szBuffer, "processBaseAddress: 0x%08x\n", processBaseAddress);
+  sprintf_s(szBuffer, _countof(szBuffer), "processBaseAddress: 0x%016llx\n",
+      processBaseAddress);
   WriteDebugLog(szBuffer);
 
   // Maximum window dimensions
-  sprintf(
-      szBuffer, "conMaxSizeX: %i, conMaxSizeY: %i\n", conMaxSizeX, conMaxSizeY);
+  sprintf_s(szBuffer, _countof(szBuffer), "conMaxSizeX: %i, conMaxSizeY: %i\n",
+      conMaxSizeX, conMaxSizeY);
   WriteDebugLog(szBuffer);
 
   // Pointer to the back-buffer memory
-  sprintf(szBuffer, "chiBuffer address: 0x%08p\n", chiBuffer);
+  sprintf_s(
+      szBuffer, _countof(szBuffer), "chiBuffer address: 0x%08p\n", chiBuffer);
   WriteDebugLog(szBuffer);
 }
 

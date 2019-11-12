@@ -5,15 +5,8 @@
 #include <tchar.h>
 #include <tlhelp32.h>
 
-#define NELEMS(x) (sizeof(x) / sizeof(x[0]))
-
-UINT16 LastBossHP = 0xff;
-BOOL GameOver = FALSE; // set to TRUE when the last boss is dead
-char GlobalWeaponName[18] = "";
-DWORD processID;
-DWORD processVersion;
-BOOL DEBUG;
-
+#include "includes/vst_types.h"
+#include "includes/vst_init.h"
 #include "includes/vst_utils.h"
 #include "includes/vst_console.h"
 #include "includes/vst_process.h"
@@ -27,34 +20,37 @@ BOOL DEBUG;
 
 // Main
 int
-wmain(int argc, wchar_t *argv[])
+main(int argc, char *argv[])
 {
-  WCHAR ver_s[3];
-  UINT8 ver_d = 0;
+  char ver_s[3];
+  u8 ver_d = 0;
 
-  do // repeat until the user enters the right option
+  do // repeat until the user enters a valid option
   {
     switch (argc)
     {
       case 1:
       {
         system("cls");
-        printf("1. ePSXe 1.9.00\n");
-        printf("2. ePSXe 1.9.25\n");
-        printf("3. ePSXe 2.0.50\n");
-        printf("0. Exit\n");
 
-        wscanf_s(L"%2s", ver_s, (unsigned) _countof(ver_s));
+        fprintf(stdout, "1. ePSXe 1.9.00\n");
+        fprintf(stdout, "2. ePSXe 1.9.25\n");
+        fprintf(stdout, "3. ePSXe 2.0.50\n");
+        fprintf(stdout, "4. BizHawk 2.3.0\n");
+        fprintf(stdout, "4. BizHawk 2.3.2\n\n");
+        fprintf(stdout, "0. Exit\n\n");
+
+        scanf_s("%2s", ver_s, (unsigned) _countof(ver_s));
 
         break;
       }
       case 2:
       {
-        wsprintfW(ver_s, argv[1]);
+        sprintf_s(ver_s, _countof(ver_s), argv[1]);
         break;
       }
     }
-    ver_d = _wtoi(ver_s);
+    ver_d = atoi(ver_s);
 
     switch (ver_d)
     {
@@ -66,19 +62,36 @@ wmain(int argc, wchar_t *argv[])
       case 1:
       {
         PSX_TO_EMU = PSX_TO_EPSXE_1900;
-        wsprintf(szModuleName, TEXT("%s"), TEXT("ePSXe.exe"));
+        sprintf_s(szExeName, MAX_PATH, "ePSXe.exe");
+        sprintf_s(szModuleName, MAX_PATH, "");
         break;
       }
       case 2:
       {
         PSX_TO_EMU = PSX_TO_EPSXE_1925;
-        wsprintf(szModuleName, TEXT("%s"), TEXT("ePSXe.exe"));
+        sprintf_s(szExeName, MAX_PATH, "ePSXe.exe");
+        sprintf_s(szModuleName, MAX_PATH, "");
         break;
       }
       case 3:
       {
         PSX_TO_EMU = PSX_TO_EPSXE_2050;
-        wsprintf(szModuleName, TEXT("%s"), TEXT("ePSXe.exe"));
+        sprintf_s(szExeName, MAX_PATH, "ePSXe.exe");
+        sprintf_s(szModuleName, MAX_PATH, "");
+        break;
+      }
+      case 4:
+      {
+        PSX_TO_EMU = PSX_TO_BIZHAWK_2300;
+        sprintf_s(szModuleName, MAX_PATH, "octoshock.dll");
+        sprintf_s(szExeName, MAX_PATH, "EmuHawk.exe");
+        break;
+      }
+      case 5:
+      {
+        PSX_TO_EMU = PSX_TO_BIZHAWK_2320;
+        sprintf_s(szModuleName, MAX_PATH, "octoshock.dll");
+        sprintf_s(szExeName, MAX_PATH, "EmuHawk.exe");
         break;
       }
       default:
@@ -89,7 +102,7 @@ wmain(int argc, wchar_t *argv[])
     }
   } while (!PSX_TO_EMU);
 
-  while (!(GetProcessIdFromName(&processID, szModuleName)))
+  while (!(GetProcessIdFromName(&processID, szExeName)))
   {
 
     system("cls");
@@ -98,6 +111,16 @@ wmain(int argc, wchar_t *argv[])
 
     Sleep(1000);
   };
+  system("cls");
+
+  if (!strlen(szModuleName))
+  {
+    processBaseAddress = GetModuleDllBase(processID, szExeName);
+  }
+  else
+  {
+    processBaseAddress = FindDllAddress(processID, szModuleName);
+  }
 
   // Setup the folders
   mkdir("debug");
@@ -108,6 +131,15 @@ wmain(int argc, wchar_t *argv[])
   // PrintProcessNameAndID(processID);
   // PrintProcessVersion(processID);
   // PrintModuleFileName(processID);
+  // EnumProcessModules2(processID);
+  fprintf(stdout, "processID: %i\n", processID);
+  fprintf(stdout, "processBaseAddress: 0x%llx\n", processBaseAddress);
+
+  // processBaseAddress = GetModuleDllBase(processID, "octoshock.dll");
+  // ListProcessThreads(processID);
+  ListProcessModules(processID);
+
+  // getc(stdin);
 
   SetConsoleHandles();
   cls(hStdout);
@@ -128,26 +160,37 @@ wmain(int argc, wchar_t *argv[])
     SetCursorPosition(hStdout, 0, 0);
     SetCursorPosition(hBackBuffer, 0, 0);
 
-    // Write player stats into the file
+    WriteBladeInfo(processID);
+    ReadPlayerStats(&PlayerStats);
 
-    if (CheckPlayerStats())
+    if (CheckPlayerStats(&PlayerStats))
     {
+      // TIME
+      PlayTimeTemp = PlayTimeCurrent;
       ReadPlayTime(&PlayTimeCurrent);
-      PrintPlayTimeShort2(&PlayTimeCurrent);
-      WritePlayTimeToFile(&PlayTimeCurrent, _T("game_stats//play-time.txt"));
 
-      // Check player's location
+      // Check if the time progressed
+      if (IsItLater(&PlayTimeTemp, &PlayTimeCurrent))
+      {
+        WritePlayTimeToFile(&PlayTimeCurrent, "game_stats/play-time.txt");
+      }
+      PrintPlayTimeShort(&PlayTimeCurrent);
+
+      // LOCATION
       ReadLocation(&Location);
       GetAreaAndRoomName(&Location, szAreaName, szRoomName);
-      PrintLocation2(&Location, szAreaName, szRoomName);
+      PrintLocation(&Location, szAreaName, szRoomName);
       WriteLocationIntoFile(&Location, szAreaName, szRoomName);
 
-      PrintPlayerStats2();
+      // STATS
+      ReadPlayerStats(&PlayerStats);
+      ReadPlayerStatus(&PlayerEffects);
+      PrintPlayerStats(&PlayerStats, &PlayerEffects);
       WritePlayerStats();
 
       GetWeaponName(processID, GlobalWeaponName);
 
-      // Write equipment stats into files
+      // EQUIPMENT
       WriteWeaponInfo(processID);
 
       WriteBladeInfo(processID);
@@ -175,13 +218,20 @@ wmain(int argc, wchar_t *argv[])
     }
     else
     {
-      sprintf(szBuffer, "============================\n"
-                        "== VSTracker v0.1.6-alpha ==\n"
-                        "============================\n");
+
+      sprintf_s(szBuffer, _countof(szBuffer),
+          "============================\n"
+          "== VSTracker v0.2.0-alpha ==\n"
+          "============================\n");
       WriteToBackBuffer();
 
-      sprintf(szBuffer, "\nWaiting for the game to load ...\n");
+      sprintf_s(
+          szBuffer, _countof(szBuffer), "\nWaiting for the game to load ...\n");
       WriteToBackBuffer();
+
+      // sprintf_s(szBuffer, _countof(szBuffer), "\nprocessBaseAddress: 0x%p\n",
+      //     (void *) processBaseAddress);
+      // WriteToBackBuffer();
     }
 
     // Handle last boss
@@ -190,23 +240,15 @@ wmain(int argc, wchar_t *argv[])
       LastBossHandleIt2();
     }
 
-    // SHORT keyState = GetAsyncKeyState(0x44); // 'D' for Debug Mode
-
-    // if (keyState & 0x8000) // 0x8000 is 'D' key code
-    // {
-    //   DEBUG = !DEBUG;
-    //   FlushConsoleInputBuffer(GetStdHandle(STD_INPUT_HANDLE));
-    // }
-
     CopyFromBackBuffer();
-    Sleep(100);
+    Sleep(10);
   } while (!GameOver);
 
   cls(hStdout);
 
-  PrintRecordTime(&RecordTime);
+  PrintRecordTime(&PlayTimeRecord);
 
-  printf("\nPress any key to exit the program...\n");
+  fprintf(stdout, "\nPress any key to exit the program...\n");
   getchar();
 
   return 0;

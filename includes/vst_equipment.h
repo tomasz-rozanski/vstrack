@@ -1,106 +1,6 @@
 #ifndef _VST_EQUIPMENT_H
 #define _VST_EQUIPMENT_H
 
-//
-// Equipped Item Extended Info
-//
-
-/*
- * Area shape (bits 0-2):
- * 1  spheroid
- * 2  upward cylinder
- * 3  up-downward cylinder
- * 4  downward cone (base is at casting position)
- * 5  upward cone (point is at casting position)
- * 6  cuboid
- * 7  rhombohedron
- * Shape angle (bits 3-7):
- * increment by 360°/32,
- * center is casting position,
- * direction is upward, incrementing backward
- */
-
-typedef struct
-{
-  UINT8 x;
-  UINT8 y;
-  UINT8 z;
-
-  union {
-    UINT8 ShapeAngleCompound;
-    struct
-    {
-      UINT8 Shape : 3;
-      UINT8 Angle : 5;
-    };
-  } ShapeAngle;
-} range;
-
-#pragma pack(push, 1)
-typedef struct
-{
-  UINT16 NamesListPosition;
-  UINT8 ListPosition;
-  UINT8 WepFileNumber;
-  UINT8 Category;
-
-  INT8 STR_Bonus;
-  INT8 INT_Bonus;
-  INT8 AGL_Bonus;
-
-  UINT16 DamagePoints;
-  UINT16 DamagePointsMax;
-  UINT16 PhantomPoints;
-  UINT16 PhantomPointsMax;
-
-  // Blades only
-  // (1=MP 2=RISK 3=HP 4=PP 5=nothing)
-  UINT8 DamageType;
-  UINT8 StatsCostType;
-  UINT8 StatsCostValue;
-
-  UINT8 Material;
-
-  INT8 Padding0;
-
-  UINT8 GemSlots; // grips and shields only
-  UINT8 GemsSpecialEffects;
-
-  UINT8 EqiupmentListIndex; // RAM only
-
-  range Range; // blades only?
-
-  INT8 Padding1;
-
-  // Type (grips only)
-  UINT8 TypeBlunt;
-  UINT8 TypeEdged;
-  UINT8 TypePiercing;
-
-  // Class
-  INT8 ClassHuman;
-  INT8 ClassBeast;
-  INT8 ClassUndead;
-  INT8 ClassPhantom;
-  INT8 ClassDragon;
-  INT8 ClassEvil;
-
-  INT16 Padding2;
-
-  // Affinity
-  INT8 AffinityPhysical;
-  INT8 AffinityAir;
-  INT8 AffinityFire;
-  INT8 AffinityEarth;
-  INT8 AffinityWater;
-  INT8 AffinityLight;
-  INT8 AffinityDark;
-
-  INT8 Padding3;
-} equip_item_info;
-
-#pragma pack(pop)
-
 enum which_glove
 {
   RIGHT_GLOVE,
@@ -295,7 +195,9 @@ char *WeaponsList[91] = { "", "Battle Knife", "Scramasax", "Dirk",
   "Bardysh", "Brandestoc", "Gastraph Bow", "Light Crossbow", "Target Bow",
   "Windlass", "Cranequin", "Lug Crossbow", "Siege Bow", "Arbalest" };
 
-char *AccessoriesList[32] = { "", "Rood Necklace", "Rune Earrings", "Lionhead",
+// The first element of this array should start at index 97 (0x61),
+// so make adjustments in a funcions reading it.
+char *AccessoriesList[31] = { "Rood Necklace", "Rune Earrings", "Lionhead",
   "Rusted Nails", "Sylphid Ring", "Marduk", "Salamander Ring", "Tamulis Tongue",
   "Gnome Bracelet", "Palolo\'s Ring", "Undine Bracelet", "Talian Ring",
   "Agrias\'s Balm", "Kadesh Ring", "Agrippa\'s Choker", "Diadra\'s Earring",
@@ -344,20 +246,20 @@ char *ItemClass[10] = { "", "Warrior's ", "Knightly ", "Prestigious ", "Brave ",
   "Warlord ", "Champion ", "Glorious ", "Supreme ", "Divine " };
 
 void
-WriteBladeInfo(DWORD processID)
+WriteBladeInfo(u32 processID)
 {
-  equip_item_info BladeInfo;
+  item_info BladeInfo;
 
-  SIZE_T BytesToRead = sizeof(equip_item_info);
-  DWORD BytesRead;
+  usize BytesToRead = sizeof(item_info);
+  u32 BytesRead;
 
   BytesRead = ReadGameMemory(
       processID, OFFSET_EQUIPPED_WEAPON_BLADE, BytesToRead, &BladeInfo);
 
   // Check for out-of-bound indexes
-  if (BladeInfo.NamesListPosition > 511 || //
-      BladeInfo.ListPosition > 90 || //
-      BladeInfo.Category > 10)
+  if (BladeInfo.NamesListPosition > _countof(ItemNamesList) - 1 || //
+      BladeInfo.ListPosition > _countof(WeaponsList) - 1 || //
+      BladeInfo.Category > _countof(WeaponsCategories) - 1)
   {
     return;
   }
@@ -388,18 +290,17 @@ WriteBladeInfo(DWORD processID)
   // Bonuses
   fprintf(fpBladeInfoExt, "BONUSES\n");
   fprintf(fpBladeInfoExt, "========\n");
-  fprintf(fpBladeInfoExt, "STR: %3i\n", BladeInfo.STR_Bonus);
-  fprintf(fpBladeInfoExt, "INT: %3i\n", BladeInfo.INT_Bonus);
-  fprintf(fpBladeInfoExt, "AGL: %3i\n", BladeInfo.AGL_Bonus);
+  fprintf(fpBladeInfoExt, "STR: %3i\n", BladeInfo.STR);
+  fprintf(fpBladeInfoExt, "INT: %3i\n", BladeInfo.INT);
+  fprintf(fpBladeInfoExt, "AGL: %3i\n", BladeInfo.AGL);
   fprintf(fpBladeInfoExt, "\n");
 
   // DP & PP
   fprintf(fpBladeInfoExt, "DURABILITY\n");
   fprintf(fpBladeInfoExt, "===========\n");
-  fprintf(fpBladeInfoExt, "DP: %3i/%3i\n", (BladeInfo.DamagePoints + 99) / 100,
-      (BladeInfo.DamagePointsMax + 99) / 100);
-  fprintf(fpBladeInfoExt, "PP: %3i/%3i\n", BladeInfo.PhantomPoints,
-      BladeInfo.PhantomPointsMax);
+  fprintf(fpBladeInfoExt, "DP: %3i/%3i\n", (BladeInfo.DPCur + 99) / 100,
+      (BladeInfo.DPMax + 99) / 100);
+  fprintf(fpBladeInfoExt, "PP: %3i/%3i\n", BladeInfo.PPCur, BladeInfo.PPMax);
   fprintf(fpBladeInfoExt, "\n");
 
   // Misc
@@ -441,21 +342,21 @@ WriteBladeInfo(DWORD processID)
 }
 
 void
-WriteBladeInfoShort(DWORD processID)
+WriteBladeInfoShort(u32 processID)
 {
-  equip_item_info BladeInfo;
+  item_info BladeInfo;
 
-  SIZE_T BytesToRead = sizeof(equip_item_info);
-  DWORD BytesRead;
+  usize BytesToRead = sizeof(item_info);
+  u32 BytesRead;
 
   BytesRead = ReadGameMemory(
       processID, OFFSET_EQUIPPED_WEAPON_BLADE, BytesToRead, &BladeInfo);
 
   // Check for out-of-bound indexes
-  if (BladeInfo.NamesListPosition > 511 || //
-      BladeInfo.ListPosition > 90 || //
-      BladeInfo.Material > 7 || //
-      BladeInfo.Category > 10)
+  if (BladeInfo.NamesListPosition > _countof(ItemNamesList) - 1 || //
+      BladeInfo.ListPosition > _countof(WeaponsList) - 1 || //
+      BladeInfo.Material > _countof(CraftingMaterials) - 1 || //
+      BladeInfo.Category > _countof(WeaponsCategories) - 1)
   {
     return;
   }
@@ -500,16 +401,16 @@ WriteBladeInfoShort(DWORD processID)
 }
 
 void
-WriteWeaponInfo(DWORD processID)
+WriteWeaponInfo(u32 processID)
 {
-  equip_item_info BladeInfo;
-  equip_item_info GripInfo;
-  equip_item_info Gem1Info;
-  equip_item_info Gem2Info;
-  equip_item_info Gem3Info;
+  item_info BladeInfo;
+  item_info GripInfo;
+  item_info Gem1Info;
+  item_info Gem2Info;
+  item_info Gem3Info;
 
-  SIZE_T BytesToRead = sizeof(equip_item_info);
-  DWORD BytesRead;
+  usize BytesToRead = sizeof(item_info);
+  u32 BytesRead;
 
   BytesRead = ReadGameMemory(
       processID, OFFSET_EQUIPPED_WEAPON_BLADE, BytesToRead, &BladeInfo);
@@ -523,14 +424,14 @@ WriteWeaponInfo(DWORD processID)
       processID, OFFSET_EQUIPPED_WEAPON_GEM_SLOT3, BytesToRead, &Gem3Info);
 
   // Check for out-of-bound indexes
-  if (BladeInfo.NamesListPosition > 511 || //
-      BladeInfo.ListPosition > 90 || //
-      BladeInfo.Category > 10 || //
-      BladeInfo.Material > 7 || //
-      GripInfo.ListPosition > 31 || //
-      Gem1Info.ListPosition > 62 || //
-      Gem2Info.ListPosition > 62 || //
-      Gem3Info.ListPosition > 62)
+  if (BladeInfo.NamesListPosition > _countof(ItemNamesList) - 1 || //
+      BladeInfo.ListPosition > _countof(WeaponsList) - 1 || //
+      BladeInfo.Category > _countof(WeaponsCategories) - 1 || //
+      BladeInfo.Material > _countof(CraftingMaterials) - 1 || //
+      GripInfo.ListPosition > _countof(GripsList) - 1 || //
+      Gem1Info.ListPosition > _countof(GemsList) - 1 || //
+      Gem2Info.ListPosition > _countof(GemsList) - 1 || //
+      Gem3Info.ListPosition > _countof(GemsList) - 1)
   {
     return;
   }
@@ -564,30 +465,26 @@ WriteWeaponInfo(DWORD processID)
   fprintf(fpWeaponInfo, "\n");
 
   // Bonuses
-  INT16 STR_BonusTotal = BladeInfo.STR_Bonus + GripInfo.STR_Bonus +
-                         Gem1Info.STR_Bonus + Gem2Info.STR_Bonus +
-                         Gem3Info.STR_Bonus;
-  INT16 INT_BonusTotal = BladeInfo.INT_Bonus + GripInfo.INT_Bonus +
-                         Gem1Info.INT_Bonus + Gem2Info.INT_Bonus +
-                         Gem3Info.INT_Bonus;
-  INT16 AGL_BonusTotal = BladeInfo.AGL_Bonus + GripInfo.AGL_Bonus +
-                         Gem1Info.AGL_Bonus + Gem2Info.AGL_Bonus +
-                         Gem3Info.AGL_Bonus;
+  i16 STRTotal =
+      BladeInfo.STR + GripInfo.STR + Gem1Info.STR + Gem2Info.STR + Gem3Info.STR;
+  i16 INTTotal =
+      BladeInfo.INT + GripInfo.INT + Gem1Info.INT + Gem2Info.INT + Gem3Info.INT;
+  i16 AGLTotal =
+      BladeInfo.AGL + GripInfo.AGL + Gem1Info.AGL + Gem2Info.AGL + Gem3Info.AGL;
 
   fprintf(fpWeaponInfo, "BONUSES\n");
   fprintf(fpWeaponInfo, "========\n");
-  fprintf(fpWeaponInfo, "STR: %3i\n", STR_BonusTotal);
-  fprintf(fpWeaponInfo, "INT: %3i\n", INT_BonusTotal);
-  fprintf(fpWeaponInfo, "AGL: %3i\n", AGL_BonusTotal);
+  fprintf(fpWeaponInfo, "STR: %3i\n", STRTotal);
+  fprintf(fpWeaponInfo, "INT: %3i\n", INTTotal);
+  fprintf(fpWeaponInfo, "AGL: %3i\n", AGLTotal);
   fprintf(fpWeaponInfo, "\n");
 
   // DP & PP
   fprintf(fpWeaponInfo, "DURABILITY\n");
   fprintf(fpWeaponInfo, "===========\n");
-  fprintf(fpWeaponInfo, "DP: %3i/%3i\n", (BladeInfo.DamagePoints + 99) / 100,
-      (BladeInfo.DamagePointsMax + 99) / 100);
-  fprintf(fpWeaponInfo, "PP: %3i/%3i\n", BladeInfo.PhantomPoints,
-      BladeInfo.PhantomPointsMax);
+  fprintf(fpWeaponInfo, "DP: %3i/%3i\n", (BladeInfo.DPCur + 99) / 100,
+      (BladeInfo.DPMax + 99) / 100);
+  fprintf(fpWeaponInfo, "PP: %3i/%3i\n", BladeInfo.PPCur, BladeInfo.PPMax);
   fprintf(fpWeaponInfo, "\n");
 
   // Misc
@@ -605,7 +502,7 @@ WriteWeaponInfo(DWORD processID)
   fprintf(fpWeaponInfo, "\n");
 
   // Gems
-  UINT8 GemSlots = GripInfo.GemSlots;
+  u8 GemSlots = GripInfo.GemSlots;
   if (GemSlots)
   {
     fprintf(fpWeaponInfo, "GEMS\n");
@@ -638,35 +535,35 @@ WriteWeaponInfo(DWORD processID)
   fprintf(fpWeaponInfo, "\n");
 
   // Class summary
-  INT16 ClassHumanTotal = BladeInfo.ClassHuman + Gem1Info.ClassHuman +
-                          Gem2Info.ClassHuman + Gem3Info.ClassHuman;
-  INT16 ClassBeastTotal = BladeInfo.ClassBeast + Gem1Info.ClassBeast +
-                          Gem2Info.ClassBeast + Gem3Info.ClassBeast;
-  INT16 ClassUndeadTotal = BladeInfo.ClassUndead + Gem1Info.ClassUndead +
-                           Gem2Info.ClassUndead + Gem3Info.ClassUndead;
-  INT16 ClassPhantomTotal = BladeInfo.ClassPhantom + Gem1Info.ClassPhantom +
-                            Gem2Info.ClassPhantom + Gem3Info.ClassPhantom;
-  INT16 ClassDragonTotal = BladeInfo.ClassDragon + Gem1Info.ClassDragon +
-                           Gem2Info.ClassDragon + Gem3Info.ClassDragon;
-  INT16 ClassEvilTotal = BladeInfo.ClassEvil + Gem1Info.ClassEvil +
-                         Gem2Info.ClassEvil + Gem3Info.ClassEvil;
+  i16 ClassHumanTotal = BladeInfo.ClassHuman + Gem1Info.ClassHuman +
+                        Gem2Info.ClassHuman + Gem3Info.ClassHuman;
+  i16 ClassBeastTotal = BladeInfo.ClassBeast + Gem1Info.ClassBeast +
+                        Gem2Info.ClassBeast + Gem3Info.ClassBeast;
+  i16 ClassUndeadTotal = BladeInfo.ClassUndead + Gem1Info.ClassUndead +
+                         Gem2Info.ClassUndead + Gem3Info.ClassUndead;
+  i16 ClassPhantomTotal = BladeInfo.ClassPhantom + Gem1Info.ClassPhantom +
+                          Gem2Info.ClassPhantom + Gem3Info.ClassPhantom;
+  i16 ClassDragonTotal = BladeInfo.ClassDragon + Gem1Info.ClassDragon +
+                         Gem2Info.ClassDragon + Gem3Info.ClassDragon;
+  i16 ClassEvilTotal = BladeInfo.ClassEvil + Gem1Info.ClassEvil +
+                       Gem2Info.ClassEvil + Gem3Info.ClassEvil;
 
   // Affinity summary
-  INT16 AffinityPhysicalTotal =
+  i16 AffinityPhysicalTotal =
       BladeInfo.AffinityPhysical + Gem1Info.AffinityPhysical +
       Gem2Info.AffinityPhysical + Gem3Info.AffinityPhysical;
-  INT16 AffinityAirTotal = BladeInfo.AffinityAir + Gem1Info.AffinityAir +
-                           Gem2Info.AffinityAir + Gem3Info.AffinityAir;
-  INT16 AffinityFireTotal = BladeInfo.AffinityFire + Gem1Info.AffinityFire +
-                            Gem2Info.AffinityFire + Gem3Info.AffinityFire;
-  INT16 AffinityEarthTotal = BladeInfo.AffinityEarth + Gem1Info.AffinityEarth +
-                             Gem2Info.AffinityEarth + Gem3Info.AffinityEarth;
-  INT16 AffinityWaterTotal = BladeInfo.AffinityWater + Gem1Info.AffinityWater +
-                             Gem2Info.AffinityWater + Gem3Info.AffinityWater;
-  INT16 AffinityLightTotal = BladeInfo.AffinityLight + Gem1Info.AffinityLight +
-                             Gem2Info.AffinityLight + Gem3Info.AffinityLight;
-  INT16 AffinityDarkTotal = BladeInfo.AffinityDark + Gem1Info.AffinityDark +
-                            Gem2Info.AffinityDark + Gem3Info.AffinityDark;
+  i16 AffinityAirTotal = BladeInfo.AffinityAir + Gem1Info.AffinityAir +
+                         Gem2Info.AffinityAir + Gem3Info.AffinityAir;
+  i16 AffinityFireTotal = BladeInfo.AffinityFire + Gem1Info.AffinityFire +
+                          Gem2Info.AffinityFire + Gem3Info.AffinityFire;
+  i16 AffinityEarthTotal = BladeInfo.AffinityEarth + Gem1Info.AffinityEarth +
+                           Gem2Info.AffinityEarth + Gem3Info.AffinityEarth;
+  i16 AffinityWaterTotal = BladeInfo.AffinityWater + Gem1Info.AffinityWater +
+                           Gem2Info.AffinityWater + Gem3Info.AffinityWater;
+  i16 AffinityLightTotal = BladeInfo.AffinityLight + Gem1Info.AffinityLight +
+                           Gem2Info.AffinityLight + Gem3Info.AffinityLight;
+  i16 AffinityDarkTotal = BladeInfo.AffinityDark + Gem1Info.AffinityDark +
+                          Gem2Info.AffinityDark + Gem3Info.AffinityDark;
 
   // Class
   fprintf(fpWeaponInfo, "CLASS\n");
@@ -694,15 +591,15 @@ WriteWeaponInfo(DWORD processID)
 }
 
 void
-WriteShieldInfo(DWORD processID)
+WriteShieldInfo(u32 processID)
 {
-  equip_item_info ShieldInfo;
-  equip_item_info Gem1Info;
-  equip_item_info Gem2Info;
-  equip_item_info Gem3Info;
+  item_info ShieldInfo;
+  item_info Gem1Info;
+  item_info Gem2Info;
+  item_info Gem3Info;
 
-  SIZE_T BytesToRead = sizeof(equip_item_info);
-  DWORD BytesRead;
+  usize BytesToRead = sizeof(item_info);
+  u32 BytesRead;
 
   BytesRead = ReadGameMemory(
       processID, OFFSET_EQUIPPED_SHIELD, BytesToRead, &ShieldInfo);
@@ -714,11 +611,11 @@ WriteShieldInfo(DWORD processID)
       processID, OFFSET_EQUIPPED_SHIELD_GEM_SLOT3, BytesToRead, &Gem3Info);
 
   // Check for out-of-bound indexes
-  if (ShieldInfo.ListPosition > 80 || //
-      ShieldInfo.Material > 7 || //
-      Gem1Info.ListPosition > 62 || //
-      Gem2Info.ListPosition > 62 || //
-      Gem3Info.ListPosition > 62)
+  if (ShieldInfo.ListPosition > _countof(ArmoursList) - 1 || //
+      ShieldInfo.Material > _countof(CraftingMaterials) - 1 || //
+      Gem1Info.ListPosition > _countof(GemsList) - 1 || //
+      Gem2Info.ListPosition > _countof(GemsList) - 1 || //
+      Gem3Info.ListPosition > _countof(GemsList) - 1)
   {
     return;
   }
@@ -743,34 +640,29 @@ WriteShieldInfo(DWORD processID)
   fprintf(fpShieldInfoExt, "\n");
 
   // Bonuses
-  INT16 STR_BonusTotal = ShieldInfo.STR_Bonus + Gem1Info.STR_Bonus +
-                         Gem2Info.STR_Bonus + Gem3Info.STR_Bonus;
-  INT16 INT_BonusTotal = ShieldInfo.INT_Bonus + Gem1Info.INT_Bonus +
-                         Gem2Info.INT_Bonus + Gem3Info.INT_Bonus;
-  INT16 AGL_BonusTotal = ShieldInfo.AGL_Bonus + Gem1Info.AGL_Bonus +
-                         Gem2Info.AGL_Bonus + Gem3Info.AGL_Bonus;
+  i16 STRTotal = ShieldInfo.STR + Gem1Info.STR + Gem2Info.STR + Gem3Info.STR;
+  i16 INTTotal = ShieldInfo.INT + Gem1Info.INT + Gem2Info.INT + Gem3Info.INT;
+  i16 AGLTotal = ShieldInfo.AGL + Gem1Info.AGL + Gem2Info.AGL + Gem3Info.AGL;
 
   fprintf(fpShieldInfoExt, "BONUSES\n");
   fprintf(fpShieldInfoExt, "========\n");
-  fprintf(fpShieldInfoExt, "STR: %3i\n", STR_BonusTotal);
-  fprintf(fpShieldInfoExt, "INT: %3i\n", INT_BonusTotal);
-  fprintf(fpShieldInfoExt, "AGL: %3i\n", AGL_BonusTotal);
+  fprintf(fpShieldInfoExt, "STR: %3i\n", STRTotal);
+  fprintf(fpShieldInfoExt, "INT: %3i\n", INTTotal);
+  fprintf(fpShieldInfoExt, "AGL: %3i\n", AGLTotal);
   fprintf(fpShieldInfoExt, "\n");
 
   // DP & PP
   fprintf(fpShieldInfoExt, "DURABILITY\n");
   fprintf(fpShieldInfoExt, "===========\n");
-  fprintf(fpShieldInfoExt, "DP: %3i/%3i\n",
-      (ShieldInfo.DamagePoints + 99) / 100,
-      (ShieldInfo.DamagePointsMax + 99) / 100);
-  fprintf(fpShieldInfoExt, "PP: %3i/%3i\n", ShieldInfo.PhantomPoints,
-      ShieldInfo.PhantomPointsMax);
+  fprintf(fpShieldInfoExt, "DP: %3i/%3i\n", (ShieldInfo.DPCur + 99) / 100,
+      (ShieldInfo.DPMax + 99) / 100);
+  fprintf(fpShieldInfoExt, "PP: %3i/%3i\n", ShieldInfo.PPCur, ShieldInfo.PPMax);
   fprintf(fpShieldInfoExt, "\n");
 
   // Gems
 
   // Gems
-  UINT8 GemSlots = ShieldInfo.GemSlots;
+  u8 GemSlots = ShieldInfo.GemSlots;
   if (GemSlots)
   {
     fprintf(fpShieldInfoExt, "GEMS\n");
@@ -800,35 +692,35 @@ WriteShieldInfo(DWORD processID)
   fprintf(fpShieldInfoExt, "\n");
 
   // Class summary
-  INT16 ClassHumanTotal = ShieldInfo.ClassHuman + Gem1Info.ClassHuman +
-                          Gem2Info.ClassHuman + Gem3Info.ClassHuman;
-  INT16 ClassBeastTotal = ShieldInfo.ClassBeast + Gem1Info.ClassBeast +
-                          Gem2Info.ClassBeast + Gem3Info.ClassBeast;
-  INT16 ClassUndeadTotal = ShieldInfo.ClassUndead + Gem1Info.ClassUndead +
-                           Gem2Info.ClassUndead + Gem3Info.ClassUndead;
-  INT16 ClassPhantomTotal = ShieldInfo.ClassPhantom + Gem1Info.ClassPhantom +
-                            Gem2Info.ClassPhantom + Gem3Info.ClassPhantom;
-  INT16 ClassDragonTotal = ShieldInfo.ClassDragon + Gem1Info.ClassDragon +
-                           Gem2Info.ClassDragon + Gem3Info.ClassDragon;
-  INT16 ClassEvilTotal = ShieldInfo.ClassEvil + Gem1Info.ClassEvil +
-                         Gem2Info.ClassEvil + Gem3Info.ClassEvil;
+  i16 ClassHumanTotal = ShieldInfo.ClassHuman + Gem1Info.ClassHuman +
+                        Gem2Info.ClassHuman + Gem3Info.ClassHuman;
+  i16 ClassBeastTotal = ShieldInfo.ClassBeast + Gem1Info.ClassBeast +
+                        Gem2Info.ClassBeast + Gem3Info.ClassBeast;
+  i16 ClassUndeadTotal = ShieldInfo.ClassUndead + Gem1Info.ClassUndead +
+                         Gem2Info.ClassUndead + Gem3Info.ClassUndead;
+  i16 ClassPhantomTotal = ShieldInfo.ClassPhantom + Gem1Info.ClassPhantom +
+                          Gem2Info.ClassPhantom + Gem3Info.ClassPhantom;
+  i16 ClassDragonTotal = ShieldInfo.ClassDragon + Gem1Info.ClassDragon +
+                         Gem2Info.ClassDragon + Gem3Info.ClassDragon;
+  i16 ClassEvilTotal = ShieldInfo.ClassEvil + Gem1Info.ClassEvil +
+                       Gem2Info.ClassEvil + Gem3Info.ClassEvil;
 
   // Affinity summary
-  INT16 AffinityPhysicalTotal =
+  i16 AffinityPhysicalTotal =
       ShieldInfo.AffinityPhysical + Gem1Info.AffinityPhysical +
       Gem2Info.AffinityPhysical + Gem3Info.AffinityPhysical;
-  INT16 AffinityAirTotal = ShieldInfo.AffinityAir + Gem1Info.AffinityAir +
-                           Gem2Info.AffinityAir + Gem3Info.AffinityAir;
-  INT16 AffinityFireTotal = ShieldInfo.AffinityFire + Gem1Info.AffinityFire +
-                            Gem2Info.AffinityFire + Gem3Info.AffinityFire;
-  INT16 AffinityEarthTotal = ShieldInfo.AffinityEarth + Gem1Info.AffinityEarth +
-                             Gem2Info.AffinityEarth + Gem3Info.AffinityEarth;
-  INT16 AffinityWaterTotal = ShieldInfo.AffinityWater + Gem1Info.AffinityWater +
-                             Gem2Info.AffinityWater + Gem3Info.AffinityWater;
-  INT16 AffinityLightTotal = ShieldInfo.AffinityLight + Gem1Info.AffinityLight +
-                             Gem2Info.AffinityLight + Gem3Info.AffinityLight;
-  INT16 AffinityDarkTotal = ShieldInfo.AffinityDark + Gem1Info.AffinityDark +
-                            Gem2Info.AffinityDark + Gem3Info.AffinityDark;
+  i16 AffinityAirTotal = ShieldInfo.AffinityAir + Gem1Info.AffinityAir +
+                         Gem2Info.AffinityAir + Gem3Info.AffinityAir;
+  i16 AffinityFireTotal = ShieldInfo.AffinityFire + Gem1Info.AffinityFire +
+                          Gem2Info.AffinityFire + Gem3Info.AffinityFire;
+  i16 AffinityEarthTotal = ShieldInfo.AffinityEarth + Gem1Info.AffinityEarth +
+                           Gem2Info.AffinityEarth + Gem3Info.AffinityEarth;
+  i16 AffinityWaterTotal = ShieldInfo.AffinityWater + Gem1Info.AffinityWater +
+                           Gem2Info.AffinityWater + Gem3Info.AffinityWater;
+  i16 AffinityLightTotal = ShieldInfo.AffinityLight + Gem1Info.AffinityLight +
+                           Gem2Info.AffinityLight + Gem3Info.AffinityLight;
+  i16 AffinityDarkTotal = ShieldInfo.AffinityDark + Gem1Info.AffinityDark +
+                          Gem2Info.AffinityDark + Gem3Info.AffinityDark;
 
   // Class
   fprintf(fpShieldInfoExt, "CLASS\n");
@@ -856,19 +748,19 @@ WriteShieldInfo(DWORD processID)
 }
 
 void
-WriteShieldInfoShort(DWORD processID)
+WriteShieldInfoShort(u32 processID)
 {
-  equip_item_info ShieldInfo;
+  item_info ShieldInfo;
 
-  SIZE_T BytesToRead = sizeof(equip_item_info);
-  DWORD BytesRead;
+  usize BytesToRead = sizeof(item_info);
+  u32 BytesRead;
 
   BytesRead = ReadGameMemory(
       processID, OFFSET_EQUIPPED_SHIELD, BytesToRead, &ShieldInfo);
 
   // Check for out-of-bound indexes
-  if (ShieldInfo.ListPosition > 80 || //
-      ShieldInfo.Material > 7)
+  if (ShieldInfo.ListPosition > _countof(ArmoursList) - 1 || //
+      ShieldInfo.Material > _countof(CraftingMaterials) - 1)
   {
     return;
   }
@@ -912,30 +804,30 @@ WriteShieldInfoShort(DWORD processID)
 }
 
 void
-WriteGloveInfo(DWORD processID, int which_glove)
+WriteGloveInfo(u32 processID, u8 which_glove)
 {
-  equip_item_info GloveInfo;
-  SIZE_T offset;
+  item_info GloveInfo;
+  usize offset;
 
-  SIZE_T BytesToRead = sizeof(equip_item_info);
-  DWORD BytesRead;
+  usize BytesToRead = sizeof(item_info);
+  u32 BytesRead;
 
-  char FileName[64] = "";
+  char szFileName[64] = "";
 
   offset = which_glove ? OFFSET_EQUIPPED_LEFT_ARM : OFFSET_EQUIPPED_RIGHT_ARM;
-  sprintf(FileName, "game_stats/armor-arm-%s-full.txt",
-      which_glove ? "left" : "right");
+  sprintf_s(szFileName, _countof(szFileName),
+      "game_stats/armor-arm-%s-full.txt", which_glove ? "left" : "right");
 
   BytesRead = ReadGameMemory(processID, offset, BytesToRead, &GloveInfo);
 
   // Check for out-of-bound indexes
-  if (GloveInfo.ListPosition > 80 || //
-      GloveInfo.Material > 7)
+  if (GloveInfo.ListPosition > _countof(ArmoursList) - 1 || //
+      GloveInfo.Material > _countof(CraftingMaterials) - 1)
   {
     return;
   }
 
-  FILE *fpGloveInfoExt = fopen(FileName, "w");
+  FILE *fpGloveInfoExt = fopen(szFileName, "w");
 
   // Check if a glove is eqipped. If not, write the warning and skip the rest.
   if (GloveInfo.ListPosition == 0)
@@ -957,16 +849,16 @@ WriteGloveInfo(DWORD processID, int which_glove)
   // Bonuses
   fprintf(fpGloveInfoExt, "BONUSES\n");
   fprintf(fpGloveInfoExt, "========\n");
-  fprintf(fpGloveInfoExt, "STR: %3i\n", GloveInfo.STR_Bonus);
-  fprintf(fpGloveInfoExt, "INT: %3i\n", GloveInfo.INT_Bonus);
-  fprintf(fpGloveInfoExt, "AGL: %3i\n", GloveInfo.AGL_Bonus);
+  fprintf(fpGloveInfoExt, "STR: %3i\n", GloveInfo.STR);
+  fprintf(fpGloveInfoExt, "INT: %3i\n", GloveInfo.INT);
+  fprintf(fpGloveInfoExt, "AGL: %3i\n", GloveInfo.AGL);
   fprintf(fpGloveInfoExt, "\n");
 
   // DP
   fprintf(fpGloveInfoExt, "DURABILITY\n");
   fprintf(fpGloveInfoExt, "===========\n");
-  fprintf(fpGloveInfoExt, "DP: %3i/%3i\n", (GloveInfo.DamagePoints + 99) / 100,
-      (GloveInfo.DamagePointsMax + 99) / 100);
+  fprintf(fpGloveInfoExt, "DP: %3i/%3i\n", (GloveInfo.DPCur + 99) / 100,
+      (GloveInfo.DPMax + 99) / 100);
   fprintf(fpGloveInfoExt, "\n");
 
   // Type
@@ -1003,30 +895,30 @@ WriteGloveInfo(DWORD processID, int which_glove)
 }
 
 void
-WriteGloveInfoShort(DWORD processID, int which_glove)
+WriteGloveInfoShort(u32 processID, u8 which_glove)
 {
-  equip_item_info GloveInfo;
-  SIZE_T offset;
+  item_info GloveInfo;
+  usize offset;
 
-  SIZE_T BytesToRead = sizeof(equip_item_info);
-  DWORD BytesRead;
+  usize BytesToRead = sizeof(item_info);
+  u32 BytesRead;
 
-  char FileName[64] = "";
+  char szFileName[64] = "";
 
   offset = which_glove ? OFFSET_EQUIPPED_LEFT_ARM : OFFSET_EQUIPPED_RIGHT_ARM;
-  sprintf(FileName, "game_stats/armor-arm-%s-short.txt",
-      which_glove ? "left" : "right");
+  sprintf_s(szFileName, _countof(szFileName),
+      "game_stats/armor-arm-%s-short.txt", which_glove ? "left" : "right");
 
   BytesRead = ReadGameMemory(processID, offset, BytesToRead, &GloveInfo);
 
   // Check for out-of-bound indexes
-  if (GloveInfo.ListPosition > 80 || //
-      GloveInfo.Material > 7)
+  if (GloveInfo.ListPosition > _countof(ArmoursList) - 1 || //
+      GloveInfo.Material > _countof(CraftingMaterials) - 1)
   {
     return;
   }
 
-  FILE *fpGloveInfoShort = fopen(FileName, "w");
+  FILE *fpGloveInfoShort = fopen(szFileName, "w");
 
   // Check if a glove is eqipped. If not, write the warning and skip the rest.
   if (GloveInfo.ListPosition == 0)
@@ -1067,18 +959,18 @@ WriteGloveInfoShort(DWORD processID, int which_glove)
 }
 
 void
-WriteHeadArmorInfo(DWORD processID)
+WriteHeadArmorInfo(u32 processID)
 {
-  equip_item_info HeadInfo;
-  SIZE_T BytesToRead = sizeof(equip_item_info);
-  DWORD BytesRead;
+  item_info HeadInfo;
+  usize BytesToRead = sizeof(item_info);
+  u32 BytesRead;
 
   BytesRead =
       ReadGameMemory(processID, OFFSET_EQUIPPED_HEAD, BytesToRead, &HeadInfo);
 
   // Check for out-of-bound indexes
-  if (HeadInfo.ListPosition > 80 || //
-      HeadInfo.Material > 7)
+  if (HeadInfo.ListPosition > _countof(ArmoursList) - 1 || //
+      HeadInfo.Material > _countof(CraftingMaterials) - 1)
   {
     return;
   }
@@ -1105,16 +997,16 @@ WriteHeadArmorInfo(DWORD processID)
   // Bonuses
   fprintf(fpHeadInfoExt, "BONUSES\n");
   fprintf(fpHeadInfoExt, "========\n");
-  fprintf(fpHeadInfoExt, "STR: %3i\n", HeadInfo.STR_Bonus);
-  fprintf(fpHeadInfoExt, "INT: %3i\n", HeadInfo.INT_Bonus);
-  fprintf(fpHeadInfoExt, "AGL: %3i\n", HeadInfo.AGL_Bonus);
+  fprintf(fpHeadInfoExt, "STR: %3i\n", HeadInfo.STR);
+  fprintf(fpHeadInfoExt, "INT: %3i\n", HeadInfo.INT);
+  fprintf(fpHeadInfoExt, "AGL: %3i\n", HeadInfo.AGL);
   fprintf(fpHeadInfoExt, "\n");
 
   // DP
   fprintf(fpHeadInfoExt, "DURABILITY\n");
   fprintf(fpHeadInfoExt, "===========\n");
-  fprintf(fpHeadInfoExt, "DP: %3i/%3i\n", (HeadInfo.DamagePoints + 99) / 100,
-      (HeadInfo.DamagePointsMax + 99) / 100);
+  fprintf(fpHeadInfoExt, "DP: %3i/%3i\n", (HeadInfo.DPCur + 99) / 100,
+      (HeadInfo.DPMax + 99) / 100);
   fprintf(fpHeadInfoExt, "\n");
 
   // Type
@@ -1151,18 +1043,18 @@ WriteHeadArmorInfo(DWORD processID)
 }
 
 void
-WriteHeadArmorInfoShort(DWORD processID)
+WriteHeadArmorInfoShort(u32 processID)
 {
-  equip_item_info HeadInfo;
-  SIZE_T BytesToRead = sizeof(equip_item_info);
-  DWORD BytesRead;
+  item_info HeadInfo;
+  usize BytesToRead = sizeof(item_info);
+  u32 BytesRead;
 
   BytesRead =
       ReadGameMemory(processID, OFFSET_EQUIPPED_HEAD, BytesToRead, &HeadInfo);
 
   // Check for out-of-bound indexes
-  if (HeadInfo.ListPosition > 80 || //
-      HeadInfo.Material > 7)
+  if (HeadInfo.ListPosition > _countof(ArmoursList) - 1 || //
+      HeadInfo.Material > _countof(CraftingMaterials) - 1)
   {
     return;
   }
@@ -1207,18 +1099,18 @@ WriteHeadArmorInfoShort(DWORD processID)
 }
 
 void
-WriteBodyArmorInfo(DWORD processID)
+WriteBodyArmorInfo(u32 processID)
 {
-  equip_item_info BodyInfo;
-  SIZE_T BytesToRead = sizeof(equip_item_info);
-  DWORD BytesRead;
+  item_info BodyInfo;
+  usize BytesToRead = sizeof(item_info);
+  u32 BytesRead;
 
   BytesRead =
       ReadGameMemory(processID, OFFSET_EQUIPPED_BODY, BytesToRead, &BodyInfo);
 
   // Check for out-of-bound indexes
-  if (BodyInfo.ListPosition > 80 || //
-      BodyInfo.Material > 7)
+  if (BodyInfo.ListPosition > _countof(ArmoursList) - 1 || //
+      BodyInfo.Material > _countof(CraftingMaterials) - 1)
   {
     return;
   }
@@ -1246,16 +1138,16 @@ WriteBodyArmorInfo(DWORD processID)
   // Bonuses
   fprintf(fpBodyInfoExt, "BONUSES\n");
   fprintf(fpBodyInfoExt, "========\n");
-  fprintf(fpBodyInfoExt, "STR: %3i\n", BodyInfo.STR_Bonus);
-  fprintf(fpBodyInfoExt, "INT: %3i\n", BodyInfo.INT_Bonus);
-  fprintf(fpBodyInfoExt, "AGL: %3i\n", BodyInfo.AGL_Bonus);
+  fprintf(fpBodyInfoExt, "STR: %3i\n", BodyInfo.STR);
+  fprintf(fpBodyInfoExt, "INT: %3i\n", BodyInfo.INT);
+  fprintf(fpBodyInfoExt, "AGL: %3i\n", BodyInfo.AGL);
   fprintf(fpBodyInfoExt, "\n");
 
   // DP
   fprintf(fpBodyInfoExt, "DURABILITY\n");
   fprintf(fpBodyInfoExt, "===========\n");
-  fprintf(fpBodyInfoExt, "DP: %3i/%3i\n", (BodyInfo.DamagePoints + 99) / 100,
-      (BodyInfo.DamagePointsMax + 99) / 100);
+  fprintf(fpBodyInfoExt, "DP: %3i/%3i\n", (BodyInfo.DPCur + 99) / 100,
+      (BodyInfo.DPMax + 99) / 100);
   fprintf(fpBodyInfoExt, "\n");
 
   // Type
@@ -1292,18 +1184,18 @@ WriteBodyArmorInfo(DWORD processID)
 }
 
 void
-WriteBodyArmorInfoShort(DWORD processID)
+WriteBodyArmorInfoShort(u32 processID)
 {
-  equip_item_info BodyInfo;
-  SIZE_T BytesToRead = sizeof(equip_item_info);
-  DWORD BytesRead;
+  item_info BodyInfo;
+  usize BytesToRead = sizeof(item_info);
+  u32 BytesRead;
 
   BytesRead =
       ReadGameMemory(processID, OFFSET_EQUIPPED_BODY, BytesToRead, &BodyInfo);
 
   // Check for out-of-bound indexes
-  if (BodyInfo.ListPosition > 80 || //
-      BodyInfo.Material > 7)
+  if (BodyInfo.ListPosition > _countof(ArmoursList) - 1 || //
+      BodyInfo.Material > _countof(CraftingMaterials) - 1)
   {
     return;
   }
@@ -1349,18 +1241,18 @@ WriteBodyArmorInfoShort(DWORD processID)
 }
 
 void
-WriteLegsArmorInfo(DWORD processID)
+WriteLegsArmorInfo(u32 processID)
 {
-  equip_item_info LegsInfo;
-  SIZE_T BytesToRead = sizeof(equip_item_info);
-  DWORD BytesRead;
+  item_info LegsInfo;
+  usize BytesToRead = sizeof(item_info);
+  u32 BytesRead;
 
   BytesRead =
       ReadGameMemory(processID, OFFSET_EQUIPPED_LEGS, BytesToRead, &LegsInfo);
 
   // Check for out-of-bound indexes
-  if (LegsInfo.ListPosition > 80 || //
-      LegsInfo.Material > 7)
+  if (LegsInfo.ListPosition > _countof(ArmoursList) - 1 || //
+      LegsInfo.Material > _countof(CraftingMaterials) - 1)
   {
     return;
   }
@@ -1387,16 +1279,16 @@ WriteLegsArmorInfo(DWORD processID)
   // Bonuses
   fprintf(fpLegsInfoExt, "BONUSES\n");
   fprintf(fpLegsInfoExt, "========\n");
-  fprintf(fpLegsInfoExt, "STR: %3i\n", LegsInfo.STR_Bonus);
-  fprintf(fpLegsInfoExt, "INT: %3i\n", LegsInfo.INT_Bonus);
-  fprintf(fpLegsInfoExt, "AGL: %3i\n", LegsInfo.AGL_Bonus);
+  fprintf(fpLegsInfoExt, "STR: %3i\n", LegsInfo.STR);
+  fprintf(fpLegsInfoExt, "INT: %3i\n", LegsInfo.INT);
+  fprintf(fpLegsInfoExt, "AGL: %3i\n", LegsInfo.AGL);
   fprintf(fpLegsInfoExt, "\n");
 
   // DP
   fprintf(fpLegsInfoExt, "DURABILITY\n");
   fprintf(fpLegsInfoExt, "===========\n");
-  fprintf(fpLegsInfoExt, "DP: %3i/%3i\n", (LegsInfo.DamagePoints + 99) / 100,
-      (LegsInfo.DamagePointsMax + 99) / 100);
+  fprintf(fpLegsInfoExt, "DP: %3i/%3i\n", (LegsInfo.DPCur + 99) / 100,
+      (LegsInfo.DPMax + 99) / 100);
   fprintf(fpLegsInfoExt, "\n");
 
   // Type
@@ -1433,18 +1325,18 @@ WriteLegsArmorInfo(DWORD processID)
 }
 
 void
-WriteLegsArmorInfoShort(DWORD processID)
+WriteLegsArmorInfoShort(u32 processID)
 {
-  equip_item_info LegsInfo;
-  SIZE_T BytesToRead = sizeof(equip_item_info);
-  DWORD BytesRead;
+  item_info LegsInfo;
+  usize BytesToRead = sizeof(item_info);
+  u32 BytesRead;
 
   BytesRead =
       ReadGameMemory(processID, OFFSET_EQUIPPED_LEGS, BytesToRead, &LegsInfo);
 
   // Check for out-of-bound indexes
-  if (LegsInfo.ListPosition > 80 || //
-      LegsInfo.Material > 7)
+  if (LegsInfo.ListPosition > _countof(ArmoursList) - 1 || //
+      LegsInfo.Material > _countof(CraftingMaterials) - 1)
   {
     return;
   }
@@ -1489,17 +1381,19 @@ WriteLegsArmorInfoShort(DWORD processID)
 }
 
 void
-WriteNecklaceInfo(DWORD processID)
+WriteNecklaceInfo(u32 processID)
 {
-  equip_item_info NeckInfo;
-  SIZE_T BytesToRead = sizeof(equip_item_info);
-  DWORD BytesRead;
+  u8 ListPositionMax = 127;
+  u8 ListPositionMin = (ListPositionMax - (_countof(AccessoriesList) - 1));
+  item_info NeckInfo;
+  usize BytesToRead = sizeof(item_info);
+  u32 BytesRead;
 
   BytesRead =
       ReadGameMemory(processID, OFFSET_EQUIPPED_NECK, BytesToRead, &NeckInfo);
 
   // Check for out-of-bound indexes
-  if (NeckInfo.NamesListPosition > 31)
+  if (NeckInfo.NamesListPosition > _countof(ItemNamesList))
   {
     return;
   }
@@ -1508,7 +1402,8 @@ WriteNecklaceInfo(DWORD processID)
 
   // Check if a necklace is eqipped.
   // If not, write the warning and skip the rest.
-  if (NeckInfo.ListPosition == 0)
+  if (NeckInfo.ListPosition < ListPositionMin ||
+      NeckInfo.ListPosition > ListPositionMax)
   {
     fprintf(fpNeckInfoExt, "No necklace equipped!\n");
     fclose(fpNeckInfoExt);
@@ -1525,9 +1420,9 @@ WriteNecklaceInfo(DWORD processID)
   // Bonuses
   fprintf(fpNeckInfoExt, "BONUSES\n");
   fprintf(fpNeckInfoExt, "========\n");
-  fprintf(fpNeckInfoExt, "STR: %3i\n", NeckInfo.STR_Bonus);
-  fprintf(fpNeckInfoExt, "INT: %3i\n", NeckInfo.INT_Bonus);
-  fprintf(fpNeckInfoExt, "AGL: %3i\n", NeckInfo.AGL_Bonus);
+  fprintf(fpNeckInfoExt, "STR: %3i\n", NeckInfo.STR);
+  fprintf(fpNeckInfoExt, "INT: %3i\n", NeckInfo.INT);
+  fprintf(fpNeckInfoExt, "AGL: %3i\n", NeckInfo.AGL);
   fprintf(fpNeckInfoExt, "\n");
 
   // Type

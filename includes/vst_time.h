@@ -1,38 +1,15 @@
 #ifndef _VST_TIME_H
 #define _VST_TIME_H
 
-//
-// Time Played
-//
-
-// 4 bytes
-#define OFFSET_TIME_PLAYED 0x80061074
-
-typedef struct
-{
-  union {
-    UINT32 TimeCompound;
-    struct
-    {
-      UINT8 Centiseconds;
-      UINT8 Seconds;
-      UINT8 Minutes;
-      UINT8 Hours;
-    };
-  } Time;
-} playtime;
-
-playtime PlayTimeCurrent = { -1 };
-playtime PlayTimeTemp = { -1 };
-playtime RecordTime = { -1 };
+#define OFFSET_TIME_PLAYED 0x80061074 // 4 bytes
 
 void
 PrintPlayTimeFull(playtime *PlayTime)
 {
-  UINT8 Centiseconds = PlayTime->Time.Centiseconds;
-  UINT8 Seconds = PlayTime->Time.Seconds;
-  UINT8 Minutes = PlayTime->Time.Minutes;
-  UINT8 Hours = PlayTime->Time.Hours;
+  u8 Centiseconds = PlayTime->Centiseconds;
+  u8 Seconds = PlayTime->Seconds;
+  u8 Minutes = PlayTime->Minutes;
+  u8 Hours = PlayTime->Hours;
 
   fprintf(stdout, "\n= PLAY TIME =\n");
   fprintf(
@@ -42,59 +19,47 @@ PrintPlayTimeFull(playtime *PlayTime)
 void
 PrintPlayTimeShort(playtime *PlayTime)
 {
-  UINT8 Seconds = PlayTime->Time.Seconds;
-  UINT8 Minutes = PlayTime->Time.Minutes;
-  UINT8 Hours = PlayTime->Time.Hours;
+  u32 BytesWritten;
 
-  fprintf(stdout, "\n= PLAY TIME =\n");
-  fprintf(stdout, "%02i:%02i:%02i\n", Hours, Minutes, Seconds);
-}
+  u8 Seconds = PlayTime->Seconds;
+  u8 Minutes = PlayTime->Minutes;
+  u8 Hours = PlayTime->Hours;
 
-void
-PrintPlayTimeShort2(playtime *PlayTime)
-{
-  DWORD BytesWritten;
-
-  UINT8 Seconds = PlayTime->Time.Seconds;
-  UINT8 Minutes = PlayTime->Time.Minutes;
-  UINT8 Hours = PlayTime->Time.Hours;
-
-  sprintf(szBuffer, "\n\n== PLAY TIME ==\n\n");
+  sprintf_s(szBuffer, _countof(szBuffer), "\n\n== PLAY TIME ==\n\n");
   WriteToBackBuffer();
 
-  sprintf(szBuffer, "%02i:%02i:%02i\n", Hours, Minutes, Seconds);
+  sprintf_s(szBuffer, _countof(szBuffer), "%02i:%02i:%02i\n", Hours, Minutes,
+      Seconds);
   WriteToBackBuffer();
 }
 
 void
 PrintRecordTime(playtime *RecordTime)
 {
-  UINT8 Seconds = RecordTime->Time.Seconds;
-  UINT8 Minutes = RecordTime->Time.Minutes;
-  UINT8 Hours = RecordTime->Time.Hours;
+  u8 Seconds = RecordTime->Seconds;
+  u8 Minutes = RecordTime->Minutes;
+  u8 Hours = RecordTime->Hours;
 
   fprintf(stdout, "\n== RECORD TIME ==\n\n");
   fprintf(stdout, "%02i:%02i:%02i\n", Hours, Minutes, Seconds);
 }
 
-DWORD
+void
 ReadPlayTime(playtime *PlayTime)
 {
-  SIZE_T BytesToRead = sizeof(playtime);
-  DWORD BytesRead;
 
-  BytesRead = ReadGameMemory(
-      processID, OFFSET_TIME_PLAYED, BytesToRead, &PlayTime->Time.TimeCompound);
+  usize BytesToRead = sizeof(playtime);
+  usize BytesRead;
 
-  return BytesRead;
+  ReadGameMemory(processID, OFFSET_TIME_PLAYED, BytesToRead, PlayTime);
 }
 
 void
 WritePlayTimeToFile(playtime *PlayTime, TCHAR FileName[MAX_PATH])
 {
-  UINT8 Seconds = PlayTime->Time.Seconds;
-  UINT8 Minutes = PlayTime->Time.Minutes;
-  UINT8 Hours = PlayTime->Time.Hours;
+  u8 Seconds = PlayTime->Seconds;
+  u8 Minutes = PlayTime->Minutes;
+  u8 Hours = PlayTime->Hours;
 
   FILE *fpPlayTime = fopen(FileName, "w");
 
@@ -114,9 +79,9 @@ WriteRecordTimeToFile(
 
   sprintf(szFullPath, "%s/%s-%s", szFolderName, szTimeStampFile, FileName);
 
-  UINT8 Seconds = RecordTime->Time.Seconds;
-  UINT8 Minutes = RecordTime->Time.Minutes;
-  UINT8 Hours = RecordTime->Time.Hours;
+  u8 Seconds = RecordTime->Seconds;
+  u8 Minutes = RecordTime->Minutes;
+  u8 Hours = RecordTime->Hours;
 
   FILE *fpRecordTime = fopen(szFullPath, "w");
 
@@ -129,8 +94,8 @@ WriteRecordTimeToFile(
 BOOL
 ComparePlayTimeShort(playtime *Time1, playtime *Time2)
 {
-  if ((Time1->Time.TimeCompound & 0x0fff) ==
-      (Time2->Time.TimeCompound & 0x0fff))
+  if (Time1->Hours == Time2->Hours && Time1->Minutes == Time2->Minutes &&
+      Time1->Seconds == Time2->Seconds)
   {
     return TRUE;
   }
@@ -140,8 +105,12 @@ ComparePlayTimeShort(playtime *Time1, playtime *Time2)
 BOOL
 IsItLater(playtime *TimeOld, playtime *TimeNew)
 {
-  UINT32 Old = TimeOld->Time.TimeCompound & 0xfff0;
-  UINT32 New = TimeNew->Time.TimeCompound & 0xfff0;
+  u32 Old = (u32)(((u32)(TimeOld->Seconds) << 16) | //
+                  ((u32)(TimeOld->Minutes) << 8) | //
+                  ((u32)(TimeOld->Hours)));
+  u32 New = (u32)(((u32)(TimeNew->Seconds) << 16) | //
+                  ((u32)(TimeNew->Minutes) << 8) | //
+                  ((u32)(TimeNew->Hours)));
 
   return New > Old;
 }

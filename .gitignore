@@ -33,6 +33,9 @@
 
 # Visual Studio Stuff
 *.sln
+*.filters
+*.user
+*.vcxproj
 
 # Files built by Visual Studio
 *_i.c
@@ -99,5 +102,9 @@ debug/
 shell.bat
 setup.bat
 log.bat
+sub.bat
+build.bat
+
+# Misc
+changes.md
 TODO.md
-changes.txt

@@ -4,12 +4,12 @@
 COORD coordScreen, coord;
 CONSOLE_SCREEN_BUFFER_INFO csbi;
 HANDLE hStdout, hStdin, hStderr, hBackBuffer;
-SHORT conSizeX, conSizeY;
-SHORT conMinSizeX, conMinSizeY;
-SHORT conMaxSizeX, conMaxSizeY;
+i16 conSizeX, conSizeY;
+i16 conMinSizeX, conMinSizeY;
+i16 conMaxSizeX, conMaxSizeY;
 CONSOLE_CURSOR_INFO cciOldCursor, cciNewCursor;
-TCHAR szBuffer[1024];
-DWORD dwBytesWritten;
+char szBuffer[1024];
+u32 BytesWritten;
 
 // Double-buffering structs
 SMALL_RECT srctReadRect;
@@ -23,7 +23,7 @@ COORD coordLargestWindowSize;
 BOOL fSuccess;
 
 void *
-AllocateBackBuffer(SHORT conMaxSizeX, SHORT conMaxSizeY)
+AllocateBackBuffer(i16 conMaxSizeX, i16 conMaxSizeY)
 {
   void *chiBuffer =
       (void *) malloc(sizeof(CHAR_INFO) * conMaxSizeX * conMaxSizeY);
@@ -46,19 +46,19 @@ SetConsoleHandles()
 }
 
 void
-SetCursorPosition(HANDLE hConsole, DWORD PositionX, DWORD PositionY)
+SetCursorPosition(HANDLE hConsole, u32 PositionX, u32 PositionY)
 {
   COORD coordPosition;
 
-  coordPosition.X = (SHORT) PositionX;
-  coordPosition.Y = (SHORT) PositionY;
+  coordPosition.X = (i16) PositionX;
+  coordPosition.Y = (i16) PositionY;
 
   SetConsoleCursorPosition(hConsole, coordPosition);
 }
 
 void
-GetConsoleWindowSize(HANDLE hConsole, SHORT *conSizeX, SHORT *conSizeY,
-    SHORT *conMaxSizeX, SHORT *conMaxSizeY)
+GetConsoleWindowSize(HANDLE hConsole, i16 *conSizeX, i16 *conSizeY,
+    i16 *conMaxSizeX, i16 *conMaxSizeY)
 {
   GetConsoleScreenBufferInfo(hConsole, &csbi);
 
@@ -87,7 +87,7 @@ HideConsoleCursor(HANDLE hConsole, CONSOLE_CURSOR_INFO *cciOldCursor,
 void
 WriteToBackBuffer(void)
 {
-  WriteConsole(hBackBuffer, szBuffer, lstrlen(szBuffer), &dwBytesWritten, NULL);
+  WriteConsole(hBackBuffer, szBuffer, strlen(szBuffer), &BytesWritten, NULL);
 }
 
 void
@@ -117,7 +117,7 @@ CopyFromBackBuffer()
 
   if (!fSuccess)
   {
-    printf("ReadConsoleOutput failed - (%d)\n", GetLastError());
+    fprintf(stderr, "ReadConsoleOutput failed - (%d)\n", GetLastError());
     return;
   }
 
@@ -136,7 +136,7 @@ CopyFromBackBuffer()
 
   if (!fSuccess)
   {
-    printf("WriteConsoleOutput failed - (%d)\n", GetLastError());
+    fprintf(stderr, "WriteConsoleOutput failed - (%d)\n", GetLastError());
     return;
   }
 }
@@ -145,9 +145,9 @@ void
 cls(HANDLE hConsole)
 {
   COORD coordScreen = { 0, 0 }; // home for the cursor
-  DWORD cCharsWritten;
+  u32 cCharsWritten;
   CONSOLE_SCREEN_BUFFER_INFO csbi;
-  DWORD dwConSize;
+  u32 dwConSize;
 
   // Get the number of character cells in the current buffer.
   if (!GetConsoleScreenBufferInfo(hConsole, &csbi))
@@ -193,7 +193,7 @@ cls(HANDLE hConsole)
 void
 ClearLine()
 {
-  sprintf(szBuffer, "%*s\r", conSizeX - 1, "");
+  sprintf_s(szBuffer, _countof(szBuffer), "%*s\r", conSizeX - 1, "");
   WriteToBackBuffer();
 }
 
@@ -201,8 +201,8 @@ void
 WriteDebugMessage(HANDLE hConsole)
 {
   SetCursorPosition(hConsole, 0, conSizeY - 1);
-  sprintf(szBuffer, "Debug mode is %s. Press \"D\" to toggle.\n",
-      DEBUG ? "ON" : "OFF");
+  sprintf_s(szBuffer, _countof(szBuffer),
+      "Debug mode is %s. Press \"D\" to toggle.\n", DEBUG ? "ON" : "OFF");
   WriteToBackBuffer();
 }
 

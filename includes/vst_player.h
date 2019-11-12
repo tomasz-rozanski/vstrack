@@ -5,6 +5,8 @@
 // Player data
 //
 
+// Offsets
+
 // Misc
 #define OFFSET_PLAYER_CURRENT_MODE 0x8011FA10 // NormalMode=0, BattleMode=1
 #define OFFSET_PLAYER_EQIPPED_WEAPON_CATEGORY_ID 0x8011FA15
@@ -76,52 +78,6 @@
 #define OFFSET_LAST_BOSS_SHD_CUR 0x8017D088
 #define OFFSET_LAST_BOSS_SHD_MAX 0x8017D08A
 
-#pragma pack(push, 1)
-typedef struct
-{
-  UINT16 HP_Current;
-  UINT16 HP_Maximum;
-  UINT16 MP_Current;
-  UINT16 MP_Maximum;
-  UINT16 Risk;
-  UINT16 STR_Equipped;
-  UINT16 STR_Original;
-  UINT16 INT_Equipped;
-  UINT16 INT_Original;
-  UINT16 AGL_Equipped;
-  UINT16 AGL_Original;
-
-  UINT8 Padding0[3];
-
-  UINT8 WalkingSpeedWithBox;
-
-  UINT8 Padding1;
-
-  UINT8 RunningSpeed;
-
-  UINT32 Padding2;
-
-  range Range;
-  // UINT8 Range;
-} player_stats;
-#pragma pack(pop)
-
-#pragma pack(push, 1)
-typedef struct
-{
-  UINT32 EffectID; // bit mask
-
-  UINT8 Padding0;
-
-  UINT8 DurationOrFrequency;
-
-  UINT8 Padding1;
-
-  UINT32 CanceledBy; // bit mask
-  UINT32 ImmunizedBy; // bit mask
-} status_effect;
-#pragma pack(pop)
-
 char *StatusEffectNames[32] = { "DYING Head (silent)",
   "DYING Right Arm (damage 50%)", "DYING Left Arm (enemy hit% x2)",
   "DYING Body (RISK decay in Normal Mode as in Battle Mode)",
@@ -131,7 +87,7 @@ char *StatusEffectNames[32] = { "DYING Head (silent)",
   "+Earth", "+Water", "Resist Air", "Resist Fire", "Resist Earth",
   "Resist Water", "Analyze", "Exorcism/Banish/Drain mind", "Magic Immmunity?" };
 
-UINT32 StatusEffectMasks[32] = { MASK_STATUS_EFFECT_DYING_HEAD,
+u32 StatusEffectMasks[32] = { MASK_STATUS_EFFECT_DYING_HEAD,
   MASK_STATUS_EFFECT_DYING_RIGHT_ARM, MASK_STATUS_EFFECT_DYING_LEFT_ARM,
   MASK_STATUS_EFFECT_DYING_BODY, MASK_STATUS_EFFECT_DYING_LEGS,
   MASK_STATUS_EFFECT_STR_DOWN, MASK_STATUS_EFFECT_STR_UP,
@@ -150,12 +106,33 @@ UINT32 StatusEffectMasks[32] = { MASK_STATUS_EFFECT_DYING_HEAD,
   MASK_STATUS_EFFECT_MAGIC_IMMMUNITY };
 
 void
+ReadPlayerStats(player_stats *PlayerStats)
+{
+  usize Offset =
+      (usize)(OFFSET_PLAYER_HP_CURRENT - PSX_TO_EMU + processBaseAddress);
+
+  usize BytesToRead = sizeof(player_stats);
+
+  ReadGameMemory(processID, OFFSET_PLAYER_HP_CURRENT, BytesToRead, PlayerStats);
+}
+
+void
+ReadPlayerStatus(status_effects *PlayerEffects)
+{
+
+  usize BytesToRead = sizeof(status_effects);
+
+  ReadGameMemory(
+      processID, OFFSET_PLAYER_STATUS_EFFECTS, BytesToRead, PlayerEffects);
+}
+
+void
 WritePlayerStats(void)
 {
   player_stats PlayerStats;
 
-  SIZE_T BytesToRead = sizeof(player_stats);
-  DWORD BytesRead;
+  usize BytesToRead = sizeof(player_stats);
+  u32 BytesRead;
 
   BytesRead = ReadGameMemory(
       processID, OFFSET_PLAYER_HP_CURRENT, BytesToRead, &PlayerStats);
@@ -164,18 +141,18 @@ WritePlayerStats(void)
 
   fprintf(fpPlayerStats, "Player Stats\n\n");
 
-  fprintf(fpPlayerStats, "HP:   %3i/%3i\n", PlayerStats.HP_Current,
-      PlayerStats.HP_Maximum);
+  fprintf(
+      fpPlayerStats, "HP:   %3i/%3i\n", PlayerStats.HPCur, PlayerStats.HPMax);
 
-  fprintf(fpPlayerStats, "MP:   %3i/%3i\n", PlayerStats.MP_Current,
-      PlayerStats.MP_Maximum);
+  fprintf(
+      fpPlayerStats, "MP:   %3i/%3i\n", PlayerStats.MPCur, PlayerStats.MPMax);
 
-  fprintf(fpPlayerStats, "STR:  %3i/%3i\n", PlayerStats.STR_Original,
-      PlayerStats.STR_Equipped);
-  fprintf(fpPlayerStats, "INT:  %3i/%3i\n", PlayerStats.INT_Original,
-      PlayerStats.INT_Equipped);
-  fprintf(fpPlayerStats, "AGL:  %3i/%3i\n", PlayerStats.AGL_Original,
-      PlayerStats.AGL_Equipped);
+  fprintf(fpPlayerStats, "STR:  %3i/%3i\n", PlayerStats.STRBase,
+      PlayerStats.STRCur);
+  fprintf(fpPlayerStats, "INT:  %3i/%3i\n", PlayerStats.INTBase,
+      PlayerStats.INTCur);
+  fprintf(fpPlayerStats, "AGL:  %3i/%3i\n", PlayerStats.AGLBase,
+      PlayerStats.AGLCur);
 
   fprintf(fpPlayerStats, "RISK:     %3i\n\n", PlayerStats.Risk);
 
@@ -191,90 +168,45 @@ WritePlayerStats(void)
 }
 
 void
-PrintPlayerStats(void)
+PrintPlayerStats(player_stats *PlayerStats, status_effects *PlayerEffects)
 {
-  player_stats PlayerStats;
+  player_stats Stats = *PlayerStats;
+  status_effects Effects = *PlayerEffects;
 
-  SIZE_T BytesToRead = sizeof(player_stats);
-  DWORD BytesRead;
-
-  BytesRead = ReadGameMemory(
-      processID, OFFSET_PLAYER_HP_CURRENT, BytesToRead, &PlayerStats);
-
-  fprintf(stdout, "\n= PLAYER STATS =\n");
-
-  fprintf(stdout, "|HP Cur|HP Max|MP Cur|MP Max|RISK|"
-                  "STR Org|STR Equ|INT Org|INT Equ|AGL Org|AGL Equ|\n");
-
-  fprintf(stdout, "|------|------|------|------|----|"
-                  "-------|-------|-------|-------|-------|-------|\n");
-  fprintf(stdout, "|%6i|%6i|%6i|%6i|%4i|%7i|%7i|%7i|%7i|%7i|%7i|\n", //
-      PlayerStats.HP_Current, PlayerStats.HP_Maximum, //
-      PlayerStats.MP_Current, PlayerStats.MP_Maximum, //
-      PlayerStats.Risk, //
-      PlayerStats.STR_Original, PlayerStats.STR_Equipped, //
-      PlayerStats.INT_Original, PlayerStats.INT_Equipped, //
-      PlayerStats.AGL_Original, PlayerStats.AGL_Equipped);
-
-  if (DEBUG)
-  {
-    fprintf(stdout, "\n|Range|       |With Box|Running|\n");
-
-    fprintf(stdout, "|-----| Speed |--------|-------|\n");
-    fprintf(stdout, "|%5i|       |%8i|%7i|\n", //
-        PlayerStats.Range.x, //
-        PlayerStats.WalkingSpeedWithBox, //
-        PlayerStats.RunningSpeed);
-  }
-}
-
-void
-PrintPlayerStats2(void)
-{
-  player_stats PlayerStats;
-  status_effect StatusEffects;
-
-  DWORD BytesRead;
-
-  BytesRead = ReadGameMemory(
-      processID, OFFSET_PLAYER_HP_CURRENT, sizeof(player_stats), &PlayerStats);
-  BytesRead = ReadGameMemory(processID, OFFSET_PLAYER_STATUS_EFFECTS,
-      sizeof(status_effect), &StatusEffects);
-
-  UINT16 STR_Original = PlayerStats.STR_Original;
-  UINT16 STR_Equipped = PlayerStats.STR_Equipped;
-  UINT16 INT_Original = PlayerStats.INT_Original;
-  UINT16 INT_Equipped = PlayerStats.INT_Equipped;
-  UINT16 AGL_Original = PlayerStats.AGL_Original;
-  UINT16 AGL_Equipped = PlayerStats.AGL_Equipped;
+  u16 STRBase = Stats.STRBase;
+  u16 STRCur = Stats.STRCur;
+  u16 INTBase = Stats.INTBase;
+  u16 INTCur = Stats.INTCur;
+  u16 AGLBase = Stats.AGLBase;
+  u16 AGLCur = Stats.AGLCur;
 
   char STR_Buff = ' ';
   char INT_Buff = ' ';
   char AGL_Buff = ' ';
 
-  if (STR_Equipped > STR_Original)
+  if (STRCur > STRBase)
   {
     STR_Buff = '+';
   }
-  else if (STR_Equipped < STR_Original)
+  else if (STRCur < STRBase)
   {
     STR_Buff = '-';
   }
 
-  if (INT_Equipped > INT_Original)
+  if (INTCur > INTBase)
   {
     INT_Buff = '+';
   }
-  else if (INT_Equipped < INT_Original)
+  else if (INTCur < INTBase)
   {
     INT_Buff = '-';
   }
 
-  if (AGL_Equipped > AGL_Original)
+  if (AGLCur > AGLBase)
   {
     AGL_Buff = '+';
   }
-  else if (AGL_Equipped < AGL_Original)
+  else if (AGLCur < AGLBase)
   {
     AGL_Buff = '-';
   }
@@ -296,22 +228,22 @@ PrintPlayerStats2(void)
   sprintf(szBuffer,
       "|  %3i/%3i |  %3i/%3i | %4i | %3i/%3i | %3i/%3i | %3i/%3i |"
       " %5i |       | %8i | %7i |\n", //
-      PlayerStats.HP_Current, PlayerStats.HP_Maximum, //
-      PlayerStats.MP_Current, PlayerStats.MP_Maximum, //
-      PlayerStats.Risk, //
-      STR_Equipped, STR_Original, //
-      INT_Equipped, INT_Original, //
-      AGL_Equipped, AGL_Original,
-      PlayerStats.Range.x, //
-      PlayerStats.WalkingSpeedWithBox, //
-      PlayerStats.RunningSpeed);
+      Stats.HPCur, Stats.HPMax, //
+      Stats.MPCur, Stats.MPMax, //
+      Stats.Risk, //
+      STRCur, STRBase, //
+      INTCur, INTBase, //
+      AGLCur, AGLBase,
+      Stats.Range.x, //
+      Stats.WalkingSpeedWithBox, //
+      Stats.RunningSpeed);
   WriteToBackBuffer();
 
   // Status effects
   sprintf(szBuffer, "\n-- Status Effects --\n\n");
   WriteToBackBuffer();
 
-  UINT32 StatusEffectMask = StatusEffects.EffectID;
+  u32 StatusEffectMask = Effects.EffectID;
 
   if (!StatusEffectMask) // if no Status Effects active, skip it
   {
@@ -337,28 +269,22 @@ PrintPlayerStats2(void)
 }
 
 BOOL
-CheckPlayerStats(void)
+CheckPlayerStats(player_stats *PlayerStats)
 {
-  player_stats PlayerStats;
 
-  DWORD BytesRead;
-
-  BytesRead = ReadGameMemory(
-      processID, OFFSET_PLAYER_HP_CURRENT, sizeof(player_stats), &PlayerStats);
-
-  UINT16 HP_Current = PlayerStats.HP_Current;
-  UINT16 HP_Maximum = PlayerStats.HP_Maximum;
-  UINT16 MP_Current = PlayerStats.MP_Current;
-  UINT16 MP_Maximum = PlayerStats.MP_Maximum;
-  UINT16 Risk = PlayerStats.Risk;
-  UINT16 STR_Original = PlayerStats.STR_Original;
-  UINT16 INT_Original = PlayerStats.INT_Original;
-  UINT16 AGL_Original = PlayerStats.AGL_Original;
+  u16 HPCur = PlayerStats->HPCur;
+  u16 HPMax = PlayerStats->HPMax;
+  u16 MPCur = PlayerStats->MPCur;
+  u16 MPMax = PlayerStats->MPMax;
+  u16 Risk = PlayerStats->Risk;
+  u16 STRBase = PlayerStats->STRBase;
+  u16 INTBase = PlayerStats->INTBase;
+  u16 AGLBase = PlayerStats->AGLBase;
 
   // Check for invalid data
-  if (HP_Current == 0 || HP_Current > 999 || HP_Maximum > 999 ||
-      MP_Current == 0 || MP_Current > 999 || MP_Maximum > 999 ||
-      STR_Original > 999 || INT_Original > 999 || AGL_Original > 999 ||
+  if (HPCur == 0 || HPCur > 999 || HPMax == 0 || HPMax > 999 || MPCur > 999 ||
+      MPMax == 0 || MPMax > 999 || STRBase == 0 || STRBase > 999 ||
+      INTBase == 0 || INTBase > 999 || AGLBase == 0 || AGLBase > 999 ||
       Risk > 100)
   {
     return FALSE;
@@ -367,11 +293,10 @@ CheckPlayerStats(void)
   return TRUE;
 }
 
-DWORD
-ReadLastBossHealth(UINT16 *BossHP)
+u32
+ReadLastBossHealth(u16 *BossHP)
 {
-  DWORD BytesRead =
-      ReadGameMemory(processID, OFFSET_LAST_BOSS_HP_CUR, 2, BossHP);
+  u32 BytesRead = ReadGameMemory(processID, OFFSET_LAST_BOSS_HP_CUR, 2, BossHP);
 
   return BytesRead;
 }
@@ -394,9 +319,9 @@ LastBossHandleIt2()
     sprintf(szBuffer, "Guildenstern is dead. Good Job!!!\n");
     WriteToBackBuffer();
 
-    ReadPlayTime(&RecordTime);
+    ReadPlayTime(&PlayTimeRecord);
     WriteRecordTimeToFile(
-        &RecordTime, _T("game_stats/records"), _T("record-time.txt"));
+        &PlayTimeRecord, "game_stats/records", "record-time.txt");
 
     CopyFromBackBuffer();
 
