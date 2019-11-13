@@ -29,24 +29,38 @@ Weapon, armor and shield data are stored in two formats:
 ## Prerequisites
 [prerequisites]: #prerequisites
 
-At this moment, *VSTrack* is working only with the [ePSXe emulator][epsxe-emulator], but the plan is to add support for more emulation platforms.
+Currently, *VSTrack* can work with [ePSXe][epsxe-emulator] and [BizHawk][bizhawk-emulator] emulators, but the plan is to add support for more in the future.
 
 To use *VSTrack* you'll need:
-* **ePSXe** version *1.9.0*, *1.9.25* or *2.0.5*
-* **Vagrant Story** NTSC-US version *(SLUS-01040)*
+* One of the supported emulators:
+	* **ePSXe** version *1.9.0*, *1.9.25* or *2.0.5*
+	* **BizHawk** version *2.3.0* or *2.3.2*
+* Copy of the game:
+	* **Vagrant Story** NTSC-US version *(SLUS-01040)* <sup>1</sup>
 
-Other SKUs of the game might work, but weren't tested yet.
+<sup>1</sup> Other SKUs of the game might work, but weren't tested yet.
 
 ## How to use it
 [usage]: #usage
 
-No installation is required. Just copy the executable into preffered folder, and run it from the command-line or by double-clicking (running as Administrator is recommended). 
+No installation is required. Just copy the executable into preffered folder, and run it from the command-line or by double-clicking. **WARNING** If you're not sure your user account has the writing privileges for the chosen folder, run the program as an administrator. 
 
-When you'll see the start menu, press key `1-3` to choose emulator version you're using to play the game,  or `0` to exit. If your selection was correct, you should see some basic game information in the console window.
+When you'll see the start menu, press key `1-5` to choose emulator version you're using to play the game,  or `0` to exit. If your selection was correct, you should see some basic game information in the console window.
 
-During the first use, the program will create a subfolder called `game_stats`, where all the output files will be stored.
+Alternatively, you can pass preferred emulator number as a command-line parameter, so if you want to use *VSTrack* with `BizHawk 2.3.0`, type:
+```bash
+vstrack.exe 4
+```
 
-After you kill the last boss, *VSTrack* will write record time into a file, wait for your input and terminate itself. If you want to play another game session, simply restart the program.
+During the first use, the program will create a subfolder called `game_stats`, where all the output files will be stored. When you finish the game, record time will be stored in the folder `game_stats/records`. Each record is preserved in separate file, with an unique name. For example, if the record file is named:
+```
+20191112T201730-record-time.txt
+```
+it means, that the last boss died at ***20:17.30, November 12, 2019***. Easy.
+
+After writing the record, *VSTrack* will wait for your input and terminate itself. If you want to play another game session, simply restart the program.
+
+
 
 ## Contributing
 [contributing]: #contributing
@@ -66,10 +80,6 @@ I encourage you to use the following labels:
 * `bug`: if you want to report a part of *VSTrack* that is not working correctly, or not working at all
 * `discussion`: if you want to discuss improving something in *VSTrack* 
 
-### Development Workflow
-[development-workflow]: #development-workflow
-
-To build *VSTrack* use **Visual Studio 2019** or **Build Tools for Visual Studio 2019**. You can build executable from command line, using the `build.bat` script from the project folder, but first make sure to set all required envirorment variables, by calling `vcvars32.bat`. You'll find this script somewhere within the installation folders of the tools mentioned above. 
 
 ## Known Issues
 [known-issues]: #known-issues
@@ -97,6 +107,7 @@ I would like to thank:
 [vagrant-game]: https://en.wikipedia.org/wiki/Vagrant_Story
 [obs]: https://obsproject.com
 [epsxe-emulator]: https://www.epsxe.com
+[bizhawk-emulator]: http://tasvideos.org/BizHawk.html
 [data-crystal]: http://datacrystal.romhacking.net/wiki/Vagrant_Story
 [game-faqs]: https://gamefaqs.gamespot.com/ps/914326-vagrant-story/faqs 
 [square-enix]: https://www.jp.square-enix.com/game/detail/vagrantstory/
