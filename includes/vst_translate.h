@@ -25,78 +25,77 @@ char TranslationTableChars[125] = { '0', '1', '2', '3', '4', '5', '6', '7', '8',
   'ú', 'û', 'ü', ' ', '!', '"', '%', '\'', '(', ')', '{', '}', '[', ']', ';',
   ':', ',', '.', '/', '\\', '<', '>', '?', '-', '+', '\n' };
 
-typedef struct
-{
-  u8 NameHex[18];
-} weapon_name;
-
 void
-GetWeaponName(u32 processID, char *WeaponName)
+ReadWeaponName()
 {
-  item_info BladeInfo;
-
-  usize BytesToRead = sizeof(item_info);
-  u32 BytesRead;
-
-  BytesRead = ReadGameMemory(
-      processID, OFFSET_EQUIPPED_WEAPON_BLADE, BytesToRead, &BladeInfo);
+  nameWeaponCur[0] = '\0';
 
   // Check if weapon is eqipped
-  if (BladeInfo.ListPosition == 0 || BladeInfo.ListPosition > 511)
+  if (itemBladeCur.ListPosition == 0 || itemBladeCur.ListPosition > 511)
   {
     return;
   }
 
-  WeaponName[0] = '\0';
-  weapon_name WeaponNameStruct;
-  BytesToRead = sizeof(weapon_name);
+  char WeaponNameHex[WEAPON_NAME_LENGTH];
+  usize BytesToRead = (usize) WEAPON_NAME_LENGTH;
 
-  BytesRead = ReadGameMemory(processID, OFFSET_EQUIPPED_WEAPON_NAME_STRING,
-      BytesToRead, &WeaponNameStruct);
+  usize BytesRead = ReadGameMemory(processID,
+      OFFSET_EQUIPPED_WEAPON_NAME_STRING, BytesToRead, WeaponNameHex);
 
-  for (int i = 0; i < 18; ++i)
+  for (int i = 0, k = 0; i < WEAPON_NAME_LENGTH; ++i)
   {
-    u8 HexCode = WeaponNameStruct.NameHex[i];
-    if (HexCode == 0xE7)
+    u8 *HexCode = (u8 *) &WeaponNameHex[i];
+    if (*HexCode == 0xE7)
     {
+      nameWeaponCur[k] = '\0';
       break;
     }
 
-    if (HexCode == 0xFA)
+    if (*HexCode == 0xFA && *(HexCode + 1) == 0x06)
     {
-      if (WeaponNameStruct.NameHex[i + 1] == 0x06)
-      {
-        sprintf(WeaponName, "%s ", WeaponName);
-        i++;
-        continue;
-      }
+      nameWeaponCur[k++] = ' ';
+      i++;
+      continue;
     }
 
     for (int j = 0, size = _countof(TranslationTableHex); j < size; ++j)
     {
-      if (TranslationTableHex[j] == HexCode)
+      if (TranslationTableHex[j] == (char) *HexCode)
       {
-        sprintf(WeaponName, "%s%c", WeaponName, TranslationTableChars[j]);
+        nameWeaponCur[k++] = TranslationTableChars[j];
+        break;
       }
     }
   }
+}
 
-  // Some DEBUG info
-  sprintf_s(szBuffer, _countof(szBuffer), "\n\n== WEAPON NAME ==\n\n");
-  WriteToBackBuffer();
-  sprintf_s(szBuffer, _countof(szBuffer), "In memory (HEX): ");
-  WriteToBackBuffer();
+void
+ReadWeaponNumber()
+{
+  u8 *tempBuffer;
 
-  for (int i = 0; i < 18; ++i)
+  char number_s[1];
+  number_s[0] = nameWeaponCur[strlen(nameWeaponCur) - 1];
+
+  WeaponNumber = strtoul(number_s, &tempBuffer, 10);
+}
+
+BOOL
+WeaponNameChanged()
+{
+  if (strcmp(nameWeaponPrev, nameWeaponCur) == 0)
   {
-    u8 HexCode = WeaponNameStruct.NameHex[i];
-
-    sprintf_s(szBuffer, _countof(szBuffer), "%02X ", HexCode);
-    WriteToBackBuffer();
+    return FALSE;
   }
 
-  sprintf_s(szBuffer, _countof(szBuffer), "\nAfter translation: \"%s\"\n",
-      WeaponName);
+  return TRUE;
+}
+
+void
+PrintWeaponName()
+{
+  sprintf_s(
+      szBuffer, _countof(szBuffer), "\n\nWeapon name: %s\n\n", nameWeaponCur);
   WriteToBackBuffer();
 }
 

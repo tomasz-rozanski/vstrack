@@ -78,32 +78,35 @@
 #define OFFSET_LAST_BOSS_SHD_CUR 0x8017D088
 #define OFFSET_LAST_BOSS_SHD_MAX 0x8017D08A
 
-char *StatusEffectNames[32] = { "DYING Head (silent)",
-  "DYING Right Arm (damage 50%)", "DYING Left Arm (enemy hit% x2)",
+char *StatusEffectNames[32] = { //
+  "DYING Head (silent)", "DYING Right Arm (damage 50%%)",
+  "DYING Left Arm (enemy hit%% x2)",
   "DYING Body (RISK decay in Normal Mode as in Battle Mode)",
-  "DYING Legs (move 50%)", "STR-down", "STR-up", "INT-down", "INT-up",
+  "DYING Legs (move 50%%)", "STR-down", "STR-up", "INT-down", "INT-up",
   "AGI-down", "AGI-up", "Quicken", "Silence", "Paralysis", "Poison", "Numbness",
   "Curse", "Regen", "Magic Ward ", "Equip-down", "Equip-up", "+Air", "+Fire",
   "+Earth", "+Water", "Resist Air", "Resist Fire", "Resist Earth",
-  "Resist Water", "Analyze", "Exorcism/Banish/Drain mind", "Magic Immmunity?" };
+  "Resist Water", "Analyze", "Exorcism/Banish/Drain mind", "Magic Immmunity?"
+};
 
-u32 StatusEffectMasks[32] = { MASK_STATUS_EFFECT_DYING_HEAD,
-  MASK_STATUS_EFFECT_DYING_RIGHT_ARM, MASK_STATUS_EFFECT_DYING_LEFT_ARM,
-  MASK_STATUS_EFFECT_DYING_BODY, MASK_STATUS_EFFECT_DYING_LEGS,
-  MASK_STATUS_EFFECT_STR_DOWN, MASK_STATUS_EFFECT_STR_UP,
-  MASK_STATUS_EFFECT_INT_DOWN, MASK_STATUS_EFFECT_INT_UP,
-  MASK_STATUS_EFFECT_AGI_DOWN, MASK_STATUS_EFFECT_AGI_UP,
-  MASK_STATUS_EFFECT_QUICKEN, MASK_STATUS_EFFECT_SILENCE,
-  MASK_STATUS_EFFECT_PARALYSIS, MASK_STATUS_EFFECT_POISON,
-  MASK_STATUS_EFFECT_NUMBNESS, MASK_STATUS_EFFECT_CURSE,
-  MASK_STATUS_EFFECT_REGEN, MASK_STATUS_EFFECT_MAGIC_WARD,
-  MASK_STATUS_EFFECT_EQUIP_DOWN, MASK_STATUS_EFFECT_EQUIP_UP,
-  MASK_STATUS_EFFECT_AIR_UP, MASK_STATUS_EFFECT_FIRE_UP,
-  MASK_STATUS_EFFECT_EARTH_UP, MASK_STATUS_EFFECT_WATER_UP,
-  MASK_STATUS_EFFECT_AIR_RESIST, MASK_STATUS_EFFECT_FIRE_RESIST,
-  MASK_STATUS_EFFECT_EARTH_RESIST, MASK_STATUS_EFFECT_WATER_RESIST,
-  MASK_STATUS_EFFECT_ANALYZE, MASK_STATUS_EFFECT_EXORCISM,
-  MASK_STATUS_EFFECT_MAGIC_IMMMUNITY };
+u32 StatusEffectMasks[32] = { //
+  MASK_STATUS_EFFECT_DYING_HEAD, MASK_STATUS_EFFECT_DYING_RIGHT_ARM,
+  MASK_STATUS_EFFECT_DYING_LEFT_ARM, MASK_STATUS_EFFECT_DYING_BODY,
+  MASK_STATUS_EFFECT_DYING_LEGS, MASK_STATUS_EFFECT_STR_DOWN,
+  MASK_STATUS_EFFECT_STR_UP, MASK_STATUS_EFFECT_INT_DOWN,
+  MASK_STATUS_EFFECT_INT_UP, MASK_STATUS_EFFECT_AGI_DOWN,
+  MASK_STATUS_EFFECT_AGI_UP, MASK_STATUS_EFFECT_QUICKEN,
+  MASK_STATUS_EFFECT_SILENCE, MASK_STATUS_EFFECT_PARALYSIS,
+  MASK_STATUS_EFFECT_POISON, MASK_STATUS_EFFECT_NUMBNESS,
+  MASK_STATUS_EFFECT_CURSE, MASK_STATUS_EFFECT_REGEN,
+  MASK_STATUS_EFFECT_MAGIC_WARD, MASK_STATUS_EFFECT_EQUIP_DOWN,
+  MASK_STATUS_EFFECT_EQUIP_UP, MASK_STATUS_EFFECT_AIR_UP,
+  MASK_STATUS_EFFECT_FIRE_UP, MASK_STATUS_EFFECT_EARTH_UP,
+  MASK_STATUS_EFFECT_WATER_UP, MASK_STATUS_EFFECT_AIR_RESIST,
+  MASK_STATUS_EFFECT_FIRE_RESIST, MASK_STATUS_EFFECT_EARTH_RESIST,
+  MASK_STATUS_EFFECT_WATER_RESIST, MASK_STATUS_EFFECT_ANALYZE,
+  MASK_STATUS_EFFECT_EXORCISM, MASK_STATUS_EFFECT_MAGIC_IMMMUNITY
+};
 
 void
 ReadPlayerStats(player_stats *PlayerStats)
@@ -117,7 +120,7 @@ ReadPlayerStats(player_stats *PlayerStats)
 }
 
 void
-ReadPlayerStatus(status_effects *PlayerEffects)
+ReadPlayerEffects(status_effects *PlayerEffects)
 {
 
   usize BytesToRead = sizeof(status_effects);
@@ -127,51 +130,41 @@ ReadPlayerStatus(status_effects *PlayerEffects)
 }
 
 void
-WritePlayerStats(void)
+WritePlayerStats(player_stats *PlayerStats)
 {
-  player_stats PlayerStats;
-
-  usize BytesToRead = sizeof(player_stats);
-  u32 BytesRead;
-
-  BytesRead = ReadGameMemory(
-      processID, OFFSET_PLAYER_HP_CURRENT, BytesToRead, &PlayerStats);
-
-  FILE *fpPlayerStats = fopen("game_stats/player-stats.txt", "w");
+  FILE *fpPlayerStats = fopen("game_data/player/player_stats.txt", "w");
 
   fprintf(fpPlayerStats, "Player Stats\n\n");
 
   fprintf(
-      fpPlayerStats, "HP:   %3i/%3i\n", PlayerStats.HPCur, PlayerStats.HPMax);
+      fpPlayerStats, "HP:   %3i/%3i\n", PlayerStats->HPCur, PlayerStats->HPMax);
 
   fprintf(
-      fpPlayerStats, "MP:   %3i/%3i\n", PlayerStats.MPCur, PlayerStats.MPMax);
+      fpPlayerStats, "MP:   %3i/%3i\n", PlayerStats->MPCur, PlayerStats->MPMax);
 
-  fprintf(fpPlayerStats, "STR:  %3i/%3i\n", PlayerStats.STRBase,
-      PlayerStats.STRCur);
-  fprintf(fpPlayerStats, "INT:  %3i/%3i\n", PlayerStats.INTBase,
-      PlayerStats.INTCur);
-  fprintf(fpPlayerStats, "AGL:  %3i/%3i\n", PlayerStats.AGLBase,
-      PlayerStats.AGLCur);
+  fprintf(fpPlayerStats, "STR:  %3i/%3i\n", PlayerStats->STRBase,
+      PlayerStats->STRCur);
+  fprintf(fpPlayerStats, "INT:  %3i/%3i\n", PlayerStats->INTBase,
+      PlayerStats->INTCur);
+  fprintf(fpPlayerStats, "AGL:  %3i/%3i\n", PlayerStats->AGLBase,
+      PlayerStats->AGLCur);
 
-  fprintf(fpPlayerStats, "RISK:     %3i\n\n", PlayerStats.Risk);
+  fprintf(fpPlayerStats, "RISK:     %3i\n\n", PlayerStats->Risk);
 
   fprintf(fpPlayerStats, "SPEED\n");
-  fprintf(fpPlayerStats, "Running:  %2i\n", PlayerStats.RunningSpeed);
-  fprintf(fpPlayerStats, "With box: %2i\n\n", PlayerStats.WalkingSpeedWithBox);
+  fprintf(fpPlayerStats, "Running:  %2i\n", PlayerStats->RunningSpeed);
+  fprintf(fpPlayerStats, "With box: %2i\n\n", PlayerStats->WalkingSpeedWithBox);
 
-  fprintf(fpPlayerStats, "Range (x/y/z): %2i/%2i/%2i\n", PlayerStats.Range.x,
-      PlayerStats.Range.y, PlayerStats.Range.z);
-  // fprintf(fpPlayerStats, "Range: %i\n", PlayerStats.Range);
+  fprintf(fpPlayerStats, "Range (x/y/z): %2i/%2i/%2i\n", PlayerStats->Range.x,
+      PlayerStats->Range.y, PlayerStats->Range.z);
 
   fclose(fpPlayerStats);
 }
 
 void
-PrintPlayerStats(player_stats *PlayerStats, status_effects *PlayerEffects)
+PrintPlayerStats(player_stats *PlayerStats)
 {
   player_stats Stats = *PlayerStats;
-  status_effects Effects = *PlayerEffects;
 
   u16 STRBase = Stats.STRBase;
   u16 STRCur = Stats.STRCur;
@@ -238,8 +231,13 @@ PrintPlayerStats(player_stats *PlayerStats, status_effects *PlayerEffects)
       Stats.WalkingSpeedWithBox, //
       Stats.RunningSpeed);
   WriteToBackBuffer();
+}
 
-  // Status effects
+void
+PrintPlayerEffects(status_effects *PlayerEffects)
+{
+  status_effects Effects = *PlayerEffects;
+
   sprintf(szBuffer, "\n-- Status Effects --\n\n");
   WriteToBackBuffer();
 
@@ -268,6 +266,38 @@ PrintPlayerStats(player_stats *PlayerStats, status_effects *PlayerEffects)
   }
 }
 
+void
+WritePlayerEffects(status_effects *PlayerEffects)
+{
+  status_effects Effects = *PlayerEffects;
+
+  FILE *fpPlayerEffects = fopen("game_data/player/player_effects.txt", "w");
+
+  fprintf(fpPlayerEffects, "Status Effects\n\n");
+
+  u32 StatusEffectMask = Effects.EffectID;
+
+  if (!StatusEffectMask) // if no Status Effects active, skip it
+  {
+    fprintf(fpPlayerEffects, "No effects active\n");
+  }
+  else
+  {
+    int buff_counter = 0;
+    for (int i = 0; i < 32; ++i)
+    {
+      if (StatusEffectMasks[i] & StatusEffectMask)
+      {
+        fprintf(fpPlayerEffects, "%s%s%s", buff_counter ? "," : "",
+            buff_counter ? " " : "", StatusEffectNames[i]);
+        buff_counter++;
+      }
+    }
+    fprintf(fpPlayerEffects, "\n");
+  }
+  fclose(fpPlayerEffects);
+}
+
 BOOL
 CheckPlayerStats(player_stats *PlayerStats)
 {
@@ -293,6 +323,28 @@ CheckPlayerStats(player_stats *PlayerStats)
   return TRUE;
 }
 
+BOOL
+PlayerStatsChanged()
+{
+  usize DataSize = sizeof(player_stats);
+
+  BOOL Result = DataChanged(
+      (void *) &statsPlayerPrev, (void *) &statsPlayerCur, DataSize);
+
+  return Result;
+}
+
+BOOL
+PlayerEffectsChanged()
+{
+  usize DataSize = sizeof(status_effects);
+
+  BOOL Result = DataChanged(
+      (void *) &effectsPlayerPrev, (void *) &effectsPlayerCur, DataSize);
+
+  return Result;
+}
+
 u32
 ReadLastBossHealth(u16 *BossHP)
 {
@@ -302,30 +354,32 @@ ReadLastBossHealth(u16 *BossHP)
 }
 
 void
-LastBossHandleIt2()
+LastBossHandleIt()
 {
+#ifdef DEBUG
   sprintf(szBuffer, "\n= LAST BOSS FIGHT IS ON =\n");
   WriteToBackBuffer();
+#endif
 
   ReadLastBossHealth(&LastBossHP);
 
   if (LastBossHP > 0)
   {
+#ifdef DEBUG
     sprintf(szBuffer, "Guildenstern's HP: %3i\n", LastBossHP);
     WriteToBackBuffer();
+#endif
   }
   else
   {
+    ReadGameTime(&GameTimeRecord);
+    WriteGameTimeRecordToFile(&GameTimeRecord);
+
+#ifdef DEBUG
     sprintf(szBuffer, "Guildenstern is dead. Good Job!!!\n");
     WriteToBackBuffer();
-
-    ReadPlayTime(&PlayTimeRecord);
-    WriteRecordTimeToFile(
-        &PlayTimeRecord, "game_stats/records", "record-time.txt");
-
     CopyFromBackBuffer();
-
-    Sleep(5000);
+#endif
 
     GameOver = TRUE;
   }

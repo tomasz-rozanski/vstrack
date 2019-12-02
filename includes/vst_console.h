@@ -5,10 +5,12 @@ COORD coordScreen, coord;
 CONSOLE_SCREEN_BUFFER_INFO csbi;
 HANDLE hStdout, hStdin, hStderr, hBackBuffer;
 i16 conSizeX, conSizeY;
+i16 conSizeXtemp, conSizeYtemp;
 i16 conMinSizeX, conMinSizeY;
 i16 conMaxSizeX, conMaxSizeY;
 CONSOLE_CURSOR_INFO cciOldCursor, cciNewCursor;
-char szBuffer[1024];
+char szBuffer[4096];
+// char szBuffer[1024];
 u32 BytesWritten;
 
 // Double-buffering structs
@@ -23,10 +25,14 @@ COORD coordLargestWindowSize;
 BOOL fSuccess;
 
 void *
-AllocateBackBuffer(i16 conMaxSizeX, i16 conMaxSizeY)
+AllocateBackBuffer()
 {
+  if (chiBuffer != NULL)
+  {
+    free(chiBuffer);
+  }
   void *chiBuffer =
-      (void *) malloc(sizeof(CHAR_INFO) * conMaxSizeX * conMaxSizeY);
+      (void *) malloc(sizeof(CHAR_INFO) * conMaxSizeX * conMaxSizeY * 2);
 
   return chiBuffer;
 }
@@ -46,6 +52,27 @@ SetConsoleHandles()
 }
 
 void
+ScrollBuffer(HANDLE hConsole)
+{
+  SMALL_RECT ScrollRectangle, ClipRectangle;
+  COORD DestinationOrigin = { 0, 15 };
+  CHAR_INFO Fill = { ' ' };
+
+  ScrollRectangle.Top = 0;
+  ScrollRectangle.Left = 0;
+  ScrollRectangle.Bottom = conMaxSizeY * 2 - 1;
+  ScrollRectangle.Right = conMaxSizeX - 1;
+
+  ClipRectangle.Top = 0;
+  ClipRectangle.Left = 0;
+  ClipRectangle.Bottom = conMaxSizeY * 2 - 1;
+  ClipRectangle.Right = conMaxSizeX - 1;
+
+  ScrollConsoleScreenBuffer(
+      hConsole, &ScrollRectangle, &ClipRectangle, DestinationOrigin, &Fill);
+}
+
+void
 SetCursorPosition(HANDLE hConsole, u32 PositionX, u32 PositionY)
 {
   COORD coordPosition;
@@ -54,6 +81,23 @@ SetCursorPosition(HANDLE hConsole, u32 PositionX, u32 PositionY)
   coordPosition.Y = (i16) PositionY;
 
   SetConsoleCursorPosition(hConsole, coordPosition);
+}
+
+void
+ResizeConsoleWindow(HANDLE hConsole, i16 Width, i16 Height)
+{
+  BOOL AbsolutePosition = FALSE;
+  SMALL_RECT NewSize;
+
+  i16 ShiftX = 0;
+  i16 ShiftY = 0;
+
+  NewSize.Top = 0 + ShiftY;
+  NewSize.Left = 0 + ShiftX;
+  NewSize.Bottom = Height - 1 + ShiftY;
+  NewSize.Right = Width - 1 + ShiftX;
+
+  SetConsoleWindowInfo(hConsole, AbsolutePosition, &NewSize);
 }
 
 void
@@ -96,12 +140,12 @@ CopyFromBackBuffer()
   // Set the source rectangle.
   srctReadRect.Top = 0;
   srctReadRect.Left = 0;
-  srctReadRect.Bottom = conMaxSizeY - 1;
+  srctReadRect.Bottom = conMaxSizeY * 2 - 1;
   srctReadRect.Right = conMaxSizeX - 1;
 
   // The temporary buffer size
-  coordBufSize.Y = conMaxSizeY;
   coordBufSize.X = conMaxSizeX;
+  coordBufSize.Y = conMaxSizeY * 2;
 
   // The top left destination cell of the temporary buffer
   // is row 0, col 0.
@@ -124,7 +168,7 @@ CopyFromBackBuffer()
   // Set the destination rectangle.
   srctWriteRect.Top = 0;
   srctWriteRect.Left = 0;
-  srctWriteRect.Bottom = conMaxSizeY - 1;
+  srctWriteRect.Bottom = conMaxSizeY * 2 - 1;
   srctWriteRect.Right = conMaxSizeX - 1;
 
   // Copy the temporary buffer to the new screen buffer.
@@ -191,6 +235,14 @@ cls(HANDLE hConsole)
 }
 
 void
+ChangeMode(HANDLE hConsole)
+{
+
+  u32 conMode = 0x0;
+  SetConsoleMode(hConsole, conMode);
+}
+
+void
 ClearLine()
 {
   sprintf_s(szBuffer, _countof(szBuffer), "%*s\r", conSizeX - 1, "");
@@ -200,10 +252,46 @@ ClearLine()
 void
 WriteDebugMessage(HANDLE hConsole)
 {
-  SetCursorPosition(hConsole, 0, conSizeY - 1);
-  sprintf_s(szBuffer, _countof(szBuffer),
-      "Debug mode is %s. Press \"D\" to toggle.\n", DEBUG ? "ON" : "OFF");
-  WriteToBackBuffer();
+  static struct
+  {
+    u32 ConModeFlag;
+    char *ConModeName;
+  } ConModes[] = { { ENABLE_ECHO_INPUT, "ENABLE_ECHO_INPUT" },
+    { ENABLE_INSERT_MODE, "ENABLE_INSERT_MODE" },
+    { ENABLE_LINE_INPUT, "ENABLE_LINE_INPUT" },
+    { ENABLE_MOUSE_INPUT, "ENABLE_MOUSE_INPUT" },
+    { ENABLE_PROCESSED_INPUT, "ENABLE_PROCESSED_INPUT" },
+    { ENABLE_QUICK_EDIT_MODE, "ENABLE_QUICK_EDIT_MODE" },
+    { ENABLE_WINDOW_INPUT, "ENABLE_WINDOW_INPUT" },
+    { ENABLE_VIRTUAL_TERMINAL_INPUT, "ENABLE_VIRTUAL_TERMINAL_INPUT" },
+    { ENABLE_PROCESSED_OUTPUT, "ENABLE_PROCESSED_OUTPUT" },
+    { ENABLE_WRAP_AT_EOL_OUTPUT, "ENABLE_WRAP_AT_EOL_OUTPUT" },
+    { ENABLE_VIRTUAL_TERMINAL_PROCESSING,
+        "ENABLE_VIRTUAL_TERMINAL_PROCESSING" },
+    { DISABLE_NEWLINE_AUTO_RETURN, "DISABLE_NEWLINE_AUTO_RETURN" },
+    { ENABLE_LVB_GRID_WORLDWIDE, "ENABLE_LVB_GRID_WORLDWIDE" } };
+
+  u32 conMode;
+  char *szBuffer[1024];
+
+  GetConsoleMode(hConsole, &conMode);
+
+  FILE *fpConModeInfo = fopen("debug/conmode.txt", "w");
+
+  fprintf(fpConModeInfo, "conMode: 0x%08lu\n", conMode);
+  for (int i = 0; i < _countof(ConModes); ++i)
+  {
+    if (ConModes[i].ConModeFlag & conMode)
+    {
+      fprintf(fpConModeInfo, "%s\n", ConModes[i].ConModeName);
+    }
+  }
+
+#ifdef DEBUG
+  fprintf(fpConModeInfo, "Debug mode ON\n");
+#endif
+
+  fclose(fpConModeInfo);
 }
 
 void

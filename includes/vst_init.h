@@ -3,9 +3,6 @@
 
 // Global Variables
 
-// Diagnostics
-BOOL DEBUG = FALSE;
-
 // Process
 u32 processID;
 u32 processVersion;
@@ -18,62 +15,102 @@ char szExeName[MAX_PATH];
 // In-game data
 
 // Time
-playtime PlayTimeCurrent = { -1 };
-playtime PlayTimeTemp = { -1 };
-playtime PlayTimeRecord = { -1 };
+game_time GameTimeCur = { -1 };
+game_time GameTimePrev = { -1 };
+game_time GameTimeRecord = { -1 };
 
 // Equipment
-item_info BladeInfo;
-item_info BladeInfoTemp;
+#define WEAPON_NAME_LENGTH 18
 
-item_info GripInfo;
-item_info GripInfoTemp;
+char nameWeaponCur[WEAPON_NAME_LENGTH];
+char nameWeaponPrev[WEAPON_NAME_LENGTH];
 
-item_info Gem1Info;
-item_info Gem1InfoTemp;
+usize WeaponNumber = 0;
 
-item_info Gem2Info;
-item_info Gem2InfoTemp;
+item_data itemBladeCur;
+item_data itemBladePrev;
 
-item_info Gem3Info;
-item_info Gem3InfoTemp;
+item_data itemGripCur;
+item_data itemGripPrev;
 
-item_info ShieldInfo;
-item_info ShieldInfoTemp;
+item_data itemGem1WeaponCur;
+item_data itemGem1WeaponPrev;
 
-item_info GloveLeftInfo;
-item_info GloveLeftInfoTemp;
+item_data itemGem2WeaponCur;
+item_data itemGem2WeaponPrev;
 
-item_info GloveRightInfo;
-item_info GloveRightInfoTemp;
+item_data itemGem3WeaponCur;
+item_data itemGem3WeaponPrev;
 
-item_info HeadInfo;
-item_info HeadInfoTemp;
+item_data itemGem1ShieldCur;
+item_data itemGem1ShieldPrev;
 
-item_info BodyInfo;
-item_info BodyInfoTemp;
+item_data itemGem2ShieldCur;
+item_data itemGem2ShieldPrev;
 
-item_info LegsInfo;
-item_info LegsInfoTemp;
+item_data itemGem3ShieldCur;
+item_data itemGem3ShieldPrev;
 
-item_info NeckInfo;
-item_info NeckInfoTemp;
+item_data itemShieldCur;
+item_data itemShieldPrev;
+
+item_data itemGloveLeftCur;
+item_data itemGloveLeftPrev;
+
+item_data itemGloveRightCur;
+item_data itemGloveRightPrev;
+
+item_data itemHeadCur;
+item_data itemHeadPrev;
+
+item_data itemBodyCur;
+item_data itemBodyPrev;
+
+item_data itemLegsCur;
+item_data itemLegsPrev;
+
+item_data itemNeckCur;
+item_data itemNeckPrev;
+
+leveling_flags LevelingFlags;
 
 // Player Data
-player_stats PlayerStats;
-player_stats PlayerStatsTemp;
+player_stats statsPlayerCur;
+player_stats statsPlayerPrev;
 
-status_effects PlayerEffects;
-status_effects PlayerEffectsTemp;
+status_effects effectsPlayerCur;
+status_effects effectsPlayerPrev;
 
 // Location
-location Location;
-char szAreaName[MAX_PATH];
-char szRoomName[MAX_PATH];
+location LocationCur;
+location LocationPrev;
+
+char nameZone[MAX_PATH];
+char nameMap[MAX_PATH];
+
+// Gazette
+map_flag_mem MapFlagMemCur;
+map_flag_mem MapFlagMemPrev;
+
+map_flag_mem MapCheckFlagMem;
+
+chest_flag_mem ChestFlagMemCur;
+chest_flag_mem ChestFlagMemPrev;
+
+u8 ChestCount;
+u16 MapCount;
+
+kill_list KillListCur;
+kill_list KillListPrev;
+
+weapon_usage WeaponUsageCur;
+weapon_usage WeaponUsagePrev;
 
 // Misc
 u16 LastBossHP = 0xff;
+BOOL ProgramStarted = TRUE;
+BOOL ProgramRunning = TRUE;
+
 BOOL GameOver = FALSE; // set to TRUE when the last boss is dead
-char GlobalWeaponName[18] = "";
 
 #endif

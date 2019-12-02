@@ -17,14 +17,16 @@ At this moment, you can track the following:
 * Weapon, Blade, and Shield stats and properties
 * Armor (all slots, plus necklace) stats and properties
 * Player stats (HP, MP, RISK, STR, INT, AGL, range, walking/running speed)
+* Player status effects
 * Player location (area name, room name)
-* In-game play timer (with 1 second precision)
+* In-game timer (with 1 second precision)
+* Kill List and Weapon Usage list
+* Map and Chest completion (**real-time!**)
 
 *VSTrack* also detects when the last boss dies, and auto-magically stores the record play time in this very moment.
 
-Weapon, armor and shield data are stored in two formats:
-* full
-* short: only CLASS and AFFINITY values (useful for item leveling)
+If you're working on your Ultimate Weapon, using  [Matt Hamand method][ultimate-weapon-guide], I got you covered. If the equipped weapon has a number `1-4` at the end of its name, the proper leveling stats (Class, Affinity) will be tracked automatically in the file `game_data/weapon/blade_leveling.txt`.
+
 
 ## Prerequisites
 [prerequisites]: #prerequisites
@@ -33,33 +35,32 @@ Currently, *VSTrack* can work with [ePSXe][epsxe-emulator] and [BizHawk][bizhawk
 
 To use *VSTrack* you'll need:
 * One of the supported emulators:
-	* **ePSXe** version *1.9.0*, *1.9.25* or *2.0.5*
-	* **BizHawk** version *2.3.0* or *2.3.2*
+	* **ePSXe** version *1.9.25* or *2.0.5*
+	* **BizHawk** version *2.3.2*
 * Copy of the game:
 	* **Vagrant Story** NTSC-US version *(SLUS-01040)* <sup>1</sup>
 
 <sup>1</sup> Other SKUs of the game might work, but weren't tested yet.
+
+I tried to include support for [no$psx][no$psx-emulator] and [pSX][pSX-emulator] emulators, but they're storing game data at the different address, after each restart. If you know how to get around this, let me know in the project's Issue Tracker.
 
 ## How to use it
 [usage]: #usage
 
 No installation is required. Just copy the executable into preffered folder, and run it from the command-line or by double-clicking. **WARNING** If you're not sure your user account has the writing privileges for the chosen folder, run the program as an administrator. 
 
-When you'll see the start menu, press key `1-5` to choose emulator version you're using to play the game,  or `0` to exit. If your selection was correct, you should see some basic game information in the console window.
+When you'll see the start menu, press key `1-3` to choose emulator version you're using to play the game,  or `0` to exit. If your selection was correct, you should see some basic game information in the console window.
 
-Alternatively, you can pass preferred emulator number as a command-line parameter, so if you want to use *VSTrack* with `BizHawk 2.3.0`, type:
+Alternatively, you can pass preferred emulator number as a command-line parameter, so if you want to use *VSTrack* with `BizHawk 2.3.2`, type:
 ```bash
-vstrack.exe 4
+vstrack.exe 3
 ```
 
-During the first use, the program will create a subfolder called `game_stats`, where all the output files will be stored. When you finish the game, record time will be stored in the folder `game_stats/records`. Each record is preserved in separate file, with an unique name. For example, if the record file is named:
+During the first use, the program will create a subfolder called `game_data`, where all the output files will be stored. When you finish the game, record time will be stored in the folder `game_data/time/records`. Each record is preserved in separate file, with an unique name. For example, if the record file is named:
 ```
 20191112T201730-record-time.txt
 ```
 it means, that the last boss died at ***20:17.30, November 12, 2019***. Easy.
-
-After writing the record, *VSTrack* will wait for your input and terminate itself. If you want to play another game session, simply restart the program.
-
 
 
 ## Contributing
@@ -97,7 +98,8 @@ I would like to thank:
   * Samuel Riesterer
   * Matt Hamand
   * Zy Nicholson
-* [Data Crystal][data-crystal], for collecting and sharing a huge collection of information about the inner-workings of the game
+* [Data Crystal][data-crystal], for collecting and sharing a huge amount of information about the inner-workings of the game
+* The author of [pSX emulator][pSX-emulator] for an excellent PlayStation debugger, which was essential in testing a few big features 
 * [Cheat Engine][cheat-engine] authors and community:
   * besides being a direct inspiration for my little tool, CE allowed me to extract information from the game with ease, and test *VSTrack* behaviour in a very reliable way 
   * CE forums are the huge vault of technical knowledge; I found a lot of programming gems out there
@@ -107,9 +109,12 @@ I would like to thank:
 [vagrant-game]: https://en.wikipedia.org/wiki/Vagrant_Story
 [obs]: https://obsproject.com
 [epsxe-emulator]: https://www.epsxe.com
+[no$psx-emulator]: https://problemkaputt.de/psx.htm
 [bizhawk-emulator]: http://tasvideos.org/BizHawk.html
+[pSX-emulator]: http://psxemulator.proboards.com
 [data-crystal]: http://datacrystal.romhacking.net/wiki/Vagrant_Story
 [game-faqs]: https://gamefaqs.gamespot.com/ps/914326-vagrant-story/faqs 
+[ultimate-weapon-guide]:  https://gamefaqs.gamespot.com/ps/914326-vagrant-story/faqs/8646
 [square-enix]: https://www.jp.square-enix.com/game/detail/vagrantstory/
 [cheat-engine]: https://www.cheatengine.org
 [msdn]: https://msdn.microsoft.com/en-us/

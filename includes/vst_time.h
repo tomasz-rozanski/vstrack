@@ -4,28 +4,15 @@
 #define OFFSET_TIME_PLAYED 0x80061074 // 4 bytes
 
 void
-PrintPlayTimeFull(playtime *PlayTime)
-{
-  u8 Centiseconds = PlayTime->Centiseconds;
-  u8 Seconds = PlayTime->Seconds;
-  u8 Minutes = PlayTime->Minutes;
-  u8 Hours = PlayTime->Hours;
-
-  fprintf(stdout, "\n= PLAY TIME =\n");
-  fprintf(
-      stdout, "%02i:%02i:%02i.%02i\n", Hours, Minutes, Seconds, Centiseconds);
-}
-
-void
-PrintPlayTimeShort(playtime *PlayTime)
+PrintGameTimeShort(game_time *GameTime)
 {
   u32 BytesWritten;
 
-  u8 Seconds = PlayTime->Seconds;
-  u8 Minutes = PlayTime->Minutes;
-  u8 Hours = PlayTime->Hours;
+  u8 Seconds = GameTime->Seconds;
+  u8 Minutes = GameTime->Minutes;
+  u8 Hours = GameTime->Hours;
 
-  sprintf_s(szBuffer, _countof(szBuffer), "\n\n== PLAY TIME ==\n\n");
+  sprintf_s(szBuffer, _countof(szBuffer), "\n\n== GAME TIME ==\n\n");
   WriteToBackBuffer();
 
   sprintf_s(szBuffer, _countof(szBuffer), "%02i:%02i:%02i\n", Hours, Minutes,
@@ -34,7 +21,7 @@ PrintPlayTimeShort(playtime *PlayTime)
 }
 
 void
-PrintRecordTime(playtime *RecordTime)
+PrintGameTimeRecord(game_time *RecordTime)
 {
   u8 Seconds = RecordTime->Seconds;
   u8 Minutes = RecordTime->Minutes;
@@ -45,39 +32,39 @@ PrintRecordTime(playtime *RecordTime)
 }
 
 void
-ReadPlayTime(playtime *PlayTime)
+ReadGameTime(game_time *GameTime)
 {
 
-  usize BytesToRead = sizeof(playtime);
+  usize BytesToRead = sizeof(game_time);
   usize BytesRead;
 
-  ReadGameMemory(processID, OFFSET_TIME_PLAYED, BytesToRead, PlayTime);
+  ReadGameMemory(processID, OFFSET_TIME_PLAYED, BytesToRead, GameTime);
 }
 
 void
-WritePlayTimeToFile(playtime *PlayTime, TCHAR FileName[MAX_PATH])
+WriteGameTimeToFile(game_time *GameTime)
 {
-  u8 Seconds = PlayTime->Seconds;
-  u8 Minutes = PlayTime->Minutes;
-  u8 Hours = PlayTime->Hours;
+  u8 Seconds = GameTime->Seconds;
+  u8 Minutes = GameTime->Minutes;
+  u8 Hours = GameTime->Hours;
 
-  FILE *fpPlayTime = fopen(FileName, "w");
+  FILE *fpGameTime = fopen("game_data/time/game_time.txt", "w");
 
   // Standard time (seconds accuracy)
-  fprintf(fpPlayTime, "%02i:%02i:%02i", Hours, Minutes, Seconds);
+  fprintf(fpGameTime, "%02i:%02i:%02i", Hours, Minutes, Seconds);
 
-  fclose(fpPlayTime);
+  fclose(fpGameTime);
 }
 
 void
-WriteRecordTimeToFile(
-    playtime *RecordTime, TCHAR szFolderName[128], TCHAR FileName[128])
+WriteGameTimeRecordToFile(game_time *RecordTime)
 {
   TCHAR szFullPath[MAX_PATH];
 
   WriteTimeStampFileString();
 
-  sprintf(szFullPath, "%s/%s-%s", szFolderName, szTimeStampFile, FileName);
+  sprintf(
+      szFullPath, "game_data/time/records/%s-record-time.txt", szTimeStampFile);
 
   u8 Seconds = RecordTime->Seconds;
   u8 Minutes = RecordTime->Minutes;
@@ -92,18 +79,17 @@ WriteRecordTimeToFile(
 }
 
 BOOL
-ComparePlayTimeShort(playtime *Time1, playtime *Time2)
+GameTimeChanged(game_time *Time1, game_time *Time2)
 {
-  if (Time1->Hours == Time2->Hours && Time1->Minutes == Time2->Minutes &&
-      Time1->Seconds == Time2->Seconds)
-  {
-    return TRUE;
-  }
-  return FALSE;
+  usize DataSize = sizeof(game_time);
+
+  BOOL Result = DataChanged((void *) Time1, (void *) Time2, DataSize);
+
+  return Result;
 }
 
 BOOL
-IsItLater(playtime *TimeOld, playtime *TimeNew)
+IsItLater(game_time *TimeOld, game_time *TimeNew)
 {
   u32 Old = (u32)(((u32)(TimeOld->Seconds) << 16) | //
                   ((u32)(TimeOld->Minutes) << 8) | //

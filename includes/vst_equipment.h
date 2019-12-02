@@ -1,12 +1,6 @@
 #ifndef _VST_EQUIPMENT_H
 #define _VST_EQUIPMENT_H
 
-enum which_glove
-{
-  RIGHT_GLOVE,
-  LEFT_GLOVE
-};
-
 //
 // Entry Points
 //
@@ -159,7 +153,7 @@ char *ItemNamesList[512] = { "", "Battle Knife", "Scramasax", "Dirk",
   "untitled", "untitled", "untitled", "untitled", "untitled", "untitled",
   "untitled", "untitled" };
 
-char *ArmoursList[81] = { "", "Buckler", "Pelta Shield", "Targe", "Quad Shield",
+char *ArmorsList[81] = { "", "Buckler", "Pelta Shield", "Targe", "Quad Shield",
   "Circle Shield", "Tower Shield", "Spiked Shield", "Round Shield",
   "Kite Shield", "Casserole Shield", "Heater Shield", "Oval Shield",
   "Knight Shield", "Hoplite Shield", "Jazeraint Shield", "Dread Shield",
@@ -228,7 +222,7 @@ char *GemsList[63] = { "None", "Talos Feldspar", "Titan Malachite",
   "untitled", "untitled", "untitled", "untitled", "untitled", "untitled",
   "untitled" };
 
-char *ArmoursCategories[8] = { "", "Shield", "Helm", "Breast Armor", "Leggings",
+char *ArmorsCategories[8] = { "", "Shield", "Helm", "Breast Armor", "Leggings",
   "Glove", "unused", "Accessory" };
 
 char *WeaponsCategories[11] = { "", "Daggers", "Swords", "Great Swords",
@@ -245,1217 +239,1618 @@ char *CraftingMaterials[8] = { "", "Wood", "Leather", "Bronze", "Iron",
 char *ItemClass[10] = { "", "Warrior's ", "Knightly ", "Prestigious ", "Brave ",
   "Warlord ", "Champion ", "Glorious ", "Supreme ", "Divine " };
 
-void
-WriteBladeInfo(u32 processID)
-{
-  item_info BladeInfo;
+#define LEVELING_FLAG_HUMAN 0x0001
+#define LEVELING_FLAG_BEAST 0x0002
+#define LEVELING_FLAG_UNDEAD 0x0004
+#define LEVELING_FLAG_PHANTOM 0x0008
+#define LEVELING_FLAG_DRAGON 0x0010
+#define LEVELING_FLAG_EVIL 0x0020
+#define LEVELING_FLAG_PHYSICAL 0x0040
+#define LEVELING_FLAG_AIR 0x0080
+#define LEVELING_FLAG_FIRE 0x0100
+#define LEVELING_FLAG_EARTH 0x0200
+#define LEVELING_FLAG_WATER 0x0400
+#define LEVELING_FLAG_LIGHT 0x0800
+#define LEVELING_FLAG_DARK 0x1000
 
-  usize BytesToRead = sizeof(item_info);
-  u32 BytesRead;
+void
+ClearLevelingFlags()
+{
+  LevelingFlags.Flags.FlagsCompound = 0;
+}
+
+void
+UpdateLevelingFlags()
+{
+  ClearLevelingFlags();
+
+  i8 HumanCur = itemBladeCur.ClassHuman;
+  i8 BeastCur = itemBladeCur.ClassBeast;
+  i8 UndeadCur = itemBladeCur.ClassUndead;
+  i8 PhantomCur = itemBladeCur.ClassPhantom;
+  i8 DragonCur = itemBladeCur.ClassDragon;
+  i8 EvilCur = itemBladeCur.ClassEvil;
+  i8 PhysicalCur = itemBladeCur.AffinityPhysical;
+  i8 AirCur = itemBladeCur.AffinityAir;
+  i8 FireCur = itemBladeCur.AffinityFire;
+  i8 EarthCur = itemBladeCur.AffinityEarth;
+  i8 WaterCur = itemBladeCur.AffinityWater;
+  i8 LightCur = itemBladeCur.AffinityLight;
+  i8 DarkCur = itemBladeCur.AffinityDark;
+
+  i8 HumanPrev = itemBladePrev.ClassHuman;
+  i8 BeastPrev = itemBladePrev.ClassBeast;
+  i8 UndeadPrev = itemBladePrev.ClassUndead;
+  i8 PhantomPrev = itemBladePrev.ClassPhantom;
+  i8 DragonPrev = itemBladePrev.ClassDragon;
+  i8 EvilPrev = itemBladePrev.ClassEvil;
+  i8 PhysicalPrev = itemBladePrev.AffinityPhysical;
+  i8 AirPrev = itemBladePrev.AffinityAir;
+  i8 FirePrev = itemBladePrev.AffinityFire;
+  i8 EarthPrev = itemBladePrev.AffinityEarth;
+  i8 WaterPrev = itemBladePrev.AffinityWater;
+  i8 LightPrev = itemBladePrev.AffinityLight;
+  i8 DarkPrev = itemBladePrev.AffinityDark;
+
+  i8 HumanDiff = HumanCur - HumanPrev;
+  i8 BeastDiff = BeastCur - BeastPrev;
+  i8 UndeadDiff = UndeadCur - UndeadPrev;
+  i8 PhantomDiff = PhantomCur - PhantomPrev;
+  i8 DragonDiff = DragonCur - DragonPrev;
+  i8 EvilDiff = EvilCur - EvilPrev;
+  i8 PhysicalDiff = PhysicalCur - PhysicalPrev;
+  i8 AirDiff = AirCur - AirPrev;
+  i8 FireDiff = FireCur - FirePrev;
+  i8 EarthDiff = EarthCur - EarthPrev;
+  i8 WaterDiff = WaterCur - WaterPrev;
+  i8 LightDiff = LightCur - LightPrev;
+  i8 DarkDiff = DarkCur - DarkPrev;
+
+  if (HumanDiff)
+  {
+    LevelingFlags.Flags.FlagsCompound |= LEVELING_FLAG_HUMAN;
+  }
+  if (BeastDiff)
+  {
+    LevelingFlags.Flags.FlagsCompound |= LEVELING_FLAG_BEAST;
+  }
+  if (UndeadDiff)
+  {
+    LevelingFlags.Flags.FlagsCompound |= LEVELING_FLAG_UNDEAD;
+  }
+  if (PhantomDiff)
+  {
+    LevelingFlags.Flags.FlagsCompound |= LEVELING_FLAG_PHANTOM;
+  }
+  if (DragonDiff)
+  {
+    LevelingFlags.Flags.FlagsCompound |= LEVELING_FLAG_DRAGON;
+  }
+  if (EvilDiff)
+  {
+    LevelingFlags.Flags.FlagsCompound |= LEVELING_FLAG_EVIL;
+  }
+  if (PhysicalDiff)
+  {
+    LevelingFlags.Flags.FlagsCompound |= LEVELING_FLAG_PHYSICAL;
+  }
+  if (AirDiff)
+  {
+    LevelingFlags.Flags.FlagsCompound |= LEVELING_FLAG_AIR;
+  }
+  if (FireDiff)
+  {
+    LevelingFlags.Flags.FlagsCompound |= LEVELING_FLAG_FIRE;
+  }
+  if (EarthDiff)
+  {
+    LevelingFlags.Flags.FlagsCompound |= LEVELING_FLAG_EARTH;
+  }
+  if (WaterDiff)
+  {
+    LevelingFlags.Flags.FlagsCompound |= LEVELING_FLAG_WATER;
+  }
+  if (LightDiff)
+  {
+    LevelingFlags.Flags.FlagsCompound |= LEVELING_FLAG_LIGHT;
+  }
+  if (DarkDiff)
+  {
+    LevelingFlags.Flags.FlagsCompound |= LEVELING_FLAG_DARK;
+  }
+}
+
+void
+ReadBladeData()
+{
+  usize BytesToRead = sizeof(item_data);
+  usize BytesRead = ReadGameMemory(
+      processID, OFFSET_EQUIPPED_WEAPON_BLADE, BytesToRead, &itemBladeCur);
+}
+
+void
+ReadWeaponData()
+{
+  usize BytesToRead = sizeof(item_data);
+  usize BytesRead;
 
   BytesRead = ReadGameMemory(
-      processID, OFFSET_EQUIPPED_WEAPON_BLADE, BytesToRead, &BladeInfo);
+      processID, OFFSET_EQUIPPED_WEAPON_GRIP, BytesToRead, &itemGripCur);
 
+  // Weapon gems
+  BytesRead = ReadGameMemory(processID, OFFSET_EQUIPPED_WEAPON_GEM_SLOT1,
+      BytesToRead, &itemGem1WeaponCur);
+  BytesRead = ReadGameMemory(processID, OFFSET_EQUIPPED_WEAPON_GEM_SLOT2,
+      BytesToRead, &itemGem2WeaponCur);
+  BytesRead = ReadGameMemory(processID, OFFSET_EQUIPPED_WEAPON_GEM_SLOT3,
+      BytesToRead, &itemGem3WeaponCur);
+}
+
+void
+ReadShieldData()
+{
+  usize BytesToRead = sizeof(item_data);
+  usize BytesRead;
+
+  BytesRead = ReadGameMemory(
+      processID, OFFSET_EQUIPPED_SHIELD, BytesToRead, &itemShieldCur);
+
+  // Shield gems
+  BytesRead = ReadGameMemory(processID, OFFSET_EQUIPPED_SHIELD_GEM_SLOT1,
+      BytesToRead, &itemGem1ShieldCur);
+  BytesRead = ReadGameMemory(processID, OFFSET_EQUIPPED_SHIELD_GEM_SLOT2,
+      BytesToRead, &itemGem2ShieldCur);
+  BytesRead = ReadGameMemory(processID, OFFSET_EQUIPPED_SHIELD_GEM_SLOT3,
+      BytesToRead, &itemGem3ShieldCur);
+}
+
+void
+ReadGlovesData()
+{
+  usize BytesToRead = sizeof(item_data);
+  usize BytesRead;
+
+  BytesRead = ReadGameMemory(
+      processID, OFFSET_EQUIPPED_LEFT_ARM, BytesToRead, &itemGloveLeftCur);
+  BytesRead = ReadGameMemory(
+      processID, OFFSET_EQUIPPED_RIGHT_ARM, BytesToRead, &itemGloveRightCur);
+}
+
+void
+ReadHeadData()
+{
+  usize BytesToRead = sizeof(item_data);
+  usize BytesRead;
+
+  BytesRead = ReadGameMemory(
+      processID, OFFSET_EQUIPPED_HEAD, BytesToRead, &itemHeadCur);
+}
+
+void
+ReadBodyData()
+{
+  usize BytesToRead = sizeof(item_data);
+  usize BytesRead;
+
+  BytesRead = ReadGameMemory(
+      processID, OFFSET_EQUIPPED_BODY, BytesToRead, &itemBodyCur);
+}
+
+void
+ReadLegsData()
+{
+  usize BytesToRead = sizeof(item_data);
+  usize BytesRead;
+
+  BytesRead = ReadGameMemory(
+      processID, OFFSET_EQUIPPED_LEGS, BytesToRead, &itemLegsCur);
+}
+
+void
+ReadNeckData()
+{
+  usize BytesToRead = sizeof(item_data);
+  usize BytesRead;
+
+  BytesRead = ReadGameMemory(
+      processID, OFFSET_EQUIPPED_NECK, BytesToRead, &itemNeckCur);
+}
+
+void
+ReadArmorData()
+{
+  ReadGlovesData();
+  ReadBodyData();
+  ReadHeadData();
+  ReadLegsData();
+  ReadNeckData();
+}
+
+BOOL
+ItemDataChanged(item_data *Item1, item_data *Item2)
+{
+  usize DataSize = sizeof(item_data);
+
+  BOOL Result = DataChanged((void *) Item1, (void *) Item2, DataSize);
+
+  return Result;
+}
+
+BOOL
+BladeDataChanged()
+{
+  if (ItemDataChanged(&itemBladePrev, &itemBladeCur))
+  {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+BOOL
+WeaponDataChanged()
+{
+  if (ItemDataChanged(&itemGripPrev, &itemGripCur) ||
+      ItemDataChanged(&itemGem1WeaponPrev, &itemGem1WeaponCur) ||
+      ItemDataChanged(&itemGem2WeaponPrev, &itemGem2WeaponCur) ||
+      ItemDataChanged(&itemGem3WeaponPrev, &itemGem3WeaponCur))
+  {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+BOOL
+ShieldDataChanged()
+{
+  if (ItemDataChanged(&itemShieldPrev, &itemShieldCur) ||
+      ItemDataChanged(&itemGem1ShieldPrev, &itemGem1ShieldCur) ||
+      ItemDataChanged(&itemGem2ShieldPrev, &itemGem2ShieldCur) ||
+      ItemDataChanged(&itemGem3ShieldPrev, &itemGem3ShieldCur))
+  {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+BOOL
+ArmorDataChanged()
+{
+  if (ItemDataChanged(&itemGloveLeftPrev, &itemGloveLeftCur) ||
+      ItemDataChanged(&itemGloveRightPrev, &itemGloveRightCur) ||
+      ItemDataChanged(&itemHeadPrev, &itemHeadCur) ||
+      ItemDataChanged(&itemBodyPrev, &itemBodyCur) ||
+      ItemDataChanged(&itemLegsPrev, &itemLegsCur) ||
+      ItemDataChanged(&itemNeckPrev, &itemNeckCur))
+  {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+void
+PrintBladeLeveling(u8 BladeNumber)
+{
+
+  i8 HumanCur = itemBladeCur.ClassHuman;
+  i8 BeastCur = itemBladeCur.ClassBeast;
+  i8 UndeadCur = itemBladeCur.ClassUndead;
+  i8 PhantomCur = itemBladeCur.ClassPhantom;
+  i8 DragonCur = itemBladeCur.ClassDragon;
+  i8 EvilCur = itemBladeCur.ClassEvil;
+  i8 PhysicalCur = itemBladeCur.AffinityPhysical;
+  i8 AirCur = itemBladeCur.AffinityAir;
+  i8 FireCur = itemBladeCur.AffinityFire;
+  i8 EarthCur = itemBladeCur.AffinityEarth;
+  i8 WaterCur = itemBladeCur.AffinityWater;
+  i8 LightCur = itemBladeCur.AffinityLight;
+  i8 DarkCur = itemBladeCur.AffinityDark;
+
+  i8 HumanFlag = LevelingFlags.Flags.Human;
+  i8 BeastFlag = LevelingFlags.Flags.Beast;
+  i8 UndeadFlag = LevelingFlags.Flags.Undead;
+  i8 PhantomFlag = LevelingFlags.Flags.Phantom;
+  i8 DragonFlag = LevelingFlags.Flags.Dragon;
+  i8 EvilFlag = LevelingFlags.Flags.Evil;
+  i8 PhysicalFlag = LevelingFlags.Flags.Physical;
+  i8 AirFlag = LevelingFlags.Flags.Air;
+  i8 FireFlag = LevelingFlags.Flags.Fire;
+  i8 EarthFlag = LevelingFlags.Flags.Earth;
+  i8 WaterFlag = LevelingFlags.Flags.Water;
+  i8 LightFlag = LevelingFlags.Flags.Light;
+  i8 DarkFlag = LevelingFlags.Flags.Dark;
+
+  switch (BladeNumber)
+  {
+    case 1:
+    {
+      sprintf_s(szBuffer, _countof(szBuffer), "\n\n== BLADE 1 ==\n\n");
+      WriteToBackBuffer();
+
+      if (DragonCur == 100)
+      {
+        sprintf_s(
+            szBuffer, _countof(szBuffer), "Dragon:   %4i OK\n", DragonCur);
+      }
+      else
+      {
+        sprintf_s(szBuffer, _countof(szBuffer), "Dragon:   %4i %s\n", DragonCur,
+            DragonFlag ? "++" : "");
+      }
+      WriteToBackBuffer();
+
+      if (PhysicalCur == 100)
+      {
+
+        sprintf_s(
+            szBuffer, _countof(szBuffer), "Physical: %4i OK\n", PhysicalCur);
+      }
+      else
+      {
+        sprintf_s(szBuffer, _countof(szBuffer), "Physical: %4i %s\n",
+            PhysicalCur, PhysicalFlag ? "++" : "");
+      }
+      WriteToBackBuffer();
+
+      if (BeastCur == 100)
+      {
+
+        sprintf_s(szBuffer, _countof(szBuffer), "Beast:    %4i OK\n", BeastCur);
+      }
+      else
+      {
+        sprintf_s(szBuffer, _countof(szBuffer), "Beast:    %4i %s\n", BeastCur,
+            BeastFlag ? "++" : "");
+      }
+      WriteToBackBuffer();
+
+      break;
+    }
+
+    case 2:
+    {
+      sprintf_s(szBuffer, _countof(szBuffer), "\n\n== BLADE 2 ==\n\n");
+      WriteToBackBuffer();
+
+      if (PhantomCur == 100)
+      {
+
+        sprintf_s(
+            szBuffer, _countof(szBuffer), "Phantom: %4i OK\n", PhantomCur);
+      }
+      else
+      {
+        sprintf_s(szBuffer, _countof(szBuffer), "Phantom: %4i %s\n", PhantomCur,
+            PhantomFlag ? "++" : "");
+      }
+      WriteToBackBuffer();
+
+      if (HumanCur == 100)
+      {
+        sprintf_s(szBuffer, _countof(szBuffer), "Human:   %4i OK\n", HumanCur);
+      }
+      else
+      {
+        sprintf_s(szBuffer, _countof(szBuffer), "Human:   %4i %s\n", HumanCur,
+            HumanFlag ? "++" : "");
+      }
+      WriteToBackBuffer();
+
+      if (EarthCur == 100)
+      {
+
+        sprintf_s(szBuffer, _countof(szBuffer), "Earth:   %4i OK\n", EarthCur);
+      }
+      else
+      {
+        sprintf_s(szBuffer, _countof(szBuffer), "Earth:   %4i %s\n", EarthCur,
+            EarthFlag ? "++" : "");
+      }
+      WriteToBackBuffer();
+
+      if (DarkCur == 100)
+      {
+
+        sprintf_s(szBuffer, _countof(szBuffer), "Dark:    %4i OK\n", DarkCur);
+      }
+      else
+      {
+        sprintf_s(szBuffer, _countof(szBuffer), "Dark:    %4i %s\n", DarkCur,
+            DarkFlag ? "++" : "");
+      }
+      WriteToBackBuffer();
+
+      if (WaterCur == 100)
+      {
+
+        sprintf_s(szBuffer, _countof(szBuffer), "Water:   %4i OK\n", WaterCur);
+      }
+      else
+      {
+        sprintf_s(szBuffer, _countof(szBuffer), "Water:   %4i %s\n", WaterCur,
+            WaterFlag ? "++" : "");
+      }
+      WriteToBackBuffer();
+
+      break;
+    }
+
+    case 3:
+    {
+      sprintf_s(szBuffer, _countof(szBuffer), "\n\n== BLADE 3 ==\n\n");
+      WriteToBackBuffer();
+
+      if (FireCur == 100)
+      {
+
+        sprintf_s(szBuffer, _countof(szBuffer), "Fire: %4i OK\n", FireCur);
+      }
+      else
+      {
+        sprintf_s(szBuffer, _countof(szBuffer), "Fire: %4i %s\n", FireCur,
+            FireFlag ? "++" : "");
+      }
+      WriteToBackBuffer();
+
+      if (AirCur == 100)
+      {
+        sprintf_s(szBuffer, _countof(szBuffer), "Air:  %4i OK\n", AirCur);
+      }
+      else
+      {
+        sprintf_s(szBuffer, _countof(szBuffer), "Air:  %4i %s\n", AirCur,
+            AirFlag ? "++" : "");
+      }
+      WriteToBackBuffer();
+
+      break;
+    }
+
+    case 4:
+    {
+      sprintf_s(szBuffer, _countof(szBuffer), "\n\n== BLADE 4 ==\n\n");
+      WriteToBackBuffer();
+
+      if (UndeadCur == 100)
+      {
+
+        sprintf_s(szBuffer, _countof(szBuffer), "Undead: %4i OK\n", UndeadCur);
+      }
+      else
+      {
+        sprintf_s(szBuffer, _countof(szBuffer), "Undead: %4i %s\n", UndeadCur,
+            UndeadFlag ? "++" : "");
+      }
+      WriteToBackBuffer();
+
+      if (EvilCur == 100)
+      {
+        sprintf_s(szBuffer, _countof(szBuffer), "Evil:   %4i OK\n", EvilCur);
+      }
+      else
+      {
+        sprintf_s(szBuffer, _countof(szBuffer), "Evil:   %4i %s\n", EvilCur,
+            EvilFlag ? "++" : "");
+      }
+      WriteToBackBuffer();
+
+      if (LightCur == 100)
+      {
+        sprintf_s(szBuffer, _countof(szBuffer), "Light:  %4i OK\n", LightCur);
+      }
+      else
+      {
+        sprintf_s(szBuffer, _countof(szBuffer), "Light:  %4i %s\n", LightCur,
+            LightFlag ? "++" : "");
+      }
+      WriteToBackBuffer();
+
+      break;
+    }
+
+    default:
+    {
+      sprintf_s(
+          szBuffer, _countof(szBuffer), "\n\nNo leveling weapon equipped\n\n");
+      WriteToBackBuffer();
+    }
+  }
+}
+
+void
+WriteBladeLeveling(u8 BladeNumber)
+{
+
+  i8 HumanCur = itemBladeCur.ClassHuman;
+  i8 BeastCur = itemBladeCur.ClassBeast;
+  i8 UndeadCur = itemBladeCur.ClassUndead;
+  i8 PhantomCur = itemBladeCur.ClassPhantom;
+  i8 DragonCur = itemBladeCur.ClassDragon;
+  i8 EvilCur = itemBladeCur.ClassEvil;
+  i8 PhysicalCur = itemBladeCur.AffinityPhysical;
+  i8 AirCur = itemBladeCur.AffinityAir;
+  i8 FireCur = itemBladeCur.AffinityFire;
+  i8 EarthCur = itemBladeCur.AffinityEarth;
+  i8 WaterCur = itemBladeCur.AffinityWater;
+  i8 LightCur = itemBladeCur.AffinityLight;
+  i8 DarkCur = itemBladeCur.AffinityDark;
+
+  i8 HumanFlag = LevelingFlags.Flags.Human;
+  i8 BeastFlag = LevelingFlags.Flags.Beast;
+  i8 UndeadFlag = LevelingFlags.Flags.Undead;
+  i8 PhantomFlag = LevelingFlags.Flags.Phantom;
+  i8 DragonFlag = LevelingFlags.Flags.Dragon;
+  i8 EvilFlag = LevelingFlags.Flags.Evil;
+  i8 PhysicalFlag = LevelingFlags.Flags.Physical;
+  i8 AirFlag = LevelingFlags.Flags.Air;
+  i8 FireFlag = LevelingFlags.Flags.Fire;
+  i8 EarthFlag = LevelingFlags.Flags.Earth;
+  i8 WaterFlag = LevelingFlags.Flags.Water;
+  i8 LightFlag = LevelingFlags.Flags.Light;
+  i8 DarkFlag = LevelingFlags.Flags.Dark;
+
+  FILE *fpBladeLeveling = fopen("game_data/weapon/blade_leveling.txt", "w");
+
+  switch (BladeNumber)
+  {
+    case 1:
+    {
+      fprintf(fpBladeLeveling, "== BLADE 1 ==\n\n");
+
+      if (DragonCur == 100)
+      {
+        fprintf(fpBladeLeveling, "Dragon:   %4i OK\n", DragonCur);
+      }
+      else
+      {
+        fprintf(fpBladeLeveling, "Dragon:   %4i %s\n", DragonCur,
+            DragonFlag ? "++" : "");
+      }
+
+      if (PhysicalCur == 100)
+      {
+        fprintf(fpBladeLeveling, "Physical: %4i OK\n", PhysicalCur);
+      }
+      else
+      {
+        fprintf(fpBladeLeveling, "Physical: %4i %s\n", PhysicalCur,
+            PhysicalFlag ? "++" : "");
+      }
+
+      if (BeastCur == 100)
+      {
+        fprintf(fpBladeLeveling, "Beast:    %4i OK\n", BeastCur);
+      }
+      else
+      {
+        fprintf(fpBladeLeveling, "Beast:    %4i %s\n", BeastCur,
+            BeastFlag ? "++" : "");
+      }
+
+      break;
+    }
+
+    case 2:
+    {
+      fprintf(fpBladeLeveling, "== BLADE 2 ==\n\n");
+
+      if (PhantomCur == 100)
+      {
+        fprintf(fpBladeLeveling, "Phantom: %4i OK\n", PhantomCur);
+      }
+      else
+      {
+        fprintf(fpBladeLeveling, "Phantom: %4i %s\n", PhantomCur,
+            PhantomFlag ? "++" : "");
+      }
+
+      if (HumanCur == 100)
+      {
+        fprintf(fpBladeLeveling, "Human:   %4i OK\n", HumanCur);
+      }
+      else
+      {
+        fprintf(fpBladeLeveling, "Human:   %4i %s\n", HumanCur,
+            HumanFlag ? "++" : "");
+      }
+
+      if (EarthCur == 100)
+      {
+        fprintf(fpBladeLeveling, "Earth:   %4i OK\n", EarthCur);
+      }
+      else
+      {
+        fprintf(fpBladeLeveling, "Earth:   %4i %s\n", EarthCur,
+            EarthFlag ? "++" : "");
+      }
+
+      if (DarkCur == 100)
+      {
+        fprintf(fpBladeLeveling, "Dark:    %4i OK\n", DarkCur);
+      }
+      else
+      {
+        fprintf(fpBladeLeveling, "Dark:    %4i %s\n", DarkCur,
+            DarkFlag ? "++" : "");
+      }
+
+      if (WaterCur == 100)
+      {
+        fprintf(fpBladeLeveling, "Water:   %4i OK\n", WaterCur);
+      }
+      else
+      {
+        fprintf(fpBladeLeveling, "Water:   %4i %s\n", WaterCur,
+            WaterFlag ? "++" : "");
+      }
+
+      break;
+    }
+
+    case 3:
+    {
+      fprintf(fpBladeLeveling, "== BLADE 3 ==\n\n");
+
+      if (FireCur == 100)
+      {
+        fprintf(fpBladeLeveling, "Fire: %4i OK\n", FireCur);
+      }
+      else
+      {
+        fprintf(
+            fpBladeLeveling, "Fire: %4i %s\n", FireCur, FireFlag ? "++" : "");
+      }
+
+      if (AirCur == 100)
+      {
+        fprintf(fpBladeLeveling, "Air:  %4i OK\n", AirCur);
+      }
+      else
+      {
+        fprintf(fpBladeLeveling, "Air:  %4i %s\n", AirCur, AirFlag ? "++" : "");
+      }
+
+      break;
+    }
+
+    case 4:
+    {
+      fprintf(fpBladeLeveling, "== BLADE 4 ==\n\n");
+
+      if (UndeadCur == 100)
+      {
+        fprintf(fpBladeLeveling, "Undead: %4i OK\n", UndeadCur);
+      }
+      else
+      {
+        fprintf(fpBladeLeveling, "Undead: %4i %s\n", UndeadCur,
+            UndeadFlag ? "++" : "");
+      }
+
+      if (EvilCur == 100)
+      {
+        fprintf(fpBladeLeveling, "Evil:   %4i OK\n", EvilCur);
+      }
+      else
+      {
+        fprintf(
+            fpBladeLeveling, "Evil:   %4i %s\n", EvilCur, EvilFlag ? "++" : "");
+      }
+
+      if (LightCur == 100)
+      {
+        fprintf(fpBladeLeveling, "Light:  %4i OK\n", LightCur);
+      }
+      else
+      {
+        fprintf(fpBladeLeveling, "Light:  %4i %s\n", LightCur,
+            LightFlag ? "++" : "");
+      }
+      break;
+    }
+
+    default:
+    {
+      fprintf(fpBladeLeveling, "No leveling weapon equipped\n");
+    }
+  }
+  fclose(fpBladeLeveling);
+}
+
+void
+WriteBladeData()
+{
   // Check for out-of-bound indexes
-  if (BladeInfo.NamesListPosition > _countof(ItemNamesList) - 1 || //
-      BladeInfo.ListPosition > _countof(WeaponsList) - 1 || //
-      BladeInfo.Category > _countof(WeaponsCategories) - 1)
+  if (itemBladeCur.NamesListPosition > _countof(ItemNamesList) - 1 || //
+      itemBladeCur.ListPosition > _countof(WeaponsList) - 1 || //
+      itemBladeCur.Category > _countof(WeaponsCategories) - 1)
   {
     return;
   }
 
-  FILE *fpBladeInfoExt = fopen("game_stats/blade-full.txt", "w");
+  FILE *fpBladeData = fopen("game_data/weapon/blade.txt", "w");
 
   // Check if weapon is eqipped
-  if (BladeInfo.ListPosition == 0)
+  if (itemBladeCur.ListPosition == 0)
   {
     fprintf(
-        fpBladeInfoExt, "Can't read the blade data: weapon is not equipped!\n");
-    fclose(fpBladeInfoExt);
+        fpBladeData, "Can't read the blade data: weapon is not equipped!\n");
+    fclose(fpBladeData);
 
     return;
   }
 
-  fprintf(fpBladeInfoExt, "Blade Extended Stats\n\n");
+  fprintf(fpBladeData, "Blade Stats\n\n");
 
-  fprintf(fpBladeInfoExt, "Name: %s\n", WeaponsList[BladeInfo.ListPosition]);
+  fprintf(fpBladeData, "Name: %s\n", WeaponsList[itemBladeCur.ListPosition]);
   fprintf(
-      fpBladeInfoExt, "Category: %s\n", WeaponsCategories[BladeInfo.Category]);
+      fpBladeData, "Category: %s\n", WeaponsCategories[itemBladeCur.Category]);
   fprintf(
-      fpBladeInfoExt, "Material: %s\n", CraftingMaterials[BladeInfo.Material]);
-  fprintf(fpBladeInfoExt, "Damage type: %s\n",
-      WeaponDamageType[BladeInfo.DamageType]);
-  fprintf(fpBladeInfoExt, "\n");
+      fpBladeData, "Material: %s\n", CraftingMaterials[itemBladeCur.Material]);
+  fprintf(fpBladeData, "Damage type: %s\n",
+      WeaponDamageType[itemBladeCur.DamageType]);
+  fprintf(fpBladeData, "\n");
 
   // Bonuses
-  fprintf(fpBladeInfoExt, "BONUSES\n");
-  fprintf(fpBladeInfoExt, "========\n");
-  fprintf(fpBladeInfoExt, "STR: %3i\n", BladeInfo.STR);
-  fprintf(fpBladeInfoExt, "INT: %3i\n", BladeInfo.INT);
-  fprintf(fpBladeInfoExt, "AGL: %3i\n", BladeInfo.AGL);
-  fprintf(fpBladeInfoExt, "\n");
+  fprintf(fpBladeData, "BONUSES\n");
+  fprintf(fpBladeData, "========\n");
+  fprintf(fpBladeData, "STR: %3i\n", itemBladeCur.STR);
+  fprintf(fpBladeData, "INT: %3i\n", itemBladeCur.INT);
+  fprintf(fpBladeData, "AGL: %3i\n", itemBladeCur.AGL);
+  fprintf(fpBladeData, "\n");
 
   // DP & PP
-  fprintf(fpBladeInfoExt, "DURABILITY\n");
-  fprintf(fpBladeInfoExt, "===========\n");
-  fprintf(fpBladeInfoExt, "DP: %3i/%3i\n", (BladeInfo.DPCur + 99) / 100,
-      (BladeInfo.DPMax + 99) / 100);
-  fprintf(fpBladeInfoExt, "PP: %3i/%3i\n", BladeInfo.PPCur, BladeInfo.PPMax);
-  fprintf(fpBladeInfoExt, "\n");
+  fprintf(fpBladeData, "DURABILITY\n");
+  fprintf(fpBladeData, "===========\n");
+  fprintf(fpBladeData, "DP: %3i/%3i\n", (itemBladeCur.DPCur + 99) / 100,
+      (itemBladeCur.DPMax + 99) / 100);
+  fprintf(fpBladeData, "PP: %3i/%3i\n", itemBladeCur.PPCur, itemBladeCur.PPMax);
+  fprintf(fpBladeData, "\n");
 
   // Misc
-  fprintf(fpBladeInfoExt, "MISC\n");
-  fprintf(fpBladeInfoExt, "=======================\n");
+  fprintf(fpBladeData, "MISC\n");
+  fprintf(fpBladeData, "=======================\n");
 
   // Range
-  fprintf(fpBladeInfoExt, "Range (x/y/z): %2i/%2i/%2i\n", BladeInfo.Range.x,
-      BladeInfo.Range.y, BladeInfo.Range.z);
+  fprintf(fpBladeData, "Range (x/y/z): %2i/%2i/%2i\n", itemBladeCur.Range.x,
+      itemBladeCur.Range.y, itemBladeCur.Range.z);
 
   // Resource cost
-  fprintf(fpBladeInfoExt, "Attack cost: %i %s\n", BladeInfo.StatsCostValue,
-      WeaponAttackCostType[BladeInfo.StatsCostType]);
-  fprintf(fpBladeInfoExt, "\n");
+  fprintf(fpBladeData, "Attack cost: %i %s\n", itemBladeCur.StatsCostValue,
+      WeaponAttackCostType[itemBladeCur.StatsCostType]);
+  fprintf(fpBladeData, "\n");
 
   // Class
-  fprintf(fpBladeInfoExt, "CLASS\n");
-  fprintf(fpBladeInfoExt, "=============\n");
-  fprintf(fpBladeInfoExt, "Human:    %3i\n", BladeInfo.ClassHuman);
-  fprintf(fpBladeInfoExt, "Beast:    %3i\n", BladeInfo.ClassBeast);
-  fprintf(fpBladeInfoExt, "Undead:   %3i\n", BladeInfo.ClassUndead);
-  fprintf(fpBladeInfoExt, "Phantom:  %3i\n", BladeInfo.ClassPhantom);
-  fprintf(fpBladeInfoExt, "Dragon:   %3i\n", BladeInfo.ClassDragon);
-  fprintf(fpBladeInfoExt, "Evil:     %3i\n", BladeInfo.ClassEvil);
-  fprintf(fpBladeInfoExt, "\n");
+  fprintf(fpBladeData, "CLASS\n");
+  fprintf(fpBladeData, "=============\n");
+  fprintf(fpBladeData, "Human:    %3i\n", itemBladeCur.ClassHuman);
+  fprintf(fpBladeData, "Beast:    %3i\n", itemBladeCur.ClassBeast);
+  fprintf(fpBladeData, "Undead:   %3i\n", itemBladeCur.ClassUndead);
+  fprintf(fpBladeData, "Phantom:  %3i\n", itemBladeCur.ClassPhantom);
+  fprintf(fpBladeData, "Dragon:   %3i\n", itemBladeCur.ClassDragon);
+  fprintf(fpBladeData, "Evil:     %3i\n", itemBladeCur.ClassEvil);
+  fprintf(fpBladeData, "\n");
 
   // Affinity
-  fprintf(fpBladeInfoExt, "AFFINITY\n");
-  fprintf(fpBladeInfoExt, "=============\n");
-  fprintf(fpBladeInfoExt, "Physical: %3i\n", BladeInfo.AffinityPhysical);
-  fprintf(fpBladeInfoExt, "Air:      %3i\n", BladeInfo.AffinityAir);
-  fprintf(fpBladeInfoExt, "Fire:     %3i\n", BladeInfo.AffinityFire);
-  fprintf(fpBladeInfoExt, "Earth:    %3i\n", BladeInfo.AffinityEarth);
-  fprintf(fpBladeInfoExt, "Water:    %3i\n", BladeInfo.AffinityWater);
-  fprintf(fpBladeInfoExt, "Light:    %3i\n", BladeInfo.AffinityLight);
-  fprintf(fpBladeInfoExt, "Dark:     %3i\n", BladeInfo.AffinityDark);
+  fprintf(fpBladeData, "AFFINITY\n");
+  fprintf(fpBladeData, "=============\n");
+  fprintf(fpBladeData, "Physical: %3i\n", itemBladeCur.AffinityPhysical);
+  fprintf(fpBladeData, "Air:      %3i\n", itemBladeCur.AffinityAir);
+  fprintf(fpBladeData, "Fire:     %3i\n", itemBladeCur.AffinityFire);
+  fprintf(fpBladeData, "Earth:    %3i\n", itemBladeCur.AffinityEarth);
+  fprintf(fpBladeData, "Water:    %3i\n", itemBladeCur.AffinityWater);
+  fprintf(fpBladeData, "Light:    %3i\n", itemBladeCur.AffinityLight);
+  fprintf(fpBladeData, "Dark:     %3i\n", itemBladeCur.AffinityDark);
 
-  fclose(fpBladeInfoExt);
+  fclose(fpBladeData);
 }
 
 void
-WriteBladeInfoShort(u32 processID)
+WriteWeaponData()
 {
-  item_info BladeInfo;
-
-  usize BytesToRead = sizeof(item_info);
-  u32 BytesRead;
-
-  BytesRead = ReadGameMemory(
-      processID, OFFSET_EQUIPPED_WEAPON_BLADE, BytesToRead, &BladeInfo);
-
   // Check for out-of-bound indexes
-  if (BladeInfo.NamesListPosition > _countof(ItemNamesList) - 1 || //
-      BladeInfo.ListPosition > _countof(WeaponsList) - 1 || //
-      BladeInfo.Material > _countof(CraftingMaterials) - 1 || //
-      BladeInfo.Category > _countof(WeaponsCategories) - 1)
+  if (itemBladeCur.NamesListPosition > _countof(ItemNamesList) - 1 || //
+      itemBladeCur.ListPosition > _countof(WeaponsList) - 1 || //
+      itemBladeCur.Category > _countof(WeaponsCategories) - 1 || //
+      itemBladeCur.Material > _countof(CraftingMaterials) - 1 || //
+      itemGripCur.ListPosition > _countof(GripsList) - 1 || //
+      itemGem1WeaponCur.ListPosition > _countof(GemsList) - 1 || //
+      itemGem2WeaponCur.ListPosition > _countof(GemsList) - 1 || //
+      itemGem3WeaponCur.ListPosition > _countof(GemsList) - 1)
   {
     return;
   }
 
-  FILE *fpBladeInfoShort = fopen("game_stats/blade-short.txt", "w");
+  FILE *fpWeaponData = fopen("game_data/weapon/weapon.txt", "w");
 
   // Check if weapon is eqipped
-  if (BladeInfo.ListPosition == 0)
+  if (itemBladeCur.ListPosition == 0)
   {
-    fprintf(fpBladeInfoShort,
-        "Can't read the blade data: weapon is not equipped!\n");
-    fclose(fpBladeInfoShort);
+    fprintf(fpWeaponData, "Weapon not equipped!\n");
+    fclose(fpWeaponData);
 
     return;
   }
 
-  fprintf(fpBladeInfoShort, "Blade Basic Stats\n\n");
+  fprintf(fpWeaponData, "Weapon Stats\n\n");
 
-  // Class
-  fprintf(fpBladeInfoShort, "CLASS\n");
-  fprintf(fpBladeInfoShort, "=============\n");
-  fprintf(fpBladeInfoShort, "Human:    %3i\n", BladeInfo.ClassHuman);
-  fprintf(fpBladeInfoShort, "Beast:    %3i\n", BladeInfo.ClassBeast);
-  fprintf(fpBladeInfoShort, "Undead:   %3i\n", BladeInfo.ClassUndead);
-  fprintf(fpBladeInfoShort, "Phantom:  %3i\n", BladeInfo.ClassPhantom);
-  fprintf(fpBladeInfoShort, "Dragon:   %3i\n", BladeInfo.ClassDragon);
-  fprintf(fpBladeInfoShort, "Evil:     %3i\n", BladeInfo.ClassEvil);
-  fprintf(fpBladeInfoShort, "\n");
-
-  // Affinity
-  fprintf(fpBladeInfoShort, "AFFINITY\n");
-  fprintf(fpBladeInfoShort, "=============\n");
-  fprintf(fpBladeInfoShort, "Physical: %3i\n", BladeInfo.AffinityPhysical);
-  fprintf(fpBladeInfoShort, "Air:      %3i\n", BladeInfo.AffinityAir);
-  fprintf(fpBladeInfoShort, "Fire:     %3i\n", BladeInfo.AffinityFire);
-  fprintf(fpBladeInfoShort, "Earth:    %3i\n", BladeInfo.AffinityEarth);
-  fprintf(fpBladeInfoShort, "Water:    %3i\n", BladeInfo.AffinityWater);
-  fprintf(fpBladeInfoShort, "Light:    %3i\n", BladeInfo.AffinityLight);
-  fprintf(fpBladeInfoShort, "Dark:     %3i\n", BladeInfo.AffinityDark);
-
-  fclose(fpBladeInfoShort);
-}
-
-void
-WriteWeaponInfo(u32 processID)
-{
-  item_info BladeInfo;
-  item_info GripInfo;
-  item_info Gem1Info;
-  item_info Gem2Info;
-  item_info Gem3Info;
-
-  usize BytesToRead = sizeof(item_info);
-  u32 BytesRead;
-
-  BytesRead = ReadGameMemory(
-      processID, OFFSET_EQUIPPED_WEAPON_BLADE, BytesToRead, &BladeInfo);
-  BytesRead = ReadGameMemory(
-      processID, OFFSET_EQUIPPED_WEAPON_GRIP, BytesToRead, &GripInfo);
-  BytesRead = ReadGameMemory(
-      processID, OFFSET_EQUIPPED_WEAPON_GEM_SLOT1, BytesToRead, &Gem1Info);
-  BytesRead = ReadGameMemory(
-      processID, OFFSET_EQUIPPED_WEAPON_GEM_SLOT2, BytesToRead, &Gem2Info);
-  BytesRead = ReadGameMemory(
-      processID, OFFSET_EQUIPPED_WEAPON_GEM_SLOT3, BytesToRead, &Gem3Info);
-
-  // Check for out-of-bound indexes
-  if (BladeInfo.NamesListPosition > _countof(ItemNamesList) - 1 || //
-      BladeInfo.ListPosition > _countof(WeaponsList) - 1 || //
-      BladeInfo.Category > _countof(WeaponsCategories) - 1 || //
-      BladeInfo.Material > _countof(CraftingMaterials) - 1 || //
-      GripInfo.ListPosition > _countof(GripsList) - 1 || //
-      Gem1Info.ListPosition > _countof(GemsList) - 1 || //
-      Gem2Info.ListPosition > _countof(GemsList) - 1 || //
-      Gem3Info.ListPosition > _countof(GemsList) - 1)
-  {
-    return;
-  }
-
-  FILE *fpWeaponInfo = fopen("game_stats/weapon-full.txt", "w");
-
-  // Check if weapon is eqipped
-  if (BladeInfo.ListPosition == 0)
-  {
-    fprintf(fpWeaponInfo, "Weapon not equipped!\n");
-    fclose(fpWeaponInfo);
-
-    return;
-  }
-
-  fprintf(fpWeaponInfo, "Weapon Stats\n\n");
-
-  // char WeaponName[18] = "";
-  // GetWeaponName(processID, WeaponName);
-
-  fprintf(fpWeaponInfo, "Weapon name: %s\n", GlobalWeaponName);
+  fprintf(fpWeaponData, "Weapon name: %s\n", nameWeaponCur);
   fprintf(
-      fpWeaponInfo, "Blade name: %s\n", WeaponsList[BladeInfo.ListPosition]);
+      fpWeaponData, "Blade name: %s\n", WeaponsList[itemBladeCur.ListPosition]);
   fprintf(
-      fpWeaponInfo, "Category: %s\n", WeaponsCategories[BladeInfo.Category]);
+      fpWeaponData, "Category: %s\n", WeaponsCategories[itemBladeCur.Category]);
   fprintf(
-      fpWeaponInfo, "Material: %s\n", CraftingMaterials[BladeInfo.Material]);
-  fprintf(fpWeaponInfo, "Grip: %s\n", GripsList[GripInfo.ListPosition]);
-  fprintf(fpWeaponInfo, "Damage type: %s\n",
-      WeaponDamageType[BladeInfo.DamageType]);
-  fprintf(fpWeaponInfo, "\n");
+      fpWeaponData, "Material: %s\n", CraftingMaterials[itemBladeCur.Material]);
+  fprintf(fpWeaponData, "Grip: %s\n", GripsList[itemGripCur.ListPosition]);
+  fprintf(fpWeaponData, "Damage type: %s\n",
+      WeaponDamageType[itemBladeCur.DamageType]);
+  fprintf(fpWeaponData, "\n");
 
   // Bonuses
-  i16 STRTotal =
-      BladeInfo.STR + GripInfo.STR + Gem1Info.STR + Gem2Info.STR + Gem3Info.STR;
-  i16 INTTotal =
-      BladeInfo.INT + GripInfo.INT + Gem1Info.INT + Gem2Info.INT + Gem3Info.INT;
-  i16 AGLTotal =
-      BladeInfo.AGL + GripInfo.AGL + Gem1Info.AGL + Gem2Info.AGL + Gem3Info.AGL;
+  i16 STRTotal = itemBladeCur.STR + itemGripCur.STR + itemGem1WeaponCur.STR +
+                 itemGem2WeaponCur.STR + itemGem3WeaponCur.STR;
+  i16 INTTotal = itemBladeCur.INT + itemGripCur.INT + itemGem1WeaponCur.INT +
+                 itemGem2WeaponCur.INT + itemGem3WeaponCur.INT;
+  i16 AGLTotal = itemBladeCur.AGL + itemGripCur.AGL + itemGem1WeaponCur.AGL +
+                 itemGem2WeaponCur.AGL + itemGem3WeaponCur.AGL;
 
-  fprintf(fpWeaponInfo, "BONUSES\n");
-  fprintf(fpWeaponInfo, "========\n");
-  fprintf(fpWeaponInfo, "STR: %3i\n", STRTotal);
-  fprintf(fpWeaponInfo, "INT: %3i\n", INTTotal);
-  fprintf(fpWeaponInfo, "AGL: %3i\n", AGLTotal);
-  fprintf(fpWeaponInfo, "\n");
+  fprintf(fpWeaponData, "BONUSES\n");
+  fprintf(fpWeaponData, "========\n");
+  fprintf(fpWeaponData, "STR: %3i\n", STRTotal);
+  fprintf(fpWeaponData, "INT: %3i\n", INTTotal);
+  fprintf(fpWeaponData, "AGL: %3i\n", AGLTotal);
+  fprintf(fpWeaponData, "\n");
 
   // DP & PP
-  fprintf(fpWeaponInfo, "DURABILITY\n");
-  fprintf(fpWeaponInfo, "===========\n");
-  fprintf(fpWeaponInfo, "DP: %3i/%3i\n", (BladeInfo.DPCur + 99) / 100,
-      (BladeInfo.DPMax + 99) / 100);
-  fprintf(fpWeaponInfo, "PP: %3i/%3i\n", BladeInfo.PPCur, BladeInfo.PPMax);
-  fprintf(fpWeaponInfo, "\n");
+  fprintf(fpWeaponData, "DURABILITY\n");
+  fprintf(fpWeaponData, "===========\n");
+  fprintf(fpWeaponData, "DP: %3i/%3i\n", (itemBladeCur.DPCur + 99) / 100,
+      (itemBladeCur.DPMax + 99) / 100);
+  fprintf(
+      fpWeaponData, "PP: %3i/%3i\n", itemBladeCur.PPCur, itemBladeCur.PPMax);
+  fprintf(fpWeaponData, "\n");
 
   // Misc
-  fprintf(fpWeaponInfo, "MISC\n");
-  fprintf(fpWeaponInfo, "=======================\n");
+  fprintf(fpWeaponData, "MISC\n");
+  fprintf(fpWeaponData, "=======================\n");
 
   // Range
-  fprintf(fpWeaponInfo, "Range (x/y/z): %2i/%2i/%2i\n", BladeInfo.Range.x,
-      BladeInfo.Range.y, BladeInfo.Range.z);
+  fprintf(fpWeaponData, "Range (x/y/z): %2i/%2i/%2i\n", itemBladeCur.Range.x,
+      itemBladeCur.Range.y, itemBladeCur.Range.z);
 
   // Resource cost
-  fprintf(fpWeaponInfo, "Attack cost: %i %s\n", BladeInfo.StatsCostValue,
-      WeaponAttackCostType[BladeInfo.StatsCostType]);
+  fprintf(fpWeaponData, "Attack cost: %i %s\n", itemBladeCur.StatsCostValue,
+      WeaponAttackCostType[itemBladeCur.StatsCostType]);
 
-  fprintf(fpWeaponInfo, "\n");
+  fprintf(fpWeaponData, "\n");
 
   // Gems
-  u8 GemSlots = GripInfo.GemSlots;
+  u8 GemSlots = itemGripCur.GemSlots;
   if (GemSlots)
   {
-    fprintf(fpWeaponInfo, "GEMS\n");
-    fprintf(fpWeaponInfo, "=========================\n");
+    fprintf(fpWeaponData, "GEMS\n");
+    fprintf(fpWeaponData, "=========================\n");
 
-    fprintf(fpWeaponInfo, "Slot 1: %17s\n", GemsList[Gem1Info.ListPosition]);
+    fprintf(fpWeaponData, "Slot 1: %17s\n",
+        GemsList[itemGem1WeaponCur.ListPosition]);
 
     if (GemSlots > 1)
     {
-      fprintf(fpWeaponInfo, "Slot 2: %17s\n", GemsList[Gem2Info.ListPosition]);
+      fprintf(fpWeaponData, "Slot 2: %17s\n",
+          GemsList[itemGem2WeaponCur.ListPosition]);
     }
     if (GemSlots > 2)
     {
-      fprintf(fpWeaponInfo, "Slot 3: %17s\n", GemsList[Gem3Info.ListPosition]);
+      fprintf(fpWeaponData, "Slot 3: %17s\n",
+          GemsList[itemGem3WeaponCur.ListPosition]);
     }
   }
 
-  // fprintf(fpWeaponInfo, "Gem effects 1: %i\n", Gem1Info.GemsSpecialEffects);
-  // fprintf(fpWeaponInfo, "Gem effects 2: %i\n", Gem2Info.GemsSpecialEffects);
-  // fprintf(fpWeaponInfo, "Gem effects 3: %i\n", Gem3Info.GemsSpecialEffects);
-
-  fprintf(fpWeaponInfo, "\n");
+  fprintf(fpWeaponData, "\n");
 
   // Type
-  fprintf(fpWeaponInfo, "TYPE\n");
-  fprintf(fpWeaponInfo, "============\n");
-  fprintf(fpWeaponInfo, "Blunt:    %2i\n", GripInfo.TypeBlunt);
-  fprintf(fpWeaponInfo, "Edged:    %2i\n", GripInfo.TypeEdged);
-  fprintf(fpWeaponInfo, "Piercing: %2i\n", GripInfo.TypePiercing);
-  fprintf(fpWeaponInfo, "\n");
+  fprintf(fpWeaponData, "TYPE\n");
+  fprintf(fpWeaponData, "============\n");
+  fprintf(fpWeaponData, "Blunt:    %2i\n", itemGripCur.TypeBlunt);
+  fprintf(fpWeaponData, "Edged:    %2i\n", itemGripCur.TypeEdged);
+  fprintf(fpWeaponData, "Piercing: %2i\n", itemGripCur.TypePiercing);
+  fprintf(fpWeaponData, "\n");
 
   // Class summary
-  i16 ClassHumanTotal = BladeInfo.ClassHuman + Gem1Info.ClassHuman +
-                        Gem2Info.ClassHuman + Gem3Info.ClassHuman;
-  i16 ClassBeastTotal = BladeInfo.ClassBeast + Gem1Info.ClassBeast +
-                        Gem2Info.ClassBeast + Gem3Info.ClassBeast;
-  i16 ClassUndeadTotal = BladeInfo.ClassUndead + Gem1Info.ClassUndead +
-                         Gem2Info.ClassUndead + Gem3Info.ClassUndead;
-  i16 ClassPhantomTotal = BladeInfo.ClassPhantom + Gem1Info.ClassPhantom +
-                          Gem2Info.ClassPhantom + Gem3Info.ClassPhantom;
-  i16 ClassDragonTotal = BladeInfo.ClassDragon + Gem1Info.ClassDragon +
-                         Gem2Info.ClassDragon + Gem3Info.ClassDragon;
-  i16 ClassEvilTotal = BladeInfo.ClassEvil + Gem1Info.ClassEvil +
-                       Gem2Info.ClassEvil + Gem3Info.ClassEvil;
+  i16 ClassHumanTotal = itemBladeCur.ClassHuman + itemGem1WeaponCur.ClassHuman +
+                        itemGem2WeaponCur.ClassHuman +
+                        itemGem3WeaponCur.ClassHuman;
+  i16 ClassBeastTotal = itemBladeCur.ClassBeast + itemGem1WeaponCur.ClassBeast +
+                        itemGem2WeaponCur.ClassBeast +
+                        itemGem3WeaponCur.ClassBeast;
+  i16 ClassUndeadTotal =
+      itemBladeCur.ClassUndead + itemGem1WeaponCur.ClassUndead +
+      itemGem2WeaponCur.ClassUndead + itemGem3WeaponCur.ClassUndead;
+  i16 ClassPhantomTotal =
+      itemBladeCur.ClassPhantom + itemGem1WeaponCur.ClassPhantom +
+      itemGem2WeaponCur.ClassPhantom + itemGem3WeaponCur.ClassPhantom;
+  i16 ClassDragonTotal =
+      itemBladeCur.ClassDragon + itemGem1WeaponCur.ClassDragon +
+      itemGem2WeaponCur.ClassDragon + itemGem3WeaponCur.ClassDragon;
+  i16 ClassEvilTotal = itemBladeCur.ClassEvil + itemGem1WeaponCur.ClassEvil +
+                       itemGem2WeaponCur.ClassEvil +
+                       itemGem3WeaponCur.ClassEvil;
 
   // Affinity summary
   i16 AffinityPhysicalTotal =
-      BladeInfo.AffinityPhysical + Gem1Info.AffinityPhysical +
-      Gem2Info.AffinityPhysical + Gem3Info.AffinityPhysical;
-  i16 AffinityAirTotal = BladeInfo.AffinityAir + Gem1Info.AffinityAir +
-                         Gem2Info.AffinityAir + Gem3Info.AffinityAir;
-  i16 AffinityFireTotal = BladeInfo.AffinityFire + Gem1Info.AffinityFire +
-                          Gem2Info.AffinityFire + Gem3Info.AffinityFire;
-  i16 AffinityEarthTotal = BladeInfo.AffinityEarth + Gem1Info.AffinityEarth +
-                           Gem2Info.AffinityEarth + Gem3Info.AffinityEarth;
-  i16 AffinityWaterTotal = BladeInfo.AffinityWater + Gem1Info.AffinityWater +
-                           Gem2Info.AffinityWater + Gem3Info.AffinityWater;
-  i16 AffinityLightTotal = BladeInfo.AffinityLight + Gem1Info.AffinityLight +
-                           Gem2Info.AffinityLight + Gem3Info.AffinityLight;
-  i16 AffinityDarkTotal = BladeInfo.AffinityDark + Gem1Info.AffinityDark +
-                          Gem2Info.AffinityDark + Gem3Info.AffinityDark;
+      itemBladeCur.AffinityPhysical + itemGem1WeaponCur.AffinityPhysical +
+      itemGem2WeaponCur.AffinityPhysical + itemGem3WeaponCur.AffinityPhysical;
+  i16 AffinityAirTotal =
+      itemBladeCur.AffinityAir + itemGem1WeaponCur.AffinityAir +
+      itemGem2WeaponCur.AffinityAir + itemGem3WeaponCur.AffinityAir;
+  i16 AffinityFireTotal =
+      itemBladeCur.AffinityFire + itemGem1WeaponCur.AffinityFire +
+      itemGem2WeaponCur.AffinityFire + itemGem3WeaponCur.AffinityFire;
+  i16 AffinityEarthTotal =
+      itemBladeCur.AffinityEarth + itemGem1WeaponCur.AffinityEarth +
+      itemGem2WeaponCur.AffinityEarth + itemGem3WeaponCur.AffinityEarth;
+  i16 AffinityWaterTotal =
+      itemBladeCur.AffinityWater + itemGem1WeaponCur.AffinityWater +
+      itemGem2WeaponCur.AffinityWater + itemGem3WeaponCur.AffinityWater;
+  i16 AffinityLightTotal =
+      itemBladeCur.AffinityLight + itemGem1WeaponCur.AffinityLight +
+      itemGem2WeaponCur.AffinityLight + itemGem3WeaponCur.AffinityLight;
+  i16 AffinityDarkTotal =
+      itemBladeCur.AffinityDark + itemGem1WeaponCur.AffinityDark +
+      itemGem2WeaponCur.AffinityDark + itemGem3WeaponCur.AffinityDark;
 
   // Class
-  fprintf(fpWeaponInfo, "CLASS\n");
-  fprintf(fpWeaponInfo, "=============\n");
-  fprintf(fpWeaponInfo, "Human:    %3i\n", ClassHumanTotal);
-  fprintf(fpWeaponInfo, "Beast:    %3i\n", ClassBeastTotal);
-  fprintf(fpWeaponInfo, "Undead:   %3i\n", ClassUndeadTotal);
-  fprintf(fpWeaponInfo, "Phantom:  %3i\n", ClassPhantomTotal);
-  fprintf(fpWeaponInfo, "Dragon:   %3i\n", ClassDragonTotal);
-  fprintf(fpWeaponInfo, "Evil:     %3i\n", ClassEvilTotal);
-  fprintf(fpWeaponInfo, "\n");
+  fprintf(fpWeaponData, "CLASS\n");
+  fprintf(fpWeaponData, "=============\n");
+  fprintf(fpWeaponData, "Human:    %3i\n", ClassHumanTotal);
+  fprintf(fpWeaponData, "Beast:    %3i\n", ClassBeastTotal);
+  fprintf(fpWeaponData, "Undead:   %3i\n", ClassUndeadTotal);
+  fprintf(fpWeaponData, "Phantom:  %3i\n", ClassPhantomTotal);
+  fprintf(fpWeaponData, "Dragon:   %3i\n", ClassDragonTotal);
+  fprintf(fpWeaponData, "Evil:     %3i\n", ClassEvilTotal);
+  fprintf(fpWeaponData, "\n");
 
   // Affinity
-  fprintf(fpWeaponInfo, "AFFINITY\n");
-  fprintf(fpWeaponInfo, "=============\n");
-  fprintf(fpWeaponInfo, "Physical: %3i\n", AffinityPhysicalTotal);
-  fprintf(fpWeaponInfo, "Air:      %3i\n", AffinityAirTotal);
-  fprintf(fpWeaponInfo, "Fire:     %3i\n", AffinityFireTotal);
-  fprintf(fpWeaponInfo, "Earth:    %3i\n", AffinityEarthTotal);
-  fprintf(fpWeaponInfo, "Water:    %3i\n", AffinityWaterTotal);
-  fprintf(fpWeaponInfo, "Light:    %3i\n", AffinityLightTotal);
-  fprintf(fpWeaponInfo, "Dark:     %3i\n", AffinityDarkTotal);
+  fprintf(fpWeaponData, "AFFINITY\n");
+  fprintf(fpWeaponData, "=============\n");
+  fprintf(fpWeaponData, "Physical: %3i\n", AffinityPhysicalTotal);
+  fprintf(fpWeaponData, "Air:      %3i\n", AffinityAirTotal);
+  fprintf(fpWeaponData, "Fire:     %3i\n", AffinityFireTotal);
+  fprintf(fpWeaponData, "Earth:    %3i\n", AffinityEarthTotal);
+  fprintf(fpWeaponData, "Water:    %3i\n", AffinityWaterTotal);
+  fprintf(fpWeaponData, "Light:    %3i\n", AffinityLightTotal);
+  fprintf(fpWeaponData, "Dark:     %3i\n", AffinityDarkTotal);
 
-  fclose(fpWeaponInfo);
+  fclose(fpWeaponData);
 }
 
 void
-WriteShieldInfo(u32 processID)
+WriteShieldData()
 {
-  item_info ShieldInfo;
-  item_info Gem1Info;
-  item_info Gem2Info;
-  item_info Gem3Info;
-
-  usize BytesToRead = sizeof(item_info);
-  u32 BytesRead;
-
-  BytesRead = ReadGameMemory(
-      processID, OFFSET_EQUIPPED_SHIELD, BytesToRead, &ShieldInfo);
-  BytesRead = ReadGameMemory(
-      processID, OFFSET_EQUIPPED_SHIELD_GEM_SLOT1, BytesToRead, &Gem1Info);
-  BytesRead = ReadGameMemory(
-      processID, OFFSET_EQUIPPED_SHIELD_GEM_SLOT2, BytesToRead, &Gem2Info);
-  BytesRead = ReadGameMemory(
-      processID, OFFSET_EQUIPPED_SHIELD_GEM_SLOT3, BytesToRead, &Gem3Info);
-
   // Check for out-of-bound indexes
-  if (ShieldInfo.ListPosition > _countof(ArmoursList) - 1 || //
-      ShieldInfo.Material > _countof(CraftingMaterials) - 1 || //
-      Gem1Info.ListPosition > _countof(GemsList) - 1 || //
-      Gem2Info.ListPosition > _countof(GemsList) - 1 || //
-      Gem3Info.ListPosition > _countof(GemsList) - 1)
+  if (itemShieldCur.ListPosition > _countof(ArmorsList) - 1 || //
+      itemShieldCur.Material > _countof(CraftingMaterials) - 1 || //
+      itemGem1ShieldCur.ListPosition > _countof(GemsList) - 1 || //
+      itemGem2ShieldCur.ListPosition > _countof(GemsList) - 1 || //
+      itemGem3ShieldCur.ListPosition > _countof(GemsList) - 1)
   {
     return;
   }
 
-  FILE *fpShieldInfoExt = fopen("game_stats/shield-full.txt", "w");
+  FILE *fpShieldData = fopen("game_data/armor/shield.txt", "w");
 
   // Check if shield is eqipped. If not, write the warning and skip the rest.
-  if (ShieldInfo.ListPosition == 0)
+  if (itemShieldCur.ListPosition == 0)
   {
-    fprintf(fpShieldInfoExt, "Shield not equipped!\n");
-    fclose(fpShieldInfoExt);
+    fprintf(fpShieldData, "Shield not equipped!\n");
+    fclose(fpShieldData);
 
     return;
   }
 
-  fprintf(fpShieldInfoExt, "Shield Stats\n\n");
+  fprintf(fpShieldData, "Shield Stats\n\n");
 
-  fprintf(fpShieldInfoExt, "Name: %s\n", ArmoursList[ShieldInfo.ListPosition]);
-  fprintf(fpShieldInfoExt, "Material: %s\n",
-      CraftingMaterials[ShieldInfo.Material]);
+  fprintf(fpShieldData, "Name: %s\n", ArmorsList[itemShieldCur.ListPosition]);
+  fprintf(fpShieldData, "Material: %s\n",
+      CraftingMaterials[itemShieldCur.Material]);
 
-  fprintf(fpShieldInfoExt, "\n");
+  fprintf(fpShieldData, "\n");
 
   // Bonuses
-  i16 STRTotal = ShieldInfo.STR + Gem1Info.STR + Gem2Info.STR + Gem3Info.STR;
-  i16 INTTotal = ShieldInfo.INT + Gem1Info.INT + Gem2Info.INT + Gem3Info.INT;
-  i16 AGLTotal = ShieldInfo.AGL + Gem1Info.AGL + Gem2Info.AGL + Gem3Info.AGL;
+  i16 STRTotal = itemShieldCur.STR + itemGem1ShieldCur.STR +
+                 itemGem2ShieldCur.STR + itemGem3ShieldCur.STR;
+  i16 INTTotal = itemShieldCur.INT + itemGem1ShieldCur.INT +
+                 itemGem2ShieldCur.INT + itemGem3ShieldCur.INT;
+  i16 AGLTotal = itemShieldCur.AGL + itemGem1ShieldCur.AGL +
+                 itemGem2ShieldCur.AGL + itemGem3ShieldCur.AGL;
 
-  fprintf(fpShieldInfoExt, "BONUSES\n");
-  fprintf(fpShieldInfoExt, "========\n");
-  fprintf(fpShieldInfoExt, "STR: %3i\n", STRTotal);
-  fprintf(fpShieldInfoExt, "INT: %3i\n", INTTotal);
-  fprintf(fpShieldInfoExt, "AGL: %3i\n", AGLTotal);
-  fprintf(fpShieldInfoExt, "\n");
+  fprintf(fpShieldData, "BONUSES\n");
+  fprintf(fpShieldData, "========\n");
+  fprintf(fpShieldData, "STR: %3i\n", STRTotal);
+  fprintf(fpShieldData, "INT: %3i\n", INTTotal);
+  fprintf(fpShieldData, "AGL: %3i\n", AGLTotal);
+  fprintf(fpShieldData, "\n");
 
   // DP & PP
-  fprintf(fpShieldInfoExt, "DURABILITY\n");
-  fprintf(fpShieldInfoExt, "===========\n");
-  fprintf(fpShieldInfoExt, "DP: %3i/%3i\n", (ShieldInfo.DPCur + 99) / 100,
-      (ShieldInfo.DPMax + 99) / 100);
-  fprintf(fpShieldInfoExt, "PP: %3i/%3i\n", ShieldInfo.PPCur, ShieldInfo.PPMax);
-  fprintf(fpShieldInfoExt, "\n");
+  fprintf(fpShieldData, "DURABILITY\n");
+  fprintf(fpShieldData, "===========\n");
+  fprintf(fpShieldData, "DP: %3i/%3i\n", (itemShieldCur.DPCur + 99) / 100,
+      (itemShieldCur.DPMax + 99) / 100);
+  fprintf(
+      fpShieldData, "PP: %3i/%3i\n", itemShieldCur.PPCur, itemShieldCur.PPMax);
+  fprintf(fpShieldData, "\n");
 
   // Gems
 
   // Gems
-  u8 GemSlots = ShieldInfo.GemSlots;
+  u8 GemSlots = itemShieldCur.GemSlots;
   if (GemSlots)
   {
-    fprintf(fpShieldInfoExt, "GEMS\n");
-    fprintf(fpShieldInfoExt, "=========================\n");
+    fprintf(fpShieldData, "GEMS\n");
+    fprintf(fpShieldData, "=========================\n");
 
-    fprintf(fpShieldInfoExt, "Slot 1: %17s\n", GemsList[Gem1Info.ListPosition]);
+    fprintf(fpShieldData, "Slot 1: %17s\n",
+        GemsList[itemGem1ShieldCur.ListPosition]);
 
     if (GemSlots > 1)
     {
-      fprintf(
-          fpShieldInfoExt, "Slot 2: %17s\n", GemsList[Gem2Info.ListPosition]);
+      fprintf(fpShieldData, "Slot 2: %17s\n",
+          GemsList[itemGem2ShieldCur.ListPosition]);
     }
     if (GemSlots > 2)
     {
-      fprintf(
-          fpShieldInfoExt, "Slot 3: %17s\n", GemsList[Gem3Info.ListPosition]);
+      fprintf(fpShieldData, "Slot 3: %17s\n",
+          GemsList[itemGem3ShieldCur.ListPosition]);
     }
   }
-  fprintf(fpShieldInfoExt, "\n");
+  fprintf(fpShieldData, "\n");
 
   // Type
-  fprintf(fpShieldInfoExt, "TYPE\n");
-  fprintf(fpShieldInfoExt, "============\n");
-  fprintf(fpShieldInfoExt, "Blunt:    %2i\n", ShieldInfo.TypeBlunt);
-  fprintf(fpShieldInfoExt, "Edged:    %2i\n", ShieldInfo.TypeEdged);
-  fprintf(fpShieldInfoExt, "Piercing: %2i\n", ShieldInfo.TypePiercing);
-  fprintf(fpShieldInfoExt, "\n");
+  fprintf(fpShieldData, "TYPE\n");
+  fprintf(fpShieldData, "============\n");
+  fprintf(fpShieldData, "Blunt:    %2i\n", itemShieldCur.TypeBlunt);
+  fprintf(fpShieldData, "Edged:    %2i\n", itemShieldCur.TypeEdged);
+  fprintf(fpShieldData, "Piercing: %2i\n", itemShieldCur.TypePiercing);
+  fprintf(fpShieldData, "\n");
 
   // Class summary
-  i16 ClassHumanTotal = ShieldInfo.ClassHuman + Gem1Info.ClassHuman +
-                        Gem2Info.ClassHuman + Gem3Info.ClassHuman;
-  i16 ClassBeastTotal = ShieldInfo.ClassBeast + Gem1Info.ClassBeast +
-                        Gem2Info.ClassBeast + Gem3Info.ClassBeast;
-  i16 ClassUndeadTotal = ShieldInfo.ClassUndead + Gem1Info.ClassUndead +
-                         Gem2Info.ClassUndead + Gem3Info.ClassUndead;
-  i16 ClassPhantomTotal = ShieldInfo.ClassPhantom + Gem1Info.ClassPhantom +
-                          Gem2Info.ClassPhantom + Gem3Info.ClassPhantom;
-  i16 ClassDragonTotal = ShieldInfo.ClassDragon + Gem1Info.ClassDragon +
-                         Gem2Info.ClassDragon + Gem3Info.ClassDragon;
-  i16 ClassEvilTotal = ShieldInfo.ClassEvil + Gem1Info.ClassEvil +
-                       Gem2Info.ClassEvil + Gem3Info.ClassEvil;
+  i16 ClassHumanTotal =
+      itemShieldCur.ClassHuman + itemGem1ShieldCur.ClassHuman +
+      itemGem2ShieldCur.ClassHuman + itemGem3ShieldCur.ClassHuman;
+  i16 ClassBeastTotal =
+      itemShieldCur.ClassBeast + itemGem1ShieldCur.ClassBeast +
+      itemGem2ShieldCur.ClassBeast + itemGem3ShieldCur.ClassBeast;
+  i16 ClassUndeadTotal =
+      itemShieldCur.ClassUndead + itemGem1ShieldCur.ClassUndead +
+      itemGem2ShieldCur.ClassUndead + itemGem3ShieldCur.ClassUndead;
+  i16 ClassPhantomTotal =
+      itemShieldCur.ClassPhantom + itemGem1ShieldCur.ClassPhantom +
+      itemGem2ShieldCur.ClassPhantom + itemGem3ShieldCur.ClassPhantom;
+  i16 ClassDragonTotal =
+      itemShieldCur.ClassDragon + itemGem1ShieldCur.ClassDragon +
+      itemGem2ShieldCur.ClassDragon + itemGem3ShieldCur.ClassDragon;
+  i16 ClassEvilTotal = itemShieldCur.ClassEvil + itemGem1ShieldCur.ClassEvil +
+                       itemGem2ShieldCur.ClassEvil +
+                       itemGem3ShieldCur.ClassEvil;
 
   // Affinity summary
   i16 AffinityPhysicalTotal =
-      ShieldInfo.AffinityPhysical + Gem1Info.AffinityPhysical +
-      Gem2Info.AffinityPhysical + Gem3Info.AffinityPhysical;
-  i16 AffinityAirTotal = ShieldInfo.AffinityAir + Gem1Info.AffinityAir +
-                         Gem2Info.AffinityAir + Gem3Info.AffinityAir;
-  i16 AffinityFireTotal = ShieldInfo.AffinityFire + Gem1Info.AffinityFire +
-                          Gem2Info.AffinityFire + Gem3Info.AffinityFire;
-  i16 AffinityEarthTotal = ShieldInfo.AffinityEarth + Gem1Info.AffinityEarth +
-                           Gem2Info.AffinityEarth + Gem3Info.AffinityEarth;
-  i16 AffinityWaterTotal = ShieldInfo.AffinityWater + Gem1Info.AffinityWater +
-                           Gem2Info.AffinityWater + Gem3Info.AffinityWater;
-  i16 AffinityLightTotal = ShieldInfo.AffinityLight + Gem1Info.AffinityLight +
-                           Gem2Info.AffinityLight + Gem3Info.AffinityLight;
-  i16 AffinityDarkTotal = ShieldInfo.AffinityDark + Gem1Info.AffinityDark +
-                          Gem2Info.AffinityDark + Gem3Info.AffinityDark;
+      itemShieldCur.AffinityPhysical + itemGem1ShieldCur.AffinityPhysical +
+      itemGem2ShieldCur.AffinityPhysical + itemGem3ShieldCur.AffinityPhysical;
+  i16 AffinityAirTotal =
+      itemShieldCur.AffinityAir + itemGem1ShieldCur.AffinityAir +
+      itemGem2ShieldCur.AffinityAir + itemGem3ShieldCur.AffinityAir;
+  i16 AffinityFireTotal =
+      itemShieldCur.AffinityFire + itemGem1ShieldCur.AffinityFire +
+      itemGem2ShieldCur.AffinityFire + itemGem3ShieldCur.AffinityFire;
+  i16 AffinityEarthTotal =
+      itemShieldCur.AffinityEarth + itemGem1ShieldCur.AffinityEarth +
+      itemGem2ShieldCur.AffinityEarth + itemGem3ShieldCur.AffinityEarth;
+  i16 AffinityWaterTotal =
+      itemShieldCur.AffinityWater + itemGem1ShieldCur.AffinityWater +
+      itemGem2ShieldCur.AffinityWater + itemGem3ShieldCur.AffinityWater;
+  i16 AffinityLightTotal =
+      itemShieldCur.AffinityLight + itemGem1ShieldCur.AffinityLight +
+      itemGem2ShieldCur.AffinityLight + itemGem3ShieldCur.AffinityLight;
+  i16 AffinityDarkTotal =
+      itemShieldCur.AffinityDark + itemGem1ShieldCur.AffinityDark +
+      itemGem2ShieldCur.AffinityDark + itemGem3ShieldCur.AffinityDark;
 
   // Class
-  fprintf(fpShieldInfoExt, "CLASS\n");
-  fprintf(fpShieldInfoExt, "=============\n");
-  fprintf(fpShieldInfoExt, "Human:    %3i\n", ClassHumanTotal);
-  fprintf(fpShieldInfoExt, "Beast:    %3i\n", ClassBeastTotal);
-  fprintf(fpShieldInfoExt, "Undead:   %3i\n", ClassUndeadTotal);
-  fprintf(fpShieldInfoExt, "Phantom:  %3i\n", ClassPhantomTotal);
-  fprintf(fpShieldInfoExt, "Dragon:   %3i\n", ClassDragonTotal);
-  fprintf(fpShieldInfoExt, "Evil:     %3i\n", ClassEvilTotal);
-  fprintf(fpShieldInfoExt, "\n");
+  fprintf(fpShieldData, "CLASS\n");
+  fprintf(fpShieldData, "=============\n");
+  fprintf(fpShieldData, "Human:    %3i\n", ClassHumanTotal);
+  fprintf(fpShieldData, "Beast:    %3i\n", ClassBeastTotal);
+  fprintf(fpShieldData, "Undead:   %3i\n", ClassUndeadTotal);
+  fprintf(fpShieldData, "Phantom:  %3i\n", ClassPhantomTotal);
+  fprintf(fpShieldData, "Dragon:   %3i\n", ClassDragonTotal);
+  fprintf(fpShieldData, "Evil:     %3i\n", ClassEvilTotal);
+  fprintf(fpShieldData, "\n");
 
   // Affinity
-  fprintf(fpShieldInfoExt, "AFFINITY\n");
-  fprintf(fpShieldInfoExt, "=============\n");
-  fprintf(fpShieldInfoExt, "Physical: %3i\n", AffinityPhysicalTotal);
-  fprintf(fpShieldInfoExt, "Air:      %3i\n", AffinityAirTotal);
-  fprintf(fpShieldInfoExt, "Fire:     %3i\n", AffinityFireTotal);
-  fprintf(fpShieldInfoExt, "Earth:    %3i\n", AffinityEarthTotal);
-  fprintf(fpShieldInfoExt, "Water:    %3i\n", AffinityWaterTotal);
-  fprintf(fpShieldInfoExt, "Light:    %3i\n", AffinityLightTotal);
-  fprintf(fpShieldInfoExt, "Dark:     %3i\n", AffinityDarkTotal);
+  fprintf(fpShieldData, "AFFINITY\n");
+  fprintf(fpShieldData, "=============\n");
+  fprintf(fpShieldData, "Physical: %3i\n", AffinityPhysicalTotal);
+  fprintf(fpShieldData, "Air:      %3i\n", AffinityAirTotal);
+  fprintf(fpShieldData, "Fire:     %3i\n", AffinityFireTotal);
+  fprintf(fpShieldData, "Earth:    %3i\n", AffinityEarthTotal);
+  fprintf(fpShieldData, "Water:    %3i\n", AffinityWaterTotal);
+  fprintf(fpShieldData, "Light:    %3i\n", AffinityLightTotal);
+  fprintf(fpShieldData, "Dark:     %3i\n", AffinityDarkTotal);
 
-  fclose(fpShieldInfoExt);
+  fclose(fpShieldData);
 }
 
 void
-WriteShieldInfoShort(u32 processID)
+WriteGloveLeftData()
 {
-  item_info ShieldInfo;
-
-  usize BytesToRead = sizeof(item_info);
-  u32 BytesRead;
-
-  BytesRead = ReadGameMemory(
-      processID, OFFSET_EQUIPPED_SHIELD, BytesToRead, &ShieldInfo);
-
   // Check for out-of-bound indexes
-  if (ShieldInfo.ListPosition > _countof(ArmoursList) - 1 || //
-      ShieldInfo.Material > _countof(CraftingMaterials) - 1)
+  if (itemGloveLeftCur.ListPosition > _countof(ArmorsList) - 1 || //
+      itemGloveLeftCur.Material > _countof(CraftingMaterials) - 1)
   {
     return;
   }
 
-  FILE *fpShieldInfoShort = fopen("game_stats/shield-short.txt", "w");
-
-  // Check if shield is eqipped. If not, write the warning and skip the rest.
-  if (ShieldInfo.ListPosition == 0)
-  {
-    fprintf(fpShieldInfoShort, "Shield not equipped!\n");
-    fclose(fpShieldInfoShort);
-
-    return;
-  }
-
-  fprintf(fpShieldInfoShort, "Shield Basic Stats\n\n");
-
-  // Class
-  fprintf(fpShieldInfoShort, "CLASS\n");
-  fprintf(fpShieldInfoShort, "=============\n");
-  fprintf(fpShieldInfoShort, "Human:    %3i\n", ShieldInfo.ClassHuman);
-  fprintf(fpShieldInfoShort, "Beast:    %3i\n", ShieldInfo.ClassBeast);
-  fprintf(fpShieldInfoShort, "Undead:   %3i\n", ShieldInfo.ClassUndead);
-  fprintf(fpShieldInfoShort, "Phantom:  %3i\n", ShieldInfo.ClassPhantom);
-  fprintf(fpShieldInfoShort, "Dragon:   %3i\n", ShieldInfo.ClassDragon);
-  fprintf(fpShieldInfoShort, "Evil:     %3i\n", ShieldInfo.ClassEvil);
-  fprintf(fpShieldInfoShort, "\n");
-
-  // Affinity
-  fprintf(fpShieldInfoShort, "AFFINITY\n");
-  fprintf(fpShieldInfoShort, "=============\n");
-  fprintf(fpShieldInfoShort, "Physical: %3i\n", ShieldInfo.AffinityPhysical);
-  fprintf(fpShieldInfoShort, "Air:      %3i\n", ShieldInfo.AffinityAir);
-  fprintf(fpShieldInfoShort, "Fire:     %3i\n", ShieldInfo.AffinityFire);
-  fprintf(fpShieldInfoShort, "Earth:    %3i\n", ShieldInfo.AffinityEarth);
-  fprintf(fpShieldInfoShort, "Water:    %3i\n", ShieldInfo.AffinityWater);
-  fprintf(fpShieldInfoShort, "Light:    %3i\n", ShieldInfo.AffinityLight);
-  fprintf(fpShieldInfoShort, "Dark:     %3i\n", ShieldInfo.AffinityDark);
-
-  fclose(fpShieldInfoShort);
-}
-
-void
-WriteGloveInfo(u32 processID, u8 which_glove)
-{
-  item_info GloveInfo;
-  usize offset;
-
-  usize BytesToRead = sizeof(item_info);
-  u32 BytesRead;
-
-  char szFileName[64] = "";
-
-  offset = which_glove ? OFFSET_EQUIPPED_LEFT_ARM : OFFSET_EQUIPPED_RIGHT_ARM;
-  sprintf_s(szFileName, _countof(szFileName),
-      "game_stats/armor-arm-%s-full.txt", which_glove ? "left" : "right");
-
-  BytesRead = ReadGameMemory(processID, offset, BytesToRead, &GloveInfo);
-
-  // Check for out-of-bound indexes
-  if (GloveInfo.ListPosition > _countof(ArmoursList) - 1 || //
-      GloveInfo.Material > _countof(CraftingMaterials) - 1)
-  {
-    return;
-  }
-
-  FILE *fpGloveInfoExt = fopen(szFileName, "w");
+  FILE *fpGloveLeftData = fopen("game_data/armor/glove_left.txt", "w");
 
   // Check if a glove is eqipped. If not, write the warning and skip the rest.
-  if (GloveInfo.ListPosition == 0)
+  if (itemGloveLeftCur.ListPosition == 0)
   {
-    fprintf(fpGloveInfoExt, "No %s glove equipped!\n",
-        which_glove ? "left" : "right");
-    fclose(fpGloveInfoExt);
+    fprintf(fpGloveLeftData, "No left glove equipped!\n");
+
+    fclose(fpGloveLeftData);
 
     return;
   }
 
-  fprintf(fpGloveInfoExt, "%s Glove Stats\n\n", which_glove ? "Left" : "Right");
+  fprintf(fpGloveLeftData, "Left Glove Stats\n\n");
 
-  fprintf(fpGloveInfoExt, "Name: %s\n", ArmoursList[GloveInfo.ListPosition]);
   fprintf(
-      fpGloveInfoExt, "Material: %s\n", CraftingMaterials[GloveInfo.Material]);
-  fprintf(fpGloveInfoExt, "\n");
+      fpGloveLeftData, "Name: %s\n", ArmorsList[itemGloveLeftCur.ListPosition]);
+  fprintf(fpGloveLeftData, "Material: %s\n",
+      CraftingMaterials[itemGloveLeftCur.Material]);
+  fprintf(fpGloveLeftData, "\n");
 
   // Bonuses
-  fprintf(fpGloveInfoExt, "BONUSES\n");
-  fprintf(fpGloveInfoExt, "========\n");
-  fprintf(fpGloveInfoExt, "STR: %3i\n", GloveInfo.STR);
-  fprintf(fpGloveInfoExt, "INT: %3i\n", GloveInfo.INT);
-  fprintf(fpGloveInfoExt, "AGL: %3i\n", GloveInfo.AGL);
-  fprintf(fpGloveInfoExt, "\n");
+  fprintf(fpGloveLeftData, "BONUSES\n");
+  fprintf(fpGloveLeftData, "========\n");
+  fprintf(fpGloveLeftData, "STR: %3i\n", itemGloveLeftCur.STR);
+  fprintf(fpGloveLeftData, "INT: %3i\n", itemGloveLeftCur.INT);
+  fprintf(fpGloveLeftData, "AGL: %3i\n", itemGloveLeftCur.AGL);
+  fprintf(fpGloveLeftData, "\n");
 
   // DP
-  fprintf(fpGloveInfoExt, "DURABILITY\n");
-  fprintf(fpGloveInfoExt, "===========\n");
-  fprintf(fpGloveInfoExt, "DP: %3i/%3i\n", (GloveInfo.DPCur + 99) / 100,
-      (GloveInfo.DPMax + 99) / 100);
-  fprintf(fpGloveInfoExt, "\n");
+  fprintf(fpGloveLeftData, "DURABILITY\n");
+  fprintf(fpGloveLeftData, "===========\n");
+  fprintf(fpGloveLeftData, "DP: %3i/%3i\n", (itemGloveLeftCur.DPCur + 99) / 100,
+      (itemGloveLeftCur.DPMax + 99) / 100);
+  fprintf(fpGloveLeftData, "\n");
 
   // Type
-  fprintf(fpGloveInfoExt, "TYPE\n");
-  fprintf(fpGloveInfoExt, "============\n");
-  fprintf(fpGloveInfoExt, "Blunt:    %2i\n", GloveInfo.TypeBlunt);
-  fprintf(fpGloveInfoExt, "Edged:    %2i\n", GloveInfo.TypeEdged);
-  fprintf(fpGloveInfoExt, "Piercing: %2i\n", GloveInfo.TypePiercing);
-  fprintf(fpGloveInfoExt, "\n");
+  fprintf(fpGloveLeftData, "TYPE\n");
+  fprintf(fpGloveLeftData, "============\n");
+  fprintf(fpGloveLeftData, "Blunt:    %2i\n", itemGloveLeftCur.TypeBlunt);
+  fprintf(fpGloveLeftData, "Edged:    %2i\n", itemGloveLeftCur.TypeEdged);
+  fprintf(fpGloveLeftData, "Piercing: %2i\n", itemGloveLeftCur.TypePiercing);
+  fprintf(fpGloveLeftData, "\n");
 
   // Class
-  fprintf(fpGloveInfoExt, "CLASS\n");
-  fprintf(fpGloveInfoExt, "=============\n");
-  fprintf(fpGloveInfoExt, "Human:    %3i\n", GloveInfo.ClassHuman);
-  fprintf(fpGloveInfoExt, "Beast:    %3i\n", GloveInfo.ClassBeast);
-  fprintf(fpGloveInfoExt, "Undead:   %3i\n", GloveInfo.ClassUndead);
-  fprintf(fpGloveInfoExt, "Phantom:  %3i\n", GloveInfo.ClassPhantom);
-  fprintf(fpGloveInfoExt, "Dragon:   %3i\n", GloveInfo.ClassDragon);
-  fprintf(fpGloveInfoExt, "Evil:     %3i\n", GloveInfo.ClassEvil);
-  fprintf(fpGloveInfoExt, "\n");
+  fprintf(fpGloveLeftData, "CLASS\n");
+  fprintf(fpGloveLeftData, "=============\n");
+  fprintf(fpGloveLeftData, "Human:    %3i\n", itemGloveLeftCur.ClassHuman);
+  fprintf(fpGloveLeftData, "Beast:    %3i\n", itemGloveLeftCur.ClassBeast);
+  fprintf(fpGloveLeftData, "Undead:   %3i\n", itemGloveLeftCur.ClassUndead);
+  fprintf(fpGloveLeftData, "Phantom:  %3i\n", itemGloveLeftCur.ClassPhantom);
+  fprintf(fpGloveLeftData, "Dragon:   %3i\n", itemGloveLeftCur.ClassDragon);
+  fprintf(fpGloveLeftData, "Evil:     %3i\n", itemGloveLeftCur.ClassEvil);
+  fprintf(fpGloveLeftData, "\n");
 
   // Affinity
-  fprintf(fpGloveInfoExt, "AFFINITY\n");
-  fprintf(fpGloveInfoExt, "=============\n");
-  fprintf(fpGloveInfoExt, "Physical: %3i\n", GloveInfo.AffinityPhysical);
-  fprintf(fpGloveInfoExt, "Air:      %3i\n", GloveInfo.AffinityAir);
-  fprintf(fpGloveInfoExt, "Fire:     %3i\n", GloveInfo.AffinityFire);
-  fprintf(fpGloveInfoExt, "Earth:    %3i\n", GloveInfo.AffinityEarth);
-  fprintf(fpGloveInfoExt, "Water:    %3i\n", GloveInfo.AffinityWater);
-  fprintf(fpGloveInfoExt, "Light:    %3i\n", GloveInfo.AffinityLight);
-  fprintf(fpGloveInfoExt, "Dark:     %3i\n", GloveInfo.AffinityDark);
+  fprintf(fpGloveLeftData, "AFFINITY\n");
+  fprintf(fpGloveLeftData, "=============\n");
+  fprintf(
+      fpGloveLeftData, "Physical: %3i\n", itemGloveLeftCur.AffinityPhysical);
+  fprintf(fpGloveLeftData, "Air:      %3i\n", itemGloveLeftCur.AffinityAir);
+  fprintf(fpGloveLeftData, "Fire:     %3i\n", itemGloveLeftCur.AffinityFire);
+  fprintf(fpGloveLeftData, "Earth:    %3i\n", itemGloveLeftCur.AffinityEarth);
+  fprintf(fpGloveLeftData, "Water:    %3i\n", itemGloveLeftCur.AffinityWater);
+  fprintf(fpGloveLeftData, "Light:    %3i\n", itemGloveLeftCur.AffinityLight);
+  fprintf(fpGloveLeftData, "Dark:     %3i\n", itemGloveLeftCur.AffinityDark);
 
-  fclose(fpGloveInfoExt);
+  fclose(fpGloveLeftData);
 }
 
 void
-WriteGloveInfoShort(u32 processID, u8 which_glove)
+WriteGloveRightData()
 {
-  item_info GloveInfo;
-  usize offset;
-
-  usize BytesToRead = sizeof(item_info);
-  u32 BytesRead;
-
-  char szFileName[64] = "";
-
-  offset = which_glove ? OFFSET_EQUIPPED_LEFT_ARM : OFFSET_EQUIPPED_RIGHT_ARM;
-  sprintf_s(szFileName, _countof(szFileName),
-      "game_stats/armor-arm-%s-short.txt", which_glove ? "left" : "right");
-
-  BytesRead = ReadGameMemory(processID, offset, BytesToRead, &GloveInfo);
-
   // Check for out-of-bound indexes
-  if (GloveInfo.ListPosition > _countof(ArmoursList) - 1 || //
-      GloveInfo.Material > _countof(CraftingMaterials) - 1)
+  if (itemGloveRightCur.ListPosition > _countof(ArmorsList) - 1 || //
+      itemGloveRightCur.Material > _countof(CraftingMaterials) - 1)
   {
     return;
   }
 
-  FILE *fpGloveInfoShort = fopen(szFileName, "w");
+  FILE *fpGloveRightData = fopen("game_data/armor/glove_right.txt", "w");
 
   // Check if a glove is eqipped. If not, write the warning and skip the rest.
-  if (GloveInfo.ListPosition == 0)
+  if (itemGloveRightCur.ListPosition == 0)
   {
-    fprintf(fpGloveInfoShort, "No %s glove equipped!\n",
-        which_glove ? "left" : "right");
-    fclose(fpGloveInfoShort);
+    fprintf(fpGloveRightData, "No left glove equipped!\n");
+
+    fclose(fpGloveRightData);
 
     return;
   }
 
-  fprintf(fpGloveInfoShort, "%s Glove Basic Stats\n\n",
-      which_glove ? "Left" : "Right");
+  fprintf(fpGloveRightData, "Right Glove Stats\n\n");
+
+  fprintf(fpGloveRightData, "Name: %s\n",
+      ArmorsList[itemGloveRightCur.ListPosition]);
+  fprintf(fpGloveRightData, "Material: %s\n",
+      CraftingMaterials[itemGloveRightCur.Material]);
+  fprintf(fpGloveRightData, "\n");
+
+  // Bonuses
+  fprintf(fpGloveRightData, "BONUSES\n");
+  fprintf(fpGloveRightData, "========\n");
+  fprintf(fpGloveRightData, "STR: %3i\n", itemGloveRightCur.STR);
+  fprintf(fpGloveRightData, "INT: %3i\n", itemGloveRightCur.INT);
+  fprintf(fpGloveRightData, "AGL: %3i\n", itemGloveRightCur.AGL);
+  fprintf(fpGloveRightData, "\n");
+
+  // DP
+  fprintf(fpGloveRightData, "DURABILITY\n");
+  fprintf(fpGloveRightData, "===========\n");
+  fprintf(fpGloveRightData, "DP: %3i/%3i\n",
+      (itemGloveRightCur.DPCur + 99) / 100,
+      (itemGloveRightCur.DPMax + 99) / 100);
+  fprintf(fpGloveRightData, "\n");
+
+  // Type
+  fprintf(fpGloveRightData, "TYPE\n");
+  fprintf(fpGloveRightData, "============\n");
+  fprintf(fpGloveRightData, "Blunt:    %2i\n", itemGloveRightCur.TypeBlunt);
+  fprintf(fpGloveRightData, "Edged:    %2i\n", itemGloveRightCur.TypeEdged);
+  fprintf(fpGloveRightData, "Piercing: %2i\n", itemGloveRightCur.TypePiercing);
+  fprintf(fpGloveRightData, "\n");
 
   // Class
-  fprintf(fpGloveInfoShort, "CLASS\n");
-  fprintf(fpGloveInfoShort, "=============\n");
-  fprintf(fpGloveInfoShort, "Human:    %3i\n", GloveInfo.ClassHuman);
-  fprintf(fpGloveInfoShort, "Beast:    %3i\n", GloveInfo.ClassBeast);
-  fprintf(fpGloveInfoShort, "Undead:   %3i\n", GloveInfo.ClassUndead);
-  fprintf(fpGloveInfoShort, "Phantom:  %3i\n", GloveInfo.ClassPhantom);
-  fprintf(fpGloveInfoShort, "Dragon:   %3i\n", GloveInfo.ClassDragon);
-  fprintf(fpGloveInfoShort, "Evil:     %3i\n", GloveInfo.ClassEvil);
-  fprintf(fpGloveInfoShort, "\n");
+  fprintf(fpGloveRightData, "CLASS\n");
+  fprintf(fpGloveRightData, "=============\n");
+  fprintf(fpGloveRightData, "Human:    %3i\n", itemGloveRightCur.ClassHuman);
+  fprintf(fpGloveRightData, "Beast:    %3i\n", itemGloveRightCur.ClassBeast);
+  fprintf(fpGloveRightData, "Undead:   %3i\n", itemGloveRightCur.ClassUndead);
+  fprintf(fpGloveRightData, "Phantom:  %3i\n", itemGloveRightCur.ClassPhantom);
+  fprintf(fpGloveRightData, "Dragon:   %3i\n", itemGloveRightCur.ClassDragon);
+  fprintf(fpGloveRightData, "Evil:     %3i\n", itemGloveRightCur.ClassEvil);
+  fprintf(fpGloveRightData, "\n");
 
   // Affinity
-  fprintf(fpGloveInfoShort, "AFFINITY\n");
-  fprintf(fpGloveInfoShort, "=============\n");
-  fprintf(fpGloveInfoShort, "Physical: %3i\n", GloveInfo.AffinityPhysical);
-  fprintf(fpGloveInfoShort, "Air:      %3i\n", GloveInfo.AffinityAir);
-  fprintf(fpGloveInfoShort, "Fire:     %3i\n", GloveInfo.AffinityFire);
-  fprintf(fpGloveInfoShort, "Earth:    %3i\n", GloveInfo.AffinityEarth);
-  fprintf(fpGloveInfoShort, "Water:    %3i\n", GloveInfo.AffinityWater);
-  fprintf(fpGloveInfoShort, "Light:    %3i\n", GloveInfo.AffinityLight);
-  fprintf(fpGloveInfoShort, "Dark:     %3i\n", GloveInfo.AffinityDark);
+  fprintf(fpGloveRightData, "AFFINITY\n");
+  fprintf(fpGloveRightData, "=============\n");
+  fprintf(
+      fpGloveRightData, "Physical: %3i\n", itemGloveRightCur.AffinityPhysical);
+  fprintf(fpGloveRightData, "Air:      %3i\n", itemGloveRightCur.AffinityAir);
+  fprintf(fpGloveRightData, "Fire:     %3i\n", itemGloveRightCur.AffinityFire);
+  fprintf(fpGloveRightData, "Earth:    %3i\n", itemGloveRightCur.AffinityEarth);
+  fprintf(fpGloveRightData, "Water:    %3i\n", itemGloveRightCur.AffinityWater);
+  fprintf(fpGloveRightData, "Light:    %3i\n", itemGloveRightCur.AffinityLight);
+  fprintf(fpGloveRightData, "Dark:     %3i\n", itemGloveRightCur.AffinityDark);
 
-  fclose(fpGloveInfoShort);
+  fclose(fpGloveRightData);
 }
 
 void
-WriteHeadArmorInfo(u32 processID)
+WriteHeadData()
 {
-  item_info HeadInfo;
-  usize BytesToRead = sizeof(item_info);
-  u32 BytesRead;
-
-  BytesRead =
-      ReadGameMemory(processID, OFFSET_EQUIPPED_HEAD, BytesToRead, &HeadInfo);
-
   // Check for out-of-bound indexes
-  if (HeadInfo.ListPosition > _countof(ArmoursList) - 1 || //
-      HeadInfo.Material > _countof(CraftingMaterials) - 1)
+  if (itemHeadCur.ListPosition > _countof(ArmorsList) - 1 || //
+      itemHeadCur.Material > _countof(CraftingMaterials) - 1)
   {
     return;
   }
 
-  FILE *fpHeadInfoExt = fopen("game_stats/armor-head-full.txt", "w");
+  FILE *fpHeadData = fopen("game_data/armor/head.txt", "w");
 
   // Check if a head armor is eqipped.
   // If not, write the warning and skip the rest.
-  if (HeadInfo.ListPosition == 0)
+  if (itemHeadCur.ListPosition == 0)
   {
-    fprintf(fpHeadInfoExt, "No head armor equipped!\n");
-    fclose(fpHeadInfoExt);
+    fprintf(fpHeadData, "No head armor equipped!\n");
+    fclose(fpHeadData);
 
     return;
   }
 
-  fprintf(fpHeadInfoExt, "Helm Stats\n\n");
+  fprintf(fpHeadData, "Helm Stats\n\n");
 
-  fprintf(fpHeadInfoExt, "Name: %s\n", ArmoursList[HeadInfo.ListPosition]);
+  fprintf(fpHeadData, "Name: %s\n", ArmorsList[itemHeadCur.ListPosition]);
   fprintf(
-      fpHeadInfoExt, "Material: %s\n", CraftingMaterials[HeadInfo.Material]);
-  fprintf(fpHeadInfoExt, "\n");
+      fpHeadData, "Material: %s\n", CraftingMaterials[itemHeadCur.Material]);
+  fprintf(fpHeadData, "\n");
 
   // Bonuses
-  fprintf(fpHeadInfoExt, "BONUSES\n");
-  fprintf(fpHeadInfoExt, "========\n");
-  fprintf(fpHeadInfoExt, "STR: %3i\n", HeadInfo.STR);
-  fprintf(fpHeadInfoExt, "INT: %3i\n", HeadInfo.INT);
-  fprintf(fpHeadInfoExt, "AGL: %3i\n", HeadInfo.AGL);
-  fprintf(fpHeadInfoExt, "\n");
+  fprintf(fpHeadData, "BONUSES\n");
+  fprintf(fpHeadData, "========\n");
+  fprintf(fpHeadData, "STR: %3i\n", itemHeadCur.STR);
+  fprintf(fpHeadData, "INT: %3i\n", itemHeadCur.INT);
+  fprintf(fpHeadData, "AGL: %3i\n", itemHeadCur.AGL);
+  fprintf(fpHeadData, "\n");
 
   // DP
-  fprintf(fpHeadInfoExt, "DURABILITY\n");
-  fprintf(fpHeadInfoExt, "===========\n");
-  fprintf(fpHeadInfoExt, "DP: %3i/%3i\n", (HeadInfo.DPCur + 99) / 100,
-      (HeadInfo.DPMax + 99) / 100);
-  fprintf(fpHeadInfoExt, "\n");
+  fprintf(fpHeadData, "DURABILITY\n");
+  fprintf(fpHeadData, "===========\n");
+  fprintf(fpHeadData, "DP: %3i/%3i\n", (itemHeadCur.DPCur + 99) / 100,
+      (itemHeadCur.DPMax + 99) / 100);
+  fprintf(fpHeadData, "\n");
 
   // Type
-  fprintf(fpHeadInfoExt, "TYPE\n");
-  fprintf(fpHeadInfoExt, "============\n");
-  fprintf(fpHeadInfoExt, "Blunt:    %2i\n", HeadInfo.TypeBlunt);
-  fprintf(fpHeadInfoExt, "Edged:    %2i\n", HeadInfo.TypeEdged);
-  fprintf(fpHeadInfoExt, "Piercing: %2i\n", HeadInfo.TypePiercing);
-  fprintf(fpHeadInfoExt, "\n");
+  fprintf(fpHeadData, "TYPE\n");
+  fprintf(fpHeadData, "============\n");
+  fprintf(fpHeadData, "Blunt:    %2i\n", itemHeadCur.TypeBlunt);
+  fprintf(fpHeadData, "Edged:    %2i\n", itemHeadCur.TypeEdged);
+  fprintf(fpHeadData, "Piercing: %2i\n", itemHeadCur.TypePiercing);
+  fprintf(fpHeadData, "\n");
 
   // Class
-  fprintf(fpHeadInfoExt, "CLASS\n");
-  fprintf(fpHeadInfoExt, "=============\n");
-  fprintf(fpHeadInfoExt, "Human:    %3i\n", HeadInfo.ClassHuman);
-  fprintf(fpHeadInfoExt, "Beast:    %3i\n", HeadInfo.ClassBeast);
-  fprintf(fpHeadInfoExt, "Undead:   %3i\n", HeadInfo.ClassUndead);
-  fprintf(fpHeadInfoExt, "Phantom:  %3i\n", HeadInfo.ClassPhantom);
-  fprintf(fpHeadInfoExt, "Dragon:   %3i\n", HeadInfo.ClassDragon);
-  fprintf(fpHeadInfoExt, "Evil:     %3i\n", HeadInfo.ClassEvil);
-  fprintf(fpHeadInfoExt, "\n");
+  fprintf(fpHeadData, "CLASS\n");
+  fprintf(fpHeadData, "=============\n");
+  fprintf(fpHeadData, "Human:    %3i\n", itemHeadCur.ClassHuman);
+  fprintf(fpHeadData, "Beast:    %3i\n", itemHeadCur.ClassBeast);
+  fprintf(fpHeadData, "Undead:   %3i\n", itemHeadCur.ClassUndead);
+  fprintf(fpHeadData, "Phantom:  %3i\n", itemHeadCur.ClassPhantom);
+  fprintf(fpHeadData, "Dragon:   %3i\n", itemHeadCur.ClassDragon);
+  fprintf(fpHeadData, "Evil:     %3i\n", itemHeadCur.ClassEvil);
+  fprintf(fpHeadData, "\n");
 
   // Affinity
-  fprintf(fpHeadInfoExt, "AFFINITY\n");
-  fprintf(fpHeadInfoExt, "=============\n");
-  fprintf(fpHeadInfoExt, "Physical: %3i\n", HeadInfo.AffinityPhysical);
-  fprintf(fpHeadInfoExt, "Air:      %3i\n", HeadInfo.AffinityAir);
-  fprintf(fpHeadInfoExt, "Fire:     %3i\n", HeadInfo.AffinityFire);
-  fprintf(fpHeadInfoExt, "Earth:    %3i\n", HeadInfo.AffinityEarth);
-  fprintf(fpHeadInfoExt, "Water:    %3i\n", HeadInfo.AffinityWater);
-  fprintf(fpHeadInfoExt, "Light:    %3i\n", HeadInfo.AffinityLight);
-  fprintf(fpHeadInfoExt, "Dark:     %3i\n", HeadInfo.AffinityDark);
+  fprintf(fpHeadData, "AFFINITY\n");
+  fprintf(fpHeadData, "=============\n");
+  fprintf(fpHeadData, "Physical: %3i\n", itemHeadCur.AffinityPhysical);
+  fprintf(fpHeadData, "Air:      %3i\n", itemHeadCur.AffinityAir);
+  fprintf(fpHeadData, "Fire:     %3i\n", itemHeadCur.AffinityFire);
+  fprintf(fpHeadData, "Earth:    %3i\n", itemHeadCur.AffinityEarth);
+  fprintf(fpHeadData, "Water:    %3i\n", itemHeadCur.AffinityWater);
+  fprintf(fpHeadData, "Light:    %3i\n", itemHeadCur.AffinityLight);
+  fprintf(fpHeadData, "Dark:     %3i\n", itemHeadCur.AffinityDark);
 
-  fclose(fpHeadInfoExt);
+  fclose(fpHeadData);
 }
 
 void
-WriteHeadArmorInfoShort(u32 processID)
+WriteBodyData()
 {
-  item_info HeadInfo;
-  usize BytesToRead = sizeof(item_info);
-  u32 BytesRead;
-
-  BytesRead =
-      ReadGameMemory(processID, OFFSET_EQUIPPED_HEAD, BytesToRead, &HeadInfo);
-
   // Check for out-of-bound indexes
-  if (HeadInfo.ListPosition > _countof(ArmoursList) - 1 || //
-      HeadInfo.Material > _countof(CraftingMaterials) - 1)
+  if (itemBodyCur.ListPosition > _countof(ArmorsList) - 1 || //
+      itemBodyCur.Material > _countof(CraftingMaterials) - 1)
   {
     return;
   }
 
-  FILE *fpHeadInfoShort = fopen("game_stats/armor-head-short.txt", "w");
-
-  // Check if a head armor is eqipped.
-  // If not, write the warning and skip the rest.
-  if (HeadInfo.ListPosition == 0)
-  {
-    fprintf(fpHeadInfoShort, "No head armor equipped!\n");
-    fclose(fpHeadInfoShort);
-
-    return;
-  }
-
-  fprintf(fpHeadInfoShort, "Helm Basic Stats\n\n");
-
-  // Class
-  fprintf(fpHeadInfoShort, "CLASS\n");
-  fprintf(fpHeadInfoShort, "=============\n");
-  fprintf(fpHeadInfoShort, "Human:    %3i\n", HeadInfo.ClassHuman);
-  fprintf(fpHeadInfoShort, "Beast:    %3i\n", HeadInfo.ClassBeast);
-  fprintf(fpHeadInfoShort, "Undead:   %3i\n", HeadInfo.ClassUndead);
-  fprintf(fpHeadInfoShort, "Phantom:  %3i\n", HeadInfo.ClassPhantom);
-  fprintf(fpHeadInfoShort, "Dragon:   %3i\n", HeadInfo.ClassDragon);
-  fprintf(fpHeadInfoShort, "Evil:     %3i\n", HeadInfo.ClassEvil);
-  fprintf(fpHeadInfoShort, "\n");
-
-  // Affinity
-  fprintf(fpHeadInfoShort, "AFFINITY\n");
-  fprintf(fpHeadInfoShort, "=============\n");
-  fprintf(fpHeadInfoShort, "Physical: %3i\n", HeadInfo.AffinityPhysical);
-  fprintf(fpHeadInfoShort, "Air:      %3i\n", HeadInfo.AffinityAir);
-  fprintf(fpHeadInfoShort, "Fire:     %3i\n", HeadInfo.AffinityFire);
-  fprintf(fpHeadInfoShort, "Earth:    %3i\n", HeadInfo.AffinityEarth);
-  fprintf(fpHeadInfoShort, "Water:    %3i\n", HeadInfo.AffinityWater);
-  fprintf(fpHeadInfoShort, "Light:    %3i\n", HeadInfo.AffinityLight);
-  fprintf(fpHeadInfoShort, "Dark:     %3i\n", HeadInfo.AffinityDark);
-
-  fclose(fpHeadInfoShort);
-}
-
-void
-WriteBodyArmorInfo(u32 processID)
-{
-  item_info BodyInfo;
-  usize BytesToRead = sizeof(item_info);
-  u32 BytesRead;
-
-  BytesRead =
-      ReadGameMemory(processID, OFFSET_EQUIPPED_BODY, BytesToRead, &BodyInfo);
-
-  // Check for out-of-bound indexes
-  if (BodyInfo.ListPosition > _countof(ArmoursList) - 1 || //
-      BodyInfo.Material > _countof(CraftingMaterials) - 1)
-  {
-    return;
-  }
-
-  FILE *fpBodyInfoExt = fopen("game_stats/armor-body-full.txt", "w");
+  FILE *fpBodyData = fopen("game_data/armor/body.txt", "w");
 
   // Check if a body armor is eqipped. If not, write the warning and skip the
   // rest.
-  if (BodyInfo.ListPosition == 0)
+  if (itemBodyCur.ListPosition == 0)
   {
-    // fprintf(fpBodyInfoExt, "No body armor equipped!\n");
-    fprintf(fpBodyInfoExt, "No Breastplate Equipped!\n");
-    fclose(fpBodyInfoExt);
+    // fprintf(fpBodyData, "No body armor equipped!\n");
+    fprintf(fpBodyData, "No Breastplate Equipped!\n");
+    fclose(fpBodyData);
 
     return;
   }
 
-  fprintf(fpBodyInfoExt, "Body Armor Stats\n\n");
+  fprintf(fpBodyData, "Body Armor Stats\n\n");
 
-  fprintf(fpBodyInfoExt, "Name: %s\n", ArmoursList[BodyInfo.ListPosition]);
+  fprintf(fpBodyData, "Name: %s\n", ArmorsList[itemBodyCur.ListPosition]);
   fprintf(
-      fpBodyInfoExt, "Material: %s\n", CraftingMaterials[BodyInfo.Material]);
-  fprintf(fpBodyInfoExt, "\n");
+      fpBodyData, "Material: %s\n", CraftingMaterials[itemBodyCur.Material]);
+  fprintf(fpBodyData, "\n");
 
   // Bonuses
-  fprintf(fpBodyInfoExt, "BONUSES\n");
-  fprintf(fpBodyInfoExt, "========\n");
-  fprintf(fpBodyInfoExt, "STR: %3i\n", BodyInfo.STR);
-  fprintf(fpBodyInfoExt, "INT: %3i\n", BodyInfo.INT);
-  fprintf(fpBodyInfoExt, "AGL: %3i\n", BodyInfo.AGL);
-  fprintf(fpBodyInfoExt, "\n");
+  fprintf(fpBodyData, "BONUSES\n");
+  fprintf(fpBodyData, "========\n");
+  fprintf(fpBodyData, "STR: %3i\n", itemBodyCur.STR);
+  fprintf(fpBodyData, "INT: %3i\n", itemBodyCur.INT);
+  fprintf(fpBodyData, "AGL: %3i\n", itemBodyCur.AGL);
+  fprintf(fpBodyData, "\n");
 
   // DP
-  fprintf(fpBodyInfoExt, "DURABILITY\n");
-  fprintf(fpBodyInfoExt, "===========\n");
-  fprintf(fpBodyInfoExt, "DP: %3i/%3i\n", (BodyInfo.DPCur + 99) / 100,
-      (BodyInfo.DPMax + 99) / 100);
-  fprintf(fpBodyInfoExt, "\n");
+  fprintf(fpBodyData, "DURABILITY\n");
+  fprintf(fpBodyData, "===========\n");
+  fprintf(fpBodyData, "DP: %3i/%3i\n", (itemBodyCur.DPCur + 99) / 100,
+      (itemBodyCur.DPMax + 99) / 100);
+  fprintf(fpBodyData, "\n");
 
   // Type
-  fprintf(fpBodyInfoExt, "TYPE\n");
-  fprintf(fpBodyInfoExt, "============\n");
-  fprintf(fpBodyInfoExt, "Blunt:    %2i\n", BodyInfo.TypeBlunt);
-  fprintf(fpBodyInfoExt, "Edged:    %2i\n", BodyInfo.TypeEdged);
-  fprintf(fpBodyInfoExt, "Piercing: %2i\n", BodyInfo.TypePiercing);
-  fprintf(fpBodyInfoExt, "\n");
+  fprintf(fpBodyData, "TYPE\n");
+  fprintf(fpBodyData, "============\n");
+  fprintf(fpBodyData, "Blunt:    %2i\n", itemBodyCur.TypeBlunt);
+  fprintf(fpBodyData, "Edged:    %2i\n", itemBodyCur.TypeEdged);
+  fprintf(fpBodyData, "Piercing: %2i\n", itemBodyCur.TypePiercing);
+  fprintf(fpBodyData, "\n");
 
   // Class
-  fprintf(fpBodyInfoExt, "CLASS\n");
-  fprintf(fpBodyInfoExt, "=============\n");
-  fprintf(fpBodyInfoExt, "Human:    %3i\n", BodyInfo.ClassHuman);
-  fprintf(fpBodyInfoExt, "Beast:    %3i\n", BodyInfo.ClassBeast);
-  fprintf(fpBodyInfoExt, "Undead:   %3i\n", BodyInfo.ClassUndead);
-  fprintf(fpBodyInfoExt, "Phantom:  %3i\n", BodyInfo.ClassPhantom);
-  fprintf(fpBodyInfoExt, "Dragon:   %3i\n", BodyInfo.ClassDragon);
-  fprintf(fpBodyInfoExt, "Evil:     %3i\n", BodyInfo.ClassEvil);
-  fprintf(fpBodyInfoExt, "\n");
+  fprintf(fpBodyData, "CLASS\n");
+  fprintf(fpBodyData, "=============\n");
+  fprintf(fpBodyData, "Human:    %3i\n", itemBodyCur.ClassHuman);
+  fprintf(fpBodyData, "Beast:    %3i\n", itemBodyCur.ClassBeast);
+  fprintf(fpBodyData, "Undead:   %3i\n", itemBodyCur.ClassUndead);
+  fprintf(fpBodyData, "Phantom:  %3i\n", itemBodyCur.ClassPhantom);
+  fprintf(fpBodyData, "Dragon:   %3i\n", itemBodyCur.ClassDragon);
+  fprintf(fpBodyData, "Evil:     %3i\n", itemBodyCur.ClassEvil);
+  fprintf(fpBodyData, "\n");
 
   // Affinity
-  fprintf(fpBodyInfoExt, "AFFINITY\n");
-  fprintf(fpBodyInfoExt, "=============\n");
-  fprintf(fpBodyInfoExt, "Physical: %3i\n", BodyInfo.AffinityPhysical);
-  fprintf(fpBodyInfoExt, "Air:      %3i\n", BodyInfo.AffinityAir);
-  fprintf(fpBodyInfoExt, "Fire:     %3i\n", BodyInfo.AffinityFire);
-  fprintf(fpBodyInfoExt, "Earth:    %3i\n", BodyInfo.AffinityEarth);
-  fprintf(fpBodyInfoExt, "Water:    %3i\n", BodyInfo.AffinityWater);
-  fprintf(fpBodyInfoExt, "Light:    %3i\n", BodyInfo.AffinityLight);
-  fprintf(fpBodyInfoExt, "Dark:     %3i\n", BodyInfo.AffinityDark);
+  fprintf(fpBodyData, "AFFINITY\n");
+  fprintf(fpBodyData, "=============\n");
+  fprintf(fpBodyData, "Physical: %3i\n", itemBodyCur.AffinityPhysical);
+  fprintf(fpBodyData, "Air:      %3i\n", itemBodyCur.AffinityAir);
+  fprintf(fpBodyData, "Fire:     %3i\n", itemBodyCur.AffinityFire);
+  fprintf(fpBodyData, "Earth:    %3i\n", itemBodyCur.AffinityEarth);
+  fprintf(fpBodyData, "Water:    %3i\n", itemBodyCur.AffinityWater);
+  fprintf(fpBodyData, "Light:    %3i\n", itemBodyCur.AffinityLight);
+  fprintf(fpBodyData, "Dark:     %3i\n", itemBodyCur.AffinityDark);
 
-  fclose(fpBodyInfoExt);
+  fclose(fpBodyData);
 }
 
 void
-WriteBodyArmorInfoShort(u32 processID)
+WriteLegsData()
 {
-  item_info BodyInfo;
-  usize BytesToRead = sizeof(item_info);
-  u32 BytesRead;
-
-  BytesRead =
-      ReadGameMemory(processID, OFFSET_EQUIPPED_BODY, BytesToRead, &BodyInfo);
-
   // Check for out-of-bound indexes
-  if (BodyInfo.ListPosition > _countof(ArmoursList) - 1 || //
-      BodyInfo.Material > _countof(CraftingMaterials) - 1)
+  if (itemLegsCur.ListPosition > _countof(ArmorsList) - 1 || //
+      itemLegsCur.Material > _countof(CraftingMaterials) - 1)
   {
     return;
   }
 
-  FILE *fpBodyInfoShort = fopen("game_stats/armor-body-short.txt", "w");
-
-  // Check if a body armor is eqipped. If not, write the warning and skip the
-  // rest.
-  if (BodyInfo.ListPosition == 0)
-  {
-    // fprintf(fpBodyInfoShort, "No body armor equipped!\n");
-    fprintf(fpBodyInfoShort, "No Breastplate Equipped!\n");
-    fclose(fpBodyInfoShort);
-
-    return;
-  }
-
-  fprintf(fpBodyInfoShort, "Body Armor Basic Stats\n\n");
-
-  // Class
-  fprintf(fpBodyInfoShort, "CLASS\n");
-  fprintf(fpBodyInfoShort, "=============\n");
-  fprintf(fpBodyInfoShort, "Human:    %3i\n", BodyInfo.ClassHuman);
-  fprintf(fpBodyInfoShort, "Beast:    %3i\n", BodyInfo.ClassBeast);
-  fprintf(fpBodyInfoShort, "Undead:   %3i\n", BodyInfo.ClassUndead);
-  fprintf(fpBodyInfoShort, "Phantom:  %3i\n", BodyInfo.ClassPhantom);
-  fprintf(fpBodyInfoShort, "Dragon:   %3i\n", BodyInfo.ClassDragon);
-  fprintf(fpBodyInfoShort, "Evil:     %3i\n", BodyInfo.ClassEvil);
-  fprintf(fpBodyInfoShort, "\n");
-
-  // Affinity
-  fprintf(fpBodyInfoShort, "AFFINITY\n");
-  fprintf(fpBodyInfoShort, "=============\n");
-  fprintf(fpBodyInfoShort, "Physical: %3i\n", BodyInfo.AffinityPhysical);
-  fprintf(fpBodyInfoShort, "Air:      %3i\n", BodyInfo.AffinityAir);
-  fprintf(fpBodyInfoShort, "Fire:     %3i\n", BodyInfo.AffinityFire);
-  fprintf(fpBodyInfoShort, "Earth:    %3i\n", BodyInfo.AffinityEarth);
-  fprintf(fpBodyInfoShort, "Water:    %3i\n", BodyInfo.AffinityWater);
-  fprintf(fpBodyInfoShort, "Light:    %3i\n", BodyInfo.AffinityLight);
-  fprintf(fpBodyInfoShort, "Dark:     %3i\n", BodyInfo.AffinityDark);
-
-  fclose(fpBodyInfoShort);
-}
-
-void
-WriteLegsArmorInfo(u32 processID)
-{
-  item_info LegsInfo;
-  usize BytesToRead = sizeof(item_info);
-  u32 BytesRead;
-
-  BytesRead =
-      ReadGameMemory(processID, OFFSET_EQUIPPED_LEGS, BytesToRead, &LegsInfo);
-
-  // Check for out-of-bound indexes
-  if (LegsInfo.ListPosition > _countof(ArmoursList) - 1 || //
-      LegsInfo.Material > _countof(CraftingMaterials) - 1)
-  {
-    return;
-  }
-
-  FILE *fpLegsInfoExt = fopen("game_stats/armor-legs-full.txt", "w");
+  FILE *fpLegsData = fopen("game_data/armor/legs.txt", "w");
 
   // Check if a leg armor is eqipped.
   // If not, write the warning and skip the rest.
-  if (LegsInfo.ListPosition == 0)
+  if (itemLegsCur.ListPosition == 0)
   {
-    fprintf(fpLegsInfoExt, "No legs armor equipped!\n");
-    fclose(fpLegsInfoExt);
+    fprintf(fpLegsData, "No legs armor equipped!\n");
+    fclose(fpLegsData);
 
     return;
   }
 
-  fprintf(fpLegsInfoExt, "Leggings Stats\n\n");
+  fprintf(fpLegsData, "Leggings Stats\n\n");
 
-  fprintf(fpLegsInfoExt, "Name: %s\n", ArmoursList[LegsInfo.ListPosition]);
+  fprintf(fpLegsData, "Name: %s\n", ArmorsList[itemLegsCur.ListPosition]);
   fprintf(
-      fpLegsInfoExt, "Material: %s\n", CraftingMaterials[LegsInfo.Material]);
-  fprintf(fpLegsInfoExt, "\n");
+      fpLegsData, "Material: %s\n", CraftingMaterials[itemLegsCur.Material]);
+  fprintf(fpLegsData, "\n");
 
   // Bonuses
-  fprintf(fpLegsInfoExt, "BONUSES\n");
-  fprintf(fpLegsInfoExt, "========\n");
-  fprintf(fpLegsInfoExt, "STR: %3i\n", LegsInfo.STR);
-  fprintf(fpLegsInfoExt, "INT: %3i\n", LegsInfo.INT);
-  fprintf(fpLegsInfoExt, "AGL: %3i\n", LegsInfo.AGL);
-  fprintf(fpLegsInfoExt, "\n");
+  fprintf(fpLegsData, "BONUSES\n");
+  fprintf(fpLegsData, "========\n");
+  fprintf(fpLegsData, "STR: %3i\n", itemLegsCur.STR);
+  fprintf(fpLegsData, "INT: %3i\n", itemLegsCur.INT);
+  fprintf(fpLegsData, "AGL: %3i\n", itemLegsCur.AGL);
+  fprintf(fpLegsData, "\n");
 
   // DP
-  fprintf(fpLegsInfoExt, "DURABILITY\n");
-  fprintf(fpLegsInfoExt, "===========\n");
-  fprintf(fpLegsInfoExt, "DP: %3i/%3i\n", (LegsInfo.DPCur + 99) / 100,
-      (LegsInfo.DPMax + 99) / 100);
-  fprintf(fpLegsInfoExt, "\n");
+  fprintf(fpLegsData, "DURABILITY\n");
+  fprintf(fpLegsData, "===========\n");
+  fprintf(fpLegsData, "DP: %3i/%3i\n", (itemLegsCur.DPCur + 99) / 100,
+      (itemLegsCur.DPMax + 99) / 100);
+  fprintf(fpLegsData, "\n");
 
   // Type
-  fprintf(fpLegsInfoExt, "TYPE\n");
-  fprintf(fpLegsInfoExt, "============\n");
-  fprintf(fpLegsInfoExt, "Blunt:    %2i\n", LegsInfo.TypeBlunt);
-  fprintf(fpLegsInfoExt, "Edged:    %2i\n", LegsInfo.TypeEdged);
-  fprintf(fpLegsInfoExt, "Piercing: %2i\n", LegsInfo.TypePiercing);
-  fprintf(fpLegsInfoExt, "\n");
+  fprintf(fpLegsData, "TYPE\n");
+  fprintf(fpLegsData, "============\n");
+  fprintf(fpLegsData, "Blunt:    %2i\n", itemLegsCur.TypeBlunt);
+  fprintf(fpLegsData, "Edged:    %2i\n", itemLegsCur.TypeEdged);
+  fprintf(fpLegsData, "Piercing: %2i\n", itemLegsCur.TypePiercing);
+  fprintf(fpLegsData, "\n");
 
   // Class
-  fprintf(fpLegsInfoExt, "CLASS\n");
-  fprintf(fpLegsInfoExt, "=============\n");
-  fprintf(fpLegsInfoExt, "Human:    %3i\n", LegsInfo.ClassHuman);
-  fprintf(fpLegsInfoExt, "Beast:    %3i\n", LegsInfo.ClassBeast);
-  fprintf(fpLegsInfoExt, "Undead:   %3i\n", LegsInfo.ClassUndead);
-  fprintf(fpLegsInfoExt, "Phantom:  %3i\n", LegsInfo.ClassPhantom);
-  fprintf(fpLegsInfoExt, "Dragon:   %3i\n", LegsInfo.ClassDragon);
-  fprintf(fpLegsInfoExt, "Evil:     %3i\n", LegsInfo.ClassEvil);
-  fprintf(fpLegsInfoExt, "\n");
+  fprintf(fpLegsData, "CLASS\n");
+  fprintf(fpLegsData, "=============\n");
+  fprintf(fpLegsData, "Human:    %3i\n", itemLegsCur.ClassHuman);
+  fprintf(fpLegsData, "Beast:    %3i\n", itemLegsCur.ClassBeast);
+  fprintf(fpLegsData, "Undead:   %3i\n", itemLegsCur.ClassUndead);
+  fprintf(fpLegsData, "Phantom:  %3i\n", itemLegsCur.ClassPhantom);
+  fprintf(fpLegsData, "Dragon:   %3i\n", itemLegsCur.ClassDragon);
+  fprintf(fpLegsData, "Evil:     %3i\n", itemLegsCur.ClassEvil);
+  fprintf(fpLegsData, "\n");
 
   // Affinity
-  fprintf(fpLegsInfoExt, "AFFINITY\n");
-  fprintf(fpLegsInfoExt, "=============\n");
-  fprintf(fpLegsInfoExt, "Physical: %3i\n", LegsInfo.AffinityPhysical);
-  fprintf(fpLegsInfoExt, "Air:      %3i\n", LegsInfo.AffinityAir);
-  fprintf(fpLegsInfoExt, "Fire:     %3i\n", LegsInfo.AffinityFire);
-  fprintf(fpLegsInfoExt, "Earth:    %3i\n", LegsInfo.AffinityEarth);
-  fprintf(fpLegsInfoExt, "Water:    %3i\n", LegsInfo.AffinityWater);
-  fprintf(fpLegsInfoExt, "Light:    %3i\n", LegsInfo.AffinityLight);
-  fprintf(fpLegsInfoExt, "Dark:     %3i\n", LegsInfo.AffinityDark);
+  fprintf(fpLegsData, "AFFINITY\n");
+  fprintf(fpLegsData, "=============\n");
+  fprintf(fpLegsData, "Physical: %3i\n", itemLegsCur.AffinityPhysical);
+  fprintf(fpLegsData, "Air:      %3i\n", itemLegsCur.AffinityAir);
+  fprintf(fpLegsData, "Fire:     %3i\n", itemLegsCur.AffinityFire);
+  fprintf(fpLegsData, "Earth:    %3i\n", itemLegsCur.AffinityEarth);
+  fprintf(fpLegsData, "Water:    %3i\n", itemLegsCur.AffinityWater);
+  fprintf(fpLegsData, "Light:    %3i\n", itemLegsCur.AffinityLight);
+  fprintf(fpLegsData, "Dark:     %3i\n", itemLegsCur.AffinityDark);
 
-  fclose(fpLegsInfoExt);
+  fclose(fpLegsData);
 }
 
 void
-WriteLegsArmorInfoShort(u32 processID)
-{
-  item_info LegsInfo;
-  usize BytesToRead = sizeof(item_info);
-  u32 BytesRead;
-
-  BytesRead =
-      ReadGameMemory(processID, OFFSET_EQUIPPED_LEGS, BytesToRead, &LegsInfo);
-
-  // Check for out-of-bound indexes
-  if (LegsInfo.ListPosition > _countof(ArmoursList) - 1 || //
-      LegsInfo.Material > _countof(CraftingMaterials) - 1)
-  {
-    return;
-  }
-
-  FILE *fpLegsInfoShort = fopen("game_stats/armor-legs-short.txt", "w");
-
-  // Check if a leg armor is eqipped.
-  // If not, write the warning and skip the rest.
-  if (LegsInfo.ListPosition == 0)
-  {
-    fprintf(fpLegsInfoShort, "No legs armor equipped!\n");
-    fclose(fpLegsInfoShort);
-
-    return;
-  }
-
-  fprintf(fpLegsInfoShort, "Leggings Basic Stats\n\n");
-
-  // Class
-  fprintf(fpLegsInfoShort, "CLASS\n");
-  fprintf(fpLegsInfoShort, "=============\n");
-  fprintf(fpLegsInfoShort, "Human:    %3i\n", LegsInfo.ClassHuman);
-  fprintf(fpLegsInfoShort, "Beast:    %3i\n", LegsInfo.ClassBeast);
-  fprintf(fpLegsInfoShort, "Undead:   %3i\n", LegsInfo.ClassUndead);
-  fprintf(fpLegsInfoShort, "Phantom:  %3i\n", LegsInfo.ClassPhantom);
-  fprintf(fpLegsInfoShort, "Dragon:   %3i\n", LegsInfo.ClassDragon);
-  fprintf(fpLegsInfoShort, "Evil:     %3i\n", LegsInfo.ClassEvil);
-  fprintf(fpLegsInfoShort, "\n");
-
-  // Affinity
-  fprintf(fpLegsInfoShort, "AFFINITY\n");
-  fprintf(fpLegsInfoShort, "=============\n");
-  fprintf(fpLegsInfoShort, "Physical: %3i\n", LegsInfo.AffinityPhysical);
-  fprintf(fpLegsInfoShort, "Air:      %3i\n", LegsInfo.AffinityAir);
-  fprintf(fpLegsInfoShort, "Fire:     %3i\n", LegsInfo.AffinityFire);
-  fprintf(fpLegsInfoShort, "Earth:    %3i\n", LegsInfo.AffinityEarth);
-  fprintf(fpLegsInfoShort, "Water:    %3i\n", LegsInfo.AffinityWater);
-  fprintf(fpLegsInfoShort, "Light:    %3i\n", LegsInfo.AffinityLight);
-  fprintf(fpLegsInfoShort, "Dark:     %3i\n", LegsInfo.AffinityDark);
-
-  fclose(fpLegsInfoShort);
-}
-
-void
-WriteNecklaceInfo(u32 processID)
+WriteNeckData()
 {
   u8 ListPositionMax = 127;
   u8 ListPositionMin = (ListPositionMax - (_countof(AccessoriesList) - 1));
-  item_info NeckInfo;
-  usize BytesToRead = sizeof(item_info);
-  u32 BytesRead;
-
-  BytesRead =
-      ReadGameMemory(processID, OFFSET_EQUIPPED_NECK, BytesToRead, &NeckInfo);
-
   // Check for out-of-bound indexes
-  if (NeckInfo.NamesListPosition > _countof(ItemNamesList))
+  if (itemNeckCur.NamesListPosition > _countof(ItemNamesList))
   {
     return;
   }
 
-  FILE *fpNeckInfoExt = fopen("game_stats/accessory.txt", "w");
+  FILE *fpNeckData = fopen("game_data/armor/neck.txt", "w");
 
   // Check if a necklace is eqipped.
   // If not, write the warning and skip the rest.
-  if (NeckInfo.ListPosition < ListPositionMin ||
-      NeckInfo.ListPosition > ListPositionMax)
+  if (itemNeckCur.ListPosition < ListPositionMin ||
+      itemNeckCur.ListPosition > ListPositionMax)
   {
-    fprintf(fpNeckInfoExt, "No necklace equipped!\n");
-    fclose(fpNeckInfoExt);
+    fprintf(fpNeckData, "No necklace equipped!\n");
+    fclose(fpNeckData);
 
     return;
   }
 
-  fprintf(fpNeckInfoExt, "Necklace Stats\n\n");
+  fprintf(fpNeckData, "Necklace Stats\n\n");
 
   fprintf(
-      fpNeckInfoExt, "Name: %s\n", ItemNamesList[NeckInfo.NamesListPosition]);
-  fprintf(fpNeckInfoExt, "\n");
+      fpNeckData, "Name: %s\n", ItemNamesList[itemNeckCur.NamesListPosition]);
+  fprintf(fpNeckData, "\n");
 
   // Bonuses
-  fprintf(fpNeckInfoExt, "BONUSES\n");
-  fprintf(fpNeckInfoExt, "========\n");
-  fprintf(fpNeckInfoExt, "STR: %3i\n", NeckInfo.STR);
-  fprintf(fpNeckInfoExt, "INT: %3i\n", NeckInfo.INT);
-  fprintf(fpNeckInfoExt, "AGL: %3i\n", NeckInfo.AGL);
-  fprintf(fpNeckInfoExt, "\n");
+  fprintf(fpNeckData, "BONUSES\n");
+  fprintf(fpNeckData, "========\n");
+  fprintf(fpNeckData, "STR: %3i\n", itemNeckCur.STR);
+  fprintf(fpNeckData, "INT: %3i\n", itemNeckCur.INT);
+  fprintf(fpNeckData, "AGL: %3i\n", itemNeckCur.AGL);
+  fprintf(fpNeckData, "\n");
 
   // Type
-  fprintf(fpNeckInfoExt, "TYPE\n");
-  fprintf(fpNeckInfoExt, "============\n");
-  fprintf(fpNeckInfoExt, "Blunt:    %2i\n", NeckInfo.TypeBlunt);
-  fprintf(fpNeckInfoExt, "Edged:    %2i\n", NeckInfo.TypeEdged);
-  fprintf(fpNeckInfoExt, "Piercing: %2i\n", NeckInfo.TypePiercing);
-  fprintf(fpNeckInfoExt, "\n");
+  fprintf(fpNeckData, "TYPE\n");
+  fprintf(fpNeckData, "============\n");
+  fprintf(fpNeckData, "Blunt:    %2i\n", itemNeckCur.TypeBlunt);
+  fprintf(fpNeckData, "Edged:    %2i\n", itemNeckCur.TypeEdged);
+  fprintf(fpNeckData, "Piercing: %2i\n", itemNeckCur.TypePiercing);
+  fprintf(fpNeckData, "\n");
 
   // Class
-  fprintf(fpNeckInfoExt, "CLASS\n");
-  fprintf(fpNeckInfoExt, "=============\n");
-  fprintf(fpNeckInfoExt, "Human:    %3i\n", NeckInfo.ClassHuman);
-  fprintf(fpNeckInfoExt, "Beast:    %3i\n", NeckInfo.ClassBeast);
-  fprintf(fpNeckInfoExt, "Undead:   %3i\n", NeckInfo.ClassUndead);
-  fprintf(fpNeckInfoExt, "Phantom:  %3i\n", NeckInfo.ClassPhantom);
-  fprintf(fpNeckInfoExt, "Dragon:   %3i\n", NeckInfo.ClassDragon);
-  fprintf(fpNeckInfoExt, "Evil:     %3i\n", NeckInfo.ClassEvil);
-  fprintf(fpNeckInfoExt, "\n");
+  fprintf(fpNeckData, "CLASS\n");
+  fprintf(fpNeckData, "=============\n");
+  fprintf(fpNeckData, "Human:    %3i\n", itemNeckCur.ClassHuman);
+  fprintf(fpNeckData, "Beast:    %3i\n", itemNeckCur.ClassBeast);
+  fprintf(fpNeckData, "Undead:   %3i\n", itemNeckCur.ClassUndead);
+  fprintf(fpNeckData, "Phantom:  %3i\n", itemNeckCur.ClassPhantom);
+  fprintf(fpNeckData, "Dragon:   %3i\n", itemNeckCur.ClassDragon);
+  fprintf(fpNeckData, "Evil:     %3i\n", itemNeckCur.ClassEvil);
+  fprintf(fpNeckData, "\n");
 
   // Affinity
-  fprintf(fpNeckInfoExt, "AFFINITY\n");
-  fprintf(fpNeckInfoExt, "=============\n");
-  fprintf(fpNeckInfoExt, "Physical: %3i\n", NeckInfo.AffinityPhysical);
-  fprintf(fpNeckInfoExt, "Air:      %3i\n", NeckInfo.AffinityAir);
-  fprintf(fpNeckInfoExt, "Fire:     %3i\n", NeckInfo.AffinityFire);
-  fprintf(fpNeckInfoExt, "Earth:    %3i\n", NeckInfo.AffinityEarth);
-  fprintf(fpNeckInfoExt, "Water:    %3i\n", NeckInfo.AffinityWater);
-  fprintf(fpNeckInfoExt, "Light:    %3i\n", NeckInfo.AffinityLight);
-  fprintf(fpNeckInfoExt, "Dark:     %3i\n", NeckInfo.AffinityDark);
+  fprintf(fpNeckData, "AFFINITY\n");
+  fprintf(fpNeckData, "=============\n");
+  fprintf(fpNeckData, "Physical: %3i\n", itemNeckCur.AffinityPhysical);
+  fprintf(fpNeckData, "Air:      %3i\n", itemNeckCur.AffinityAir);
+  fprintf(fpNeckData, "Fire:     %3i\n", itemNeckCur.AffinityFire);
+  fprintf(fpNeckData, "Earth:    %3i\n", itemNeckCur.AffinityEarth);
+  fprintf(fpNeckData, "Water:    %3i\n", itemNeckCur.AffinityWater);
+  fprintf(fpNeckData, "Light:    %3i\n", itemNeckCur.AffinityLight);
+  fprintf(fpNeckData, "Dark:     %3i\n", itemNeckCur.AffinityDark);
 
-  fclose(fpNeckInfoExt);
+  fclose(fpNeckData);
+}
+
+void
+WriteArmorData()
+{
+  WriteGloveLeftData();
+  WriteGloveRightData();
+  WriteHeadData();
+  WriteBodyData();
+  WriteLegsData();
+  WriteNeckData();
 }
 
 #endif

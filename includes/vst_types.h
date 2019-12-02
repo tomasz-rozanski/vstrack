@@ -32,7 +32,7 @@ typedef struct
   u8 Seconds;
   u8 Minutes;
   u8 Hours;
-} playtime;
+} game_time;
 #pragma pack(pop)
 
 // Player/Weapon Range
@@ -64,6 +64,29 @@ typedef struct
     };
   } ShapeAngle;
 } range;
+
+typedef struct
+{
+  union {
+    u16 FlagsCompound;
+    struct
+    {
+      u16 Human : 1;
+      u16 Beast : 1;
+      u16 Undead : 1;
+      u16 Phantom : 1;
+      u16 Dragon : 1;
+      u16 Evil : 1;
+      u16 Physical : 1;
+      u16 Air : 1;
+      u16 Fire : 1;
+      u16 Earth : 1;
+      u16 Water : 1;
+      u16 Light : 1;
+      u16 Dark : 1;
+    };
+  } Flags;
+} leveling_flags;
 
 // Item Extended Info
 #pragma pack(push, 1)
@@ -127,7 +150,7 @@ typedef struct
   i8 AffinityDark;
 
   i8 _padding3;
-} item_info;
+} item_data;
 #pragma pack(pop)
 
 // Player Stats
@@ -181,9 +204,73 @@ typedef struct
 #pragma pack(push, 1)
 typedef struct
 {
-  u8 AreaNumber;
-  u8 RoomNumber;
+  u8 ZoneNumber;
+  u8 MapNumber;
 } location;
 #pragma pack(pop)
+
+// Gazette
+#define MAP_COUNT_MAX 361
+#define CHEST_COUNT_MAX 52
+
+#define MAP_COUNT_FLAGS 64
+#define CHEST_COUNT_FLAGS 64
+
+#pragma pack(push, 1)
+typedef struct
+{
+  u16 Human;
+  u16 Beast;
+  u16 Undead;
+  u16 Phantom;
+  u16 Dragon;
+  u16 Evil;
+} kill_list;
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+typedef struct
+{
+  u16 Unarmed;
+  u16 Dagger;
+  u16 Sword;
+  u16 GreatSword;
+  u16 AxeMace;
+  u16 GreatAxe;
+  u16 Staff;
+  u16 HeavyMace;
+  u16 Polearm;
+  u16 Crossbow;
+} weapon_usage;
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+typedef struct
+{
+  u8 Flags[MAP_COUNT_FLAGS];
+} map_flag_mem;
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+typedef struct
+{
+  u8 Flags[CHEST_COUNT_FLAGS];
+} chest_flag_mem;
+#pragma pack(pop)
+
+typedef struct
+{
+  u8 FlagByte;
+  u8 Zone;
+  u8 Map;
+} chest_flag_check;
+
+typedef struct
+{
+  u8 MaskByte;
+  u8 MaskBit;
+  u8 Zone;
+  u8 Map;
+} map_flag_check;
 
 #endif

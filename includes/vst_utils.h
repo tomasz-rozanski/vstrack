@@ -5,6 +5,22 @@ SYSTEMTIME stLocalTime;
 char szTimeStampDebug[64];
 char szTimeStampFile[64];
 
+BOOL
+DataChanged(void *Struct1, void *Struct2, usize StructSize)
+{
+  u8 *pStruct1 = Struct1;
+  u8 *pStruct2 = Struct2;
+
+  for (int i = 0; i < StructSize; ++i)
+  {
+    if (*pStruct1++ != *pStruct2++)
+    {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
 void
 WriteTimeStampDebugString()
 {

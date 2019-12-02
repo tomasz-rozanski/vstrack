@@ -11,11 +11,12 @@
 #include "includes/vst_console.h"
 #include "includes/vst_process.h"
 #include "includes/vst_emulation.h"
-#include "includes/vst_equipment.h"
 #include "includes/vst_translate.h"
+#include "includes/vst_equipment.h"
 #include "includes/vst_time.h"
 #include "includes/vst_player.h"
 #include "includes/vst_location.h"
+#include "includes/vst_gazette.h"
 #include "includes/vst_debug.h"
 
 // Main
@@ -33,11 +34,9 @@ main(int argc, char *argv[])
       {
         system("cls");
 
-        fprintf(stdout, "1. ePSXe 1.9.00\n");
-        fprintf(stdout, "2. ePSXe 1.9.25\n");
-        fprintf(stdout, "3. ePSXe 2.0.50\n");
-        fprintf(stdout, "4. BizHawk 2.3.0\n");
-        fprintf(stdout, "4. BizHawk 2.3.2\n\n");
+        fprintf(stdout, "1. ePSXe 1.9.25\n");
+        fprintf(stdout, "2. ePSXe 2.0.50\n");
+        fprintf(stdout, "3. BizHawk 2.3.2\n\n");
         fprintf(stdout, "0. Exit\n\n");
 
         scanf_s("%2s", ver_s, (unsigned) _countof(ver_s));
@@ -61,37 +60,23 @@ main(int argc, char *argv[])
       }
       case 1:
       {
-        PSX_TO_EMU = PSX_TO_EPSXE_1900;
+        PSX_TO_EMU = PSX_TO_EPSXE_1925;
         sprintf_s(szExeName, MAX_PATH, "ePSXe.exe");
         sprintf_s(szModuleName, MAX_PATH, "");
         break;
       }
       case 2:
       {
-        PSX_TO_EMU = PSX_TO_EPSXE_1925;
+        PSX_TO_EMU = PSX_TO_EPSXE_2050;
         sprintf_s(szExeName, MAX_PATH, "ePSXe.exe");
         sprintf_s(szModuleName, MAX_PATH, "");
         break;
       }
       case 3:
       {
-        PSX_TO_EMU = PSX_TO_EPSXE_2050;
-        sprintf_s(szExeName, MAX_PATH, "ePSXe.exe");
-        sprintf_s(szModuleName, MAX_PATH, "");
-        break;
-      }
-      case 4:
-      {
-        PSX_TO_EMU = PSX_TO_BIZHAWK_2300;
-        sprintf_s(szModuleName, MAX_PATH, "octoshock.dll");
-        sprintf_s(szExeName, MAX_PATH, "EmuHawk.exe");
-        break;
-      }
-      case 5:
-      {
         PSX_TO_EMU = PSX_TO_BIZHAWK_2320;
-        sprintf_s(szModuleName, MAX_PATH, "octoshock.dll");
         sprintf_s(szExeName, MAX_PATH, "EmuHawk.exe");
+        sprintf_s(szModuleName, MAX_PATH, "octoshock.dll");
         break;
       }
       default:
@@ -124,8 +109,15 @@ main(int argc, char *argv[])
 
   // Setup the folders
   mkdir("debug");
-  mkdir("game_stats");
-  mkdir("game_stats/records");
+  mkdir("debug/map");
+  mkdir("game_data");
+  mkdir("game_data/time");
+  mkdir("game_data/time/records");
+  mkdir("game_data/map");
+  mkdir("game_data/weapon");
+  mkdir("game_data/armor");
+  mkdir("game_data/player");
+  mkdir("game_data/score");
 
   // PrintProcessInfo(processID);
   // PrintProcessNameAndID(processID);
@@ -147,106 +139,277 @@ main(int argc, char *argv[])
   GetConsoleWindowSize(
       hStdout, &conSizeX, &conSizeY, &conMaxSizeX, &conMaxSizeY);
 
-  chiBuffer = AllocateBackBuffer(conMaxSizeX, conMaxSizeY);
+  chiBuffer = AllocateBackBuffer();
 
   WriteDebugInfo();
+  WriteDebugMessage(hStdout);
 
   do
   {
     GetConsoleWindowSize(
         hStdout, &conSizeX, &conSizeY, &conMaxSizeX, &conMaxSizeY);
+
+    chiBuffer = AllocateBackBuffer();
+
     cls(hBackBuffer);
 
     SetCursorPosition(hStdout, 0, 0);
     SetCursorPosition(hBackBuffer, 0, 0);
 
-    WriteBladeInfo(processID);
-    ReadPlayerStats(&PlayerStats);
+    // WriteBladeInfo(processID);
+    // ReadPlayerStats(&statsPlayerCur);
 
-    if (CheckPlayerStats(&PlayerStats))
+    if (1)
+    // if (CheckPlayerStats(&statsPlayerCur))
     {
       // TIME
-      PlayTimeTemp = PlayTimeCurrent;
-      ReadPlayTime(&PlayTimeCurrent);
+      GameTimePrev = GameTimeCur;
+      ReadGameTime(&GameTimeCur);
 
       // Check if the time progressed
-      if (IsItLater(&PlayTimeTemp, &PlayTimeCurrent))
+      if (GameTimeChanged(&GameTimePrev, &GameTimeCur))
       {
-        WritePlayTimeToFile(&PlayTimeCurrent, "game_stats/play-time.txt");
+        WriteGameTimeToFile(&GameTimeCur);
       }
-      PrintPlayTimeShort(&PlayTimeCurrent);
+      PrintGameTimeShort(&GameTimeCur);
+
+      if (ProgramStarted)
+      {
+        ReadLocation();
+        ReadZoneAndMapName(&LocationCur, nameZone, nameMap);
+        WriteLocation();
+
+        ReadMapFlags(&MapFlagMemCur); // Initialize Map Flags
+        ReadMapCheckFlags(&MapCheckFlagMem); // Initialize Map Check Flags
+        ReadChestFlags(&ChestFlagMemCur); // Initialize Chest Flags
+
+#ifdef DEBUG
+        GenerateMapCheckFlagList();
+#endif
+
+        ReadBladeData();
+        ReadWeaponData();
+        ReadShieldData();
+        ReadArmorData();
+
+        ReadWeaponName();
+
+        WriteBladeData();
+        WriteWeaponData();
+        WriteShieldData();
+        WriteArmorData();
+
+        ReadWeaponNumber();
+        WriteBladeLeveling(WeaponNumber);
+
+        CalculateChestCount(&ChestCount, &ChestFlagMemCur);
+        CalculateMapCount(&MapCount);
+
+        WriteMapCount(&MapCount);
+        WriteChestCount(&ChestCount);
+
+        WriteMissingChestList(&ChestFlagMemCur, ChestFlagChecklist);
+        WriteMissingMapList(&MapFlagMemCur, MapFlagChecklist);
+
+        ReadKillList();
+        WriteKillList();
+
+        ReadWeaponUsage();
+        WriteWeaponUsage();
+
+        ProgramStarted = FALSE;
+      }
+
+      // Some debug
 
       // LOCATION
-      ReadLocation(&Location);
-      GetAreaAndRoomName(&Location, szAreaName, szRoomName);
-      PrintLocation(&Location, szAreaName, szRoomName);
-      WriteLocationIntoFile(&Location, szAreaName, szRoomName);
+      LocationPrev = LocationCur;
+      ReadLocation();
+      ReadZoneAndMapName(&LocationCur, nameZone, nameMap);
+      if (LocationChanged())
+      {
+        WriteLocation();
+      }
+#ifdef DEBUG
+      PrintLocation();
+#endif
 
       // STATS
-      ReadPlayerStats(&PlayerStats);
-      ReadPlayerStatus(&PlayerEffects);
-      PrintPlayerStats(&PlayerStats, &PlayerEffects);
-      WritePlayerStats();
+      statsPlayerPrev = statsPlayerCur;
+      ReadPlayerStats(&statsPlayerCur);
+      if (PlayerStatsChanged())
+      {
+        WritePlayerStats(&statsPlayerCur);
+      }
+#ifdef DEBUG
+      PrintPlayerStats(&statsPlayerCur);
+#endif
 
-      GetWeaponName(processID, GlobalWeaponName);
+      effectsPlayerPrev = effectsPlayerCur;
+      ReadPlayerEffects(&effectsPlayerCur);
+      if (PlayerEffectsChanged())
+      {
+        WritePlayerEffects(&effectsPlayerCur);
+      }
 
+#ifdef DEBUG
+      PrintPlayerEffects(&effectsPlayerCur);
+#endif
+      // GAZETTE
+      KillListPrev = KillListCur;
+      ReadKillList();
+      if (KillListChanged())
+      {
+        WriteKillList();
+      }
+
+      WeaponUsagePrev = WeaponUsageCur;
+      ReadWeaponUsage();
+      if (WeaponUsageChanged())
+      {
+        WriteWeaponUsage();
+      }
+
+      // Opened Trausure Chests
+      ChestFlagMemPrev = ChestFlagMemCur;
+      ReadChestFlags(&ChestFlagMemCur);
+      CalculateChestCount(&ChestCount, &ChestFlagMemCur);
+      if (ChestFlagsChanged())
+      {
+#ifdef DEBUG
+        WriteChestFlagsDiffs();
+#endif
+        WriteChestCount(&ChestCount);
+        WriteMissingChestList(&ChestFlagMemCur, ChestFlagChecklist);
+      }
+#ifdef DEBUG
+      PrintChestCount(&ChestCount);
+#endif
+      // Visited Maps
+      MapFlagMemPrev = MapFlagMemCur;
+      ReadMapFlags(&MapFlagMemCur);
+
+      CalculateMapCount(&MapCount);
+      if (MapFlagsChanged())
+      {
+#ifdef DEBUG
+        WriteMapFlagsDiffs();
+#endif
+        WriteMapCount(&MapCount);
+        WriteMissingMapList(&MapFlagMemCur, MapFlagChecklist);
+      }
+#ifdef DEBUG
+      PrintMapCount(&MapCount);
+#endif
       // EQUIPMENT
-      WriteWeaponInfo(processID);
+#ifdef DEBUG
+      PrintBladeLeveling(WeaponNumber);
+#endif
+      // Check if weapon leveling name changed
+      strncpy(nameWeaponPrev, nameWeaponCur, WEAPON_NAME_LENGTH);
 
-      WriteBladeInfo(processID);
-      WriteBladeInfoShort(processID);
+#ifdef DEBUG
+      sprintf_s(
+          szBuffer, _countof(szBuffer), "Weapon number: %zi\n", WeaponNumber);
+      WriteToBackBuffer();
+#endif
 
-      WriteShieldInfo(processID);
-      WriteShieldInfoShort(processID);
+      // Weapon
+      itemBladePrev = itemBladeCur;
+      ReadBladeData();
+      if (BladeDataChanged())
+      {
+        WriteBladeData();
+        WriteWeaponData();
 
-      WriteGloveInfo(processID, RIGHT_GLOVE);
-      WriteGloveInfoShort(processID, RIGHT_GLOVE);
+        UpdateLevelingFlags();
+        ReadWeaponUsage();
 
-      WriteGloveInfo(processID, LEFT_GLOVE);
-      WriteGloveInfoShort(processID, LEFT_GLOVE);
+        ReadWeaponNumber();
+        WriteBladeLeveling(WeaponNumber);
+      }
 
-      WriteHeadArmorInfo(processID);
-      WriteHeadArmorInfoShort(processID);
+      ReadWeaponName();
+      if (WeaponNameChanged())
+      {
+        ClearLevelingFlags();
 
-      WriteBodyArmorInfo(processID);
-      WriteBodyArmorInfoShort(processID);
+        ReadWeaponNumber();
 
-      WriteLegsArmorInfo(processID);
-      WriteLegsArmorInfoShort(processID);
+        WriteBladeLeveling(WeaponNumber);
+      }
 
-      WriteNecklaceInfo(processID);
+      itemGripPrev = itemGripCur;
+      itemGem1WeaponPrev = itemGem1WeaponCur;
+      itemGem2WeaponPrev = itemGem2WeaponCur;
+      itemGem3WeaponPrev = itemGem3WeaponCur;
+      ReadWeaponData();
+      if (WeaponDataChanged())
+      {
+        WriteWeaponData();
+      }
+
+      // Shield
+      itemShieldPrev = itemShieldCur;
+      itemGem1ShieldPrev = itemGem1ShieldCur;
+      itemGem2ShieldPrev = itemGem2ShieldCur;
+      itemGem3ShieldPrev = itemGem3ShieldCur;
+
+      ReadShieldData();
+      if (ShieldDataChanged())
+      {
+        WriteShieldData();
+      }
+
+      // Armor
+      itemGloveLeftPrev = itemGloveLeftCur;
+      itemGloveRightPrev = itemGloveRightCur;
+      itemHeadPrev = itemHeadCur;
+      itemBodyPrev = itemBodyCur;
+      itemLegsPrev = itemLegsCur;
+      itemNeckPrev = itemNeckCur;
+      ReadArmorData();
+      if (ArmorDataChanged())
+      {
+        WriteArmorData();
+      }
+
+#ifdef DEBUG
+      PrintWeaponName();
+#endif
     }
     else
     {
 
       sprintf_s(szBuffer, _countof(szBuffer),
           "============================\n"
-          "== VSTracker v0.2.0-alpha ==\n"
+          "== VSTracker v0.3.0-alpha ==\n"
           "============================\n");
       WriteToBackBuffer();
 
       sprintf_s(
           szBuffer, _countof(szBuffer), "\nWaiting for the game to load ...\n");
       WriteToBackBuffer();
-
-      // sprintf_s(szBuffer, _countof(szBuffer), "\nprocessBaseAddress: 0x%p\n",
-      //     (void *) processBaseAddress);
-      // WriteToBackBuffer();
     }
 
     // Handle last boss
-    if (IsThisTheLastBossRoom(&Location))
+    if (IsThisTheLastBossMap() && !GameOver)
     {
-      LastBossHandleIt2();
+      LastBossHandleIt();
     }
 
+    SetCursorPosition(hStdout, 0, 0);
+    SetCursorPosition(hBackBuffer, 0, 0);
+
     CopyFromBackBuffer();
+    // ScrollBuffer(hBackBuffer);
+
     Sleep(10);
-  } while (!GameOver);
+  } while (ProgramRunning);
 
   cls(hStdout);
 
-  PrintRecordTime(&PlayTimeRecord);
+  PrintGameTimeRecord(&GameTimeRecord);
 
   fprintf(stdout, "\nPress any key to exit the program...\n");
   getchar();

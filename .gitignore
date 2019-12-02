@@ -103,7 +103,6 @@ shell.bat
 setup.bat
 log.bat
 sub.bat
-build.bat
 
 # Misc
 changes.md
