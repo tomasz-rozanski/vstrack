@@ -9,7 +9,7 @@
 ***VSTrack*** is a simple but powerful tool for [Vagrant Story][vagrant-game] players, streamers, and speed-runners. 
 
 
-It collects a bunch of useful data from the runnig game, and stores it in standard `.txt` files. This gives you an easy access to information that is often burried behind multiple levels of UI, or not available to the player at all.
+It collects a bunch of useful data from the running game, and stores it in standard `.txt` files. This gives you an easy access to information that is often buried behind multiple levels of UI, or not available to the player at all.
 
 One way to use the collected data is to feed the output files into your streaming software as a text input (i.e. Text (GDI+) plugin in [OBS][obs]), and use it as a part of your layout. Keep in mind, that most of the data is formatted with fixed-width fonts in mind (use proportional fonts at your own risk).
 

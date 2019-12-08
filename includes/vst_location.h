@@ -39,8 +39,7 @@ map_data MapDataList[] = {
   { 21, 0, "Intro", "Ashley meets Merlose outside manor" }, //
 
   // Outro
-  { 60, 0, "Epilogue",
-      "Merlose, Hardin, and Joshua running fleeing the city" }, //
+  { 60, 0, "Epilogue", "Merlose, Hardin, and Joshua fleeing the city" }, //
   { 61, 0, "Epilogue", "Pigmen crushed by the falling debris" }, //
   { 62, 0, "Epilogue", "Tieger and Neesa stopped by Grissom" }, //
   { 63, 0, "Epilogue", "Ashley carries Sydney" }, //
