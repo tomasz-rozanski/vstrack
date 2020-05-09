@@ -36,7 +36,7 @@ main(int argc, char *argv[])
 
         fprintf(stdout, "1. ePSXe 1.9.25\n");
         fprintf(stdout, "2. ePSXe 2.0.50\n");
-        fprintf(stdout, "3. BizHawk 2.3.2\n\n");
+        fprintf(stdout, "3. BizHawk 2.4.1\n\n");
         fprintf(stdout, "0. Exit\n\n");
 
         scanf_s("%2s", ver_s, (unsigned) _countof(ver_s));
@@ -74,7 +74,7 @@ main(int argc, char *argv[])
       }
       case 3:
       {
-        PSX_TO_EMU = PSX_TO_BIZHAWK_2320;
+        PSX_TO_EMU = PSX_TO_BIZHAWK_2410;
         sprintf_s(szExeName, MAX_PATH, "EmuHawk.exe");
         sprintf_s(szModuleName, MAX_PATH, "octoshock.dll");
         break;
@@ -383,7 +383,7 @@ main(int argc, char *argv[])
 
       sprintf_s(szBuffer, _countof(szBuffer),
           "============================\n"
-          "== VSTracker v0.3.0-alpha ==\n"
+          "== VSTracker v0.3.1-alpha ==\n"
           "============================\n");
       WriteToBackBuffer();
 
