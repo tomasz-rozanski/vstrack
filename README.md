@@ -51,7 +51,7 @@ No installation is required. Just copy the executable into preffered folder, and
 
 When you'll see the start menu, press key `1-3` to choose emulator version you're using to play the game,  or `0` to exit. If your selection was correct, you should see some basic game information in the console window.
 
-Alternatively, you can pass preferred emulator number as a command-line parameter, so if you want to use *VSTrack* with `BizHawk 2.3.2`, type:
+Alternatively, you can pass preferred emulator number as a command-line parameter, so if you want to use *VSTrack* with `BizHawk 2.4.2`, type:
 ```bash
 vstrack.exe 3
 ```
