@@ -15,6 +15,7 @@
 #include "includes/vst_equipment.h"
 #include "includes/vst_time.h"
 #include "includes/vst_player.h"
+#include "includes/vst_input.h"
 #include "includes/vst_location.h"
 #include "includes/vst_gazette.h"
 #include "includes/vst_debug.h"
@@ -255,6 +256,16 @@ main(int argc, char *argv[])
 #ifdef DEBUG
       PrintPlayerEffects(&effectsPlayerCur);
 #endif
+
+      ControllerInputPrev = ControllerInputCur;
+      ReadControllerInput(&ControllerInputCur);
+      if (ControllerInputChanged())
+      {
+        WriteControllerInput(&ControllerInputCur);
+      }
+#ifdef DEBUG
+      PrintControllerInput(&ControllerInputCur);
+#endif
       // GAZETTE
       KillListPrev = KillListCur;
       ReadKillList();
@@ -383,7 +394,7 @@ main(int argc, char *argv[])
 
       sprintf_s(szBuffer, _countof(szBuffer),
           "============================\n"
-          "== VSTracker v0.3.2-alpha ==\n"
+          "== VSTracker v0.3.3-alpha ==\n"
           "============================\n");
       WriteToBackBuffer();
 

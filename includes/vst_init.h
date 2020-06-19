@@ -113,4 +113,7 @@ BOOL ProgramRunning = TRUE;
 
 BOOL GameOver = FALSE; // set to TRUE when the last boss is dead
 
+// Input
+u16 ControllerInputCur;
+u16 ControllerInputPrev;
 #endif
