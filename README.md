@@ -22,6 +22,7 @@ At this moment, you can track the following:
 * In-game timer (with 1 second precision)
 * Kill List and Weapon Usage list
 * Map and Chest completion (**real-time!**)
+* Controller input
 
 *VSTrack* also detects when the last boss dies, and auto-magically stores the record play time in this very moment.
 
@@ -36,7 +37,7 @@ Currently, *VSTrack* can work with [ePSXe][epsxe-emulator] and [BizHawk][bizhawk
 To use *VSTrack* you'll need:
 * One of the supported emulators:
 	* **ePSXe** version *1.9.25* or *2.0.5*
-	* **BizHawk** version *2.3.2*
+	* **BizHawk** version *2.4.2*
 * Copy of the game:
 	* **Vagrant Story** NTSC-US version *(SLUS-01040)* <sup>1</sup>
 
