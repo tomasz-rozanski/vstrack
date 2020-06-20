@@ -55,7 +55,8 @@ typedef struct
   u8 y;
   u8 z;
 
-  union {
+  union
+  {
     u8 ShapeAngleCompound;
     struct
     {
@@ -67,7 +68,8 @@ typedef struct
 
 typedef struct
 {
-  union {
+  union
+  {
     u16 FlagsCompound;
     struct
     {
