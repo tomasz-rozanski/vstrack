@@ -3,6 +3,7 @@
 
 // Controller input
 #define OFFSET_CONTROLLER_INPUT 0x8005E1C0
+#define OFFSET_BUTTONS_TIMERS 0x80055C90
 
 #define MASK_CONTROLLER_INPUT_L2 0x0001
 #define MASK_CONTROLLER_INPUT_R2 0x0002
@@ -69,11 +70,19 @@ ReadControllerInput(u16 *ControllerInput)
 }
 
 void
+ReadButtonsTimers(buttons_timers *ButtonsTimers)
+{
+  usize BytesToRead = sizeof(buttons_timers);
+
+  ReadGameMemory(processID, OFFSET_BUTTONS_TIMERS, BytesToRead, ButtonsTimers);
+}
+
+void
 PrintControllerInput(u16 *ControllerInput)
 {
   u16 Input = *ControllerInput;
 
-  sprintf(szBuffer, "\n-- Controller Input --\n\n");
+  sprintf(szBuffer, "\nCONTROLLER INPUT:\n");
   WriteToBackBuffer();
 
   if (!Input) // if the register is empty, skip to the end
@@ -87,7 +96,8 @@ PrintControllerInput(u16 *ControllerInput)
     {
       if (ControllerInputMasks[i] & Input)
       {
-        sprintf(szBuffer, "%s ", ControllerInputNames[i]);
+        sprintf(szBuffer, "%s(%d) ", ControllerInputNames[i],
+            ButtonsTimers.Timers[i]);
         WriteToBackBuffer();
       }
     }
@@ -95,6 +105,7 @@ PrintControllerInput(u16 *ControllerInput)
     WriteToBackBuffer();
   }
 }
+
 void
 WriteControllerInput(u16 *ControllerInput)
 {

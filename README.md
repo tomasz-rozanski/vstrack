@@ -19,6 +19,7 @@ At this moment, you can track the following:
 * Player stats (HP, MP, RISK, STR, INT, AGL, range, walking/running speed)
 * Player status effects
 * Player location (area name, room name)
+* Enemy tracking (name, HP, MP)
 * In-game timer (with 1 second precision)
 * Kill List and Weapon Usage list
 * Map and Chest completion (**real-time!**)
@@ -37,7 +38,7 @@ Currently, *VSTrack* can work with [ePSXe][epsxe-emulator] and [BizHawk][bizhawk
 To use *VSTrack* you'll need:
 * One of the supported emulators:
 	* **ePSXe** version *1.9.25* or *2.0.5*
-	* **BizHawk** version *2.4.2*
+	* **BizHawk** version *2.6.1*
 * Copy of the game:
 	* **Vagrant Story** NTSC-US version *(SLUS-01040)* <sup>1</sup>
 
@@ -52,7 +53,7 @@ No installation is required. Just copy the executable into preffered folder, and
 
 When you'll see the start menu, press key `1-3` to choose emulator version you're using to play the game,  or `0` to exit. If your selection was correct, you should see some basic game information in the console window.
 
-Alternatively, you can pass preferred emulator number as a command-line parameter, so if you want to use *VSTrack* with `BizHawk 2.4.2`, type:
+Alternatively, you can pass preferred emulator number as a command-line parameter, so if you want to use *VSTrack* with `BizHawk 2.6.1`, type:
 ```bash
 vstrack.exe 3
 ```

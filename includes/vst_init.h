@@ -14,6 +14,8 @@ char szExeName[MAX_PATH];
 
 // In-game data
 
+u16 GameStatus;
+
 // Time
 game_time GameTimeCur = { -1 };
 game_time GameTimePrev = { -1 };
@@ -116,4 +118,11 @@ BOOL GameOver = FALSE; // set to TRUE when the last boss is dead
 // Input
 u16 ControllerInputCur;
 u16 ControllerInputPrev;
+
+buttons_timers ButtonsTimers;
+
+// Actors in the room
+#define ACTOR_NAME_LENGTH 20
+char ActorName[ACTOR_NAME_LENGTH];
+
 #endif

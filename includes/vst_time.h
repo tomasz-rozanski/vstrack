@@ -12,7 +12,7 @@ PrintGameTimeShort(game_time *GameTime)
   u8 Minutes = GameTime->Minutes;
   u8 Hours = GameTime->Hours;
 
-  sprintf_s(szBuffer, _countof(szBuffer), "\n\n== GAME TIME ==\n\n");
+  sprintf_s(szBuffer, _countof(szBuffer), "\nGAME TIME:\n");
   WriteToBackBuffer();
 
   sprintf_s(szBuffer, _countof(szBuffer), "%02i:%02i:%02i\n", Hours, Minutes,
@@ -27,7 +27,7 @@ PrintGameTimeRecord(game_time *RecordTime)
   u8 Minutes = RecordTime->Minutes;
   u8 Hours = RecordTime->Hours;
 
-  fprintf(stdout, "\n== RECORD TIME ==\n\n");
+  fprintf(stdout, "\nRECORD TIME:\n");
   fprintf(stdout, "%02i:%02i:%02i\n", Hours, Minutes, Seconds);
 }
 

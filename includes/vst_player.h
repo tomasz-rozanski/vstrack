@@ -14,7 +14,7 @@
 #define OFFSET_PLAYER_PTR_00_SHP_HDR 0x8011FA34 // ptr00ShpHdr
 #define OFFSET_PLAYER_PTR_WEAPON_WEP_HDR 0x8011FA38 // ptrWeaponWEPHdr
 #define OFFSET_PLAYER_PTR_00_SHP_DATA 0x8011FA3C // ptr00ShpData
-#define OFFSET_PLAYER_CHARACTER_NAME                                           \
+#define OFFSET_PLAYER_CHARACTER_NAME \
   0x8011FA40 // CharacterName $18str "Ashley Riot"
 
 // Main stats
@@ -29,7 +29,7 @@
 #define OFFSET_PLAYER_INT_ORIGINAL 0x8011FA68 // OriginalINT
 #define OFFSET_PLAYER_AGL_EQUIPPED 0x8011FA6A // EquippedAGL
 #define OFFSET_PLAYER_AGL_ORIGINAL 0x8011FA6C // OriginalAGL
-#define OFFSET_PLAYER_WALKING_SPEED_WITH_BOX                                   \
+#define OFFSET_PLAYER_WALKING_SPEED_WITH_BOX \
   0x8011FA71 // WalkingSpeedWhenCarryingBoxes
 #define OFFSET_PLAYER_RUNNING_SPEED 0x8011FA73 // RunningSpeed
 #define OFFSET_PLAYER_RANGE 0x8011FA78 // range
@@ -111,8 +111,8 @@ u32 StatusEffectMasks[32] = { //
 void
 ReadPlayerStats(player_stats *PlayerStats)
 {
-  usize Offset =
-      (usize)(OFFSET_PLAYER_HP_CURRENT - PSX_TO_EMU + processBaseAddress);
+  //  usize Offset =
+  //    (usize)(OFFSET_PLAYER_HP_CURRENT - PSX_TO_EMU + processBaseAddress);
 
   usize BytesToRead = sizeof(player_stats);
 
@@ -204,7 +204,7 @@ PrintPlayerStats(player_stats *PlayerStats)
     AGL_Buff = '-';
   }
 
-  sprintf(szBuffer, "\n\n== PLAYER STATS ==\n\n");
+  sprintf(szBuffer, "\n\nPLAYER STATS:\n");
   WriteToBackBuffer();
 
   sprintf(szBuffer,
@@ -238,7 +238,7 @@ PrintPlayerEffects(status_effects *PlayerEffects)
 {
   status_effects Effects = *PlayerEffects;
 
-  sprintf(szBuffer, "\n-- Status Effects --\n\n");
+  sprintf(szBuffer, "\nSTATUS EFFECTS:\n");
   WriteToBackBuffer();
 
   u32 StatusEffectMask = Effects.EffectID;

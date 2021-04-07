@@ -107,3 +107,6 @@ sub.bat
 # Misc
 changes.md
 TODO.md
+.vimrc
+ed.bat
+

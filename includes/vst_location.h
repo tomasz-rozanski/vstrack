@@ -566,7 +566,7 @@ PrintLocation()
   u8 ZoneNumber = LocationCur.ZoneNumber;
   u8 MapNumber = LocationCur.MapNumber;
 
-  sprintf(szBuffer, "\n\n== LOCATION ==\n\n");
+  sprintf(szBuffer, "\n\nLOCATION:\n");
   WriteToBackBuffer();
 
   sprintf_s(szBuffer, _countof(szBuffer), "%s, %s ( Zone %i, Map %i )\n",
