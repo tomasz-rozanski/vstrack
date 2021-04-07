@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <psapi.h>
 #include <stdio.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <tchar.h>
 #include <tlhelp32.h>
@@ -16,6 +17,7 @@
 #include "includes/vst_time.h"
 #include "includes/vst_player.h"
 #include "includes/vst_input.h"
+#include "includes/vst_actors.h"
 #include "includes/vst_location.h"
 #include "includes/vst_gazette.h"
 #include "includes/vst_debug.h"
@@ -37,7 +39,7 @@ main(int argc, char *argv[])
 
         fprintf(stdout, "1. ePSXe 1.9.25\n");
         fprintf(stdout, "2. ePSXe 2.0.50\n");
-        fprintf(stdout, "3. BizHawk 2.4.2\n\n");
+        fprintf(stdout, "3. BizHawk 2.6.1\n\n");
         fprintf(stdout, "0. Exit\n\n");
 
         scanf_s("%2s", ver_s, (unsigned) _countof(ver_s));
@@ -75,7 +77,7 @@ main(int argc, char *argv[])
       }
       case 3:
       {
-        PSX_TO_EMU = PSX_TO_BIZHAWK_2420;
+        PSX_TO_EMU = PSX_TO_BIZHAWK_2610;
         sprintf_s(szExeName, MAX_PATH, "EmuHawk.exe");
         sprintf_s(szModuleName, MAX_PATH, "octoshock.dll");
         break;
@@ -167,6 +169,11 @@ main(int argc, char *argv[])
       GameTimePrev = GameTimeCur;
       ReadGameTime(&GameTimeCur);
 
+      // GAME STATUS
+      ReadGameStatus(&GameStatus);
+#ifdef DEBUG
+      PrintGameStatus(&GameStatus);
+#endif
       // Check if the time progressed
       if (GameTimeChanged(&GameTimePrev, &GameTimeCur))
       {
@@ -232,8 +239,11 @@ main(int argc, char *argv[])
         WriteLocation();
       }
 #ifdef DEBUG
-      PrintLocation();
+      // PrintLocation();
+      PrintActorsData();
 #endif
+      // ACTORS IN THE ROOM
+      WriteActorsData();
 
       // STATS
       statsPlayerPrev = statsPlayerCur;
@@ -243,7 +253,7 @@ main(int argc, char *argv[])
         WritePlayerStats(&statsPlayerCur);
       }
 #ifdef DEBUG
-      PrintPlayerStats(&statsPlayerCur);
+      // PrintPlayerStats(&statsPlayerCur);
 #endif
 
       effectsPlayerPrev = effectsPlayerCur;
@@ -256,13 +266,13 @@ main(int argc, char *argv[])
 #ifdef DEBUG
       PrintPlayerEffects(&effectsPlayerCur);
 #endif
-
+      ReadButtonsTimers(&ButtonsTimers);
       ControllerInputPrev = ControllerInputCur;
       ReadControllerInput(&ControllerInputCur);
-      if (ControllerInputChanged())
-      {
-        WriteControllerInput(&ControllerInputCur);
-      }
+      // if (ControllerInputChanged())
+      // {
+      // WriteControllerInput(&ControllerInputCur);
+      // }
 #ifdef DEBUG
       PrintControllerInput(&ControllerInputCur);
 #endif
@@ -321,7 +331,7 @@ main(int argc, char *argv[])
 
 #ifdef DEBUG
       sprintf_s(
-          szBuffer, _countof(szBuffer), "Weapon number: %zi\n", WeaponNumber);
+          szBuffer, _countof(szBuffer), "WEAPON NUMBER: %zi\n", WeaponNumber);
       WriteToBackBuffer();
 #endif
 
@@ -391,10 +401,9 @@ main(int argc, char *argv[])
     }
     else
     {
-
       sprintf_s(szBuffer, _countof(szBuffer),
           "============================\n"
-          "== VSTracker v0.3.3-alpha ==\n"
+          "== VSTracker v0.4.0-alpha ==\n"
           "============================\n");
       WriteToBackBuffer();
 

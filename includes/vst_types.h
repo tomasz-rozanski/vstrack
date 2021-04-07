@@ -275,4 +275,69 @@ typedef struct
   u8 Map;
 } map_flag_check;
 
+/*
+#pragma pack(push, 1)
+typedef struct
+{
+  u32 L2;
+  u32 R2;
+  u32 L1;
+  u32 R1;
+  u32 Triangle;
+  u32 Circle;
+  u32 Cross;
+  u32 Square;
+  u32 Select;
+  u32 L3;
+  u32 R3;
+  u32 Start;
+  u32 Up;
+  u32 Right;
+  u32 Down;
+  u32 Left;
+} buttons_timers;
+#pragma pack(pop)
+*/
+
+#pragma pack(push, 1)
+typedef struct
+{
+  u32 Timers[16];
+} buttons_timers;
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+typedef struct
+{
+  u32 NextActorPtr; // 0
+  u8 _padding1[40]; // 4
+  u16 PosX; // 44 (0x2c)
+  u16 PosY; // 46 (0x2e)
+  u8 _padding2[12]; // 48 (0x30)
+  u32 NamePointer; // 60 (0x3c)
+  u8 _padding3[16]; // 64 (0x40)
+  char Name[20]; // 80 (0x50)
+  u8 _padding4[4]; // 100 (0x64)
+  u16 HPCur; // 104 (0x68)
+  u16 HPMax; // 106 (0x6a)
+  u16 MPCur; // 108 (0x6c)
+  u16 MPMax; // 110 (0x6e)
+  u16 Risk; // 112 (0x70)
+  u16 STRCur; // 114 (0x72)
+  u16 STRMax; // 116 (0x74)
+  u16 INTCur; // 118 (0x76)
+  u16 INTMax; // 120 (0x78)
+  u16 AGLCur; // 122 (0x7a)
+  u16 AGLMax; // 124 (0x7c)
+  u8 _padding5[14]; // 126 (0x7e)
+  char WeaponName[18]; // 140 (0x8c)
+} actor_data;
+#pragma pack(pop)
+
+typedef struct
+{
+  u32 ActorPointer;
+  BOOL IsDead;
+} actor_status;
+
 #endif

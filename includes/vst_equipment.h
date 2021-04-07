@@ -750,7 +750,7 @@ PrintBladeLeveling(u8 BladeNumber)
     default:
     {
       sprintf_s(
-          szBuffer, _countof(szBuffer), "\n\nNo leveling weapon equipped\n\n");
+          szBuffer, _countof(szBuffer), "\nNo leveling weapon equipped\n\n");
       WriteToBackBuffer();
     }
   }

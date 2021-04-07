@@ -22,7 +22,7 @@ char TranslationTableChars[125] = { '0', '1', '2', '3', '4', '5', '6', '7', '8',
   's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'Â', 'Ä', 'Ç', 'È', 'É', 'Ê', 'Ë',
   'Ì', 'Î', 'Ò', 'Ó', 'Ô', 'Ö', 'Ù', 'Ú', 'Û', 'Ü', 'ß', 'æ', 'à', 'á', 'â',
   'ä', 'ç', 'è', 'é', 'ê', 'ë', 'ì', 'í', 'î', 'ï', 'ò', 'ó', 'ô', 'ö', 'ù',
-  'ú', 'û', 'ü', ' ', '!', '"', '%', '\'', '(', ')', '{', '}', '[', ']', ';',
+  'ú', 'û', 'u', ' ', '!', '"', '%', '\'', '(', ')', '{', '}', '[', ']', ';',
   ':', ',', '.', '/', '\\', '<', '>', '?', '-', '+', '\n' };
 
 void
@@ -70,6 +70,44 @@ ReadWeaponName()
 }
 
 void
+ReadActorName(u32 NameOffset)
+{
+  ActorName[0] = '\0';
+
+  char ActorNameHex[ACTOR_NAME_LENGTH];
+  usize BytesToRead = (usize) ACTOR_NAME_LENGTH;
+
+  usize BytesRead =
+      ReadGameMemory(processID, NameOffset, BytesToRead, ActorNameHex);
+
+  for (int i = 0, k = 0; i < ACTOR_NAME_LENGTH; ++i)
+  {
+    u8 *HexCode = (u8 *) &ActorNameHex[i];
+    if (*HexCode == 0xE7 || *HexCode == 0x00)
+    {
+      ActorName[k] = '\0';
+      break;
+    }
+
+    if (*HexCode == 0xFA && *(HexCode + 1) == 0x06)
+    {
+      ActorName[k++] = ' ';
+      i++;
+      continue;
+    }
+
+    for (int j = 0, size = _countof(TranslationTableHex); j < size; ++j)
+    {
+      if (TranslationTableHex[j] == (char) *HexCode)
+      {
+        ActorName[k++] = TranslationTableChars[j];
+        break;
+      }
+    }
+  }
+}
+
+void
 ReadWeaponNumber()
 {
   u8 *tempBuffer;
@@ -95,7 +133,7 @@ void
 PrintWeaponName()
 {
   sprintf_s(
-      szBuffer, _countof(szBuffer), "\n\nWeapon name: %s\n\n", nameWeaponCur);
+      szBuffer, _countof(szBuffer), "\nWEAPON NAME:\n%s\n", nameWeaponCur);
   WriteToBackBuffer();
 }
 

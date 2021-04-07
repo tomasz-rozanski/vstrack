@@ -184,7 +184,7 @@ ReadKillList()
 void
 PrintKillList()
 {
-  sprintf_s(szBuffer, _countof(szBuffer), "\n== KILL LIST ==\n\n");
+  sprintf_s(szBuffer, _countof(szBuffer), "\nKILL LIST:\n");
   WriteToBackBuffer();
   sprintf_s(szBuffer, _countof(szBuffer), "Human:   %5i\n", KillListCur.Human);
   WriteToBackBuffer();
@@ -239,7 +239,7 @@ ReadWeaponUsage()
 void
 PrintWeaponUsage()
 {
-  sprintf_s(szBuffer, _countof(szBuffer), "\n== WEAPON USAGE ==\n\n");
+  sprintf_s(szBuffer, _countof(szBuffer), "\nWEAPON USAGE:\n");
   WriteToBackBuffer();
   sprintf_s(szBuffer, _countof(szBuffer), "Dagger:      %5i\n",
       WeaponUsageCur.Dagger);
@@ -558,7 +558,7 @@ void
 PrintChestCount(u8 *ChestCount)
 {
   u16 ChestCountScore = (*ChestCount * 100) / CHEST_COUNT_MAX;
-  sprintf_s(szBuffer, _countof(szBuffer), "\n\n== CHEST COUNT ==\n\n");
+  sprintf_s(szBuffer, _countof(szBuffer), "\nCHEST COUNT:\n");
   WriteToBackBuffer();
 
   sprintf_s(szBuffer, _countof(szBuffer), "%i/%i ( %i%% )\n", *ChestCount,
@@ -585,7 +585,7 @@ void
 PrintMapCount(u16 *MapCount)
 {
   u16 MapCountScore = (*MapCount * 100) / MAP_COUNT_MAX;
-  sprintf_s(szBuffer, _countof(szBuffer), "\n\n== ROOM COUNT ==\n\n");
+  sprintf_s(szBuffer, _countof(szBuffer), "\nROOM COUNT:\n");
   WriteToBackBuffer();
 
   sprintf_s(szBuffer, _countof(szBuffer), "%i/%i ( %i%% )\n", *MapCount,
