@@ -1,20 +1,6 @@
 #ifndef _VST_EMULATION_H
 #define _VST_EMULATION_H
 
-// The formula:
-// PSX_TO_EMU = PSX_OFFSET - EMU_OFFSET + EMU_BASE_ADDRESS
-// EMU_OFFSET = PSX_OFFSET + EMU_BASE_ADDRESS - PSX_TO_EMU
-// PSX_OFFSET = PSX_TO_EMU + EMU_OFFSET - EMU_BASE_ADDRESS
-
-#define PSX_TO_EPSXE_1925 0x7f974960
-#define PSX_TO_EPSXE_2050 0x7f57dfe0
-
-#define PSX_TO_BIZHAWK_2320 0x7fee2780
-#define PSX_TO_BIZHAWK_2410 0x7fcf2070
-#define PSX_TO_BIZHAWK_2420 0x7fcf2070
-#define PSX_TO_BIZHAWK_2520 0x7fcef080
-#define PSX_TO_BIZHAWK_2610 0x7fcef080
-
 // GameStatus flag:
 // 1=Normal,
 // 2=TargetSphere
@@ -29,7 +15,7 @@
 // B=OperateLockedDoor
 // C=?
 
-#define OFFSET_GAME_STATUS 0x800f196c
+#define OFFSET_GAME_STATUS 0xf196c
 
 #define GAME_STATUS_NORMAL 0x0001
 #define GAME_STATUS_BATTLE 0x0002
@@ -66,7 +52,6 @@ char *GameStatusNameList[17] = {
 void
 ReadGameStatus(u16 *GameStatus)
 {
-
   usize BytesToRead = sizeof(u16);
 
   ReadGameMemory(processID, OFFSET_GAME_STATUS, BytesToRead, GameStatus);

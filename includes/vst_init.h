@@ -7,7 +7,10 @@
 u32 processID;
 u32 processVersion;
 u64 processBaseAddress;
-u64 PSX_TO_EMU;
+u64 emuBaseAddress;
+u8 emuBaseMaxAttempts;
+const u8 EMU_BASE_MAGIC_STRING[] =
+    "\x03\x00\x00\x00\x80\x0c\x5a\x27\x08\x00\x40\x03\x00\x00\x00";
 
 char szModuleName[MAX_PATH];
 char szExeName[MAX_PATH];

@@ -1,7 +1,7 @@
 #ifndef _VST_TIME_H
 #define _VST_TIME_H
 
-#define OFFSET_TIME_PLAYED 0x80061074 // 4 bytes
+#define OFFSET_TIME_PLAYED 0x061074 // 4 bytes
 
 void
 PrintGameTimeShort(game_time *GameTime)

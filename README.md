@@ -27,35 +27,36 @@ At this moment, you can track the following:
 
 *VSTrack* also detects when the last boss dies, and auto-magically stores the record play time in this very moment.
 
-If you're working on your Ultimate Weapon, using  [Matt Hamand method][ultimate-weapon-guide], I got you covered. If the equipped weapon has a number `1-4` at the end of its name, the proper leveling stats (Class, Affinity) will be tracked automatically in the file `game_data/weapon/blade_leveling.txt`.
+If you're working on your Ultimate Weapon, using [Matt Hamand method][ultimate-weapon-guide], I got you covered. If the equipped weapon has a number `1-4` at the end of its name, the proper leveling stats (Class, Affinity) will be tracked automatically in the file `game_data/weapon/blade_leveling.txt`.
 
 
 ## Prerequisites
 [prerequisites]: #prerequisites
 
-Currently, *VSTrack* can work with [ePSXe][epsxe-emulator] and [BizHawk][bizhawk-emulator] emulators, but the plan is to add support for more in the future.
+Currently, *VSTrack* will work out-of-the-box with the following emulators:
+* [ePSXe][epsxe-emulator]
+* [BizHawk][bizhawk-emulator]
+* [DuckStation][duckstation-emulator]
+* [pSX][pSX-emulator]
+* [no$psx][no$psx-emulator]
+* you can easily add support for your favorite emulator, by modifying [main.c](/main.c) source file, and rebuilding the executable
 
-To use *VSTrack* you'll need:
-* One of the supported emulators:
-	* **ePSXe** version *1.9.25* or *2.0.5*
-	* **BizHawk** version *2.6.1*
-* Copy of the game:
-	* **Vagrant Story** NTSC-US version *(SLUS-01040)* <sup>1</sup>
+Apart from an emulator, to use *VSTrack*, you'll also need the NTSC-US version of **Vagrant Story** *(SLUS-01040)* <sup>1</sup>
 
 <sup>1</sup> Other SKUs of the game might work, but weren't tested yet.
-
-I tried to include support for [no$psx][no$psx-emulator] and [pSX][pSX-emulator] emulators, but they're storing game data at the different address, after each restart. If you know how to get around this, let me know in the project's Issue Tracker.
 
 ## How to use it
 [usage]: #usage
 
+### Make sure the game is already running in the emulator, before launching *VSTrack*
+
 No installation is required. Just copy the executable into preffered folder, and run it from the command-line or by double-clicking. **WARNING** If you're not sure your user account has the writing privileges for the chosen folder, run the program as an administrator. 
 
-When you'll see the start menu, press key `1-3` to choose emulator version you're using to play the game,  or `0` to exit. If your selection was correct, you should see some basic game information in the console window.
+When you'll see the start menu, press key `1-6` to choose emulator version you're using to play the game,  or `0` to exit. If your selection was correct, you should see some basic game information in the console window.
 
-Alternatively, you can pass preferred emulator number as a command-line parameter, so if you want to use *VSTrack* with `BizHawk 2.6.1`, type:
+Alternatively, you can pass preferred emulator number as a command-line parameter, so if you want to use *VSTrack* with `BizHawk`, type:
 ```bash
-vstrack.exe 3
+vstrack.exe 2
 ```
 
 During the first use, the program will create a subfolder called `game_data`, where all the output files will be stored. When you finish the game, record time will be stored in the folder `game_data/time/records`. Each record is preserved in separate file, with an unique name. For example, if the record file is named:
@@ -112,6 +113,7 @@ I would like to thank:
 [obs]: https://obsproject.com
 [epsxe-emulator]: https://www.epsxe.com
 [no$psx-emulator]: https://problemkaputt.de/psx.htm
+[duckstation-emulator]: https://github.com/stenzek/duckstation
 [bizhawk-emulator]: http://tasvideos.org/BizHawk.html
 [pSX-emulator]: http://psxemulator.proboards.com
 [data-crystal]: http://datacrystal.romhacking.net/wiki/Vagrant_Story

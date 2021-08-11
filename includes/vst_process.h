@@ -241,7 +241,7 @@ u32
 _GetProcessMemory(u32 processID, usize Offset, usize BytesToRead, void *Value)
 {
   usize BytesActuallyRead = -1;
-  usize FinalOffset = Offset - PSX_TO_EMU + processBaseAddress;
+  usize FinalOffset = (usize) emuBaseAddress + (usize) Offset;
 
   // Get a handle to the process.
   fprintf(stderr, "GetProcessMemory - Offset: 0x%llx\n", FinalOffset);
@@ -279,7 +279,7 @@ void *
 GetProcessMemory2(u32 processID, usize Offset, usize BytesToRead)
 {
   usize BytesActuallyRead = -1;
-  usize FinalOffset = Offset - PSX_TO_EMU + processBaseAddress;
+  usize FinalOffset = (usize) emuBaseAddress + (usize) Offset;
 
   // Get a handle to the process.
 
@@ -453,15 +453,18 @@ GetProcessIdFromName(u32 *processID, char *szModuleName)
     {
       if ((strcmp(pe32.szExeFile, szModuleName) == 0))
       {
+#ifdef DEBUG
         fprintf(stdout, "Found it!!! The PID you're looking for is %i\n",
             pe32.th32ProcessID);
+#endif
         *processID = pe32.th32ProcessID;
 
         MODULEENTRY32 me32 = { sizeof(MODULEENTRY32) };
         Module32First(hProcess, &me32);
 
+#ifdef DEBUG
         fprintf(stdout, "Module base: %p\n", me32.modBaseAddr);
-
+#endif
         return TRUE;
       }
 
@@ -540,7 +543,7 @@ ReadGameMemory(u32 processID, usize Offset, usize BytesToRead, void *Value)
 {
   usize BytesActuallyRead = -1;
   usize FinalOffset =
-      (usize)((usize) Offset - (usize) PSX_TO_EMU + (usize) processBaseAddress);
+      (usize)((usize) emuBaseAddress + (usize)(Offset & 0x01fffff));
 
   Toolhelp32ReadProcessMemory(
       processID, (usize *) FinalOffset, Value, BytesToRead, &BytesActuallyRead);
@@ -552,8 +555,7 @@ void *
 ReadGameMemory2(u32 processID, usize Offset, usize BytesToRead)
 {
 
-  usize FinalOffset =
-      (usize) Offset - (usize) PSX_TO_EMU + (usize) processBaseAddress;
+  usize FinalOffset = (usize) emuBaseAddress + (usize) Offset;
 
   void *pValue = (void *) malloc(BytesToRead);
 
@@ -889,6 +891,64 @@ EnableDebugPrivilege(void)
   }
 
   return TRUE;
+}
+
+u8 *
+GetAddressOfData(DWORD pid, const u8 *data, usize len, u8 maxAttempts)
+{
+  HANDLE process =
+      OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, FALSE, pid);
+  if (process)
+  {
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+
+    MEMORY_BASIC_INFORMATION info;
+    u8 *chunk;
+    u8 *p = 0;
+    usize curAttempt = 1;
+    while (p < si.lpMaximumApplicationAddress)
+    {
+      if (VirtualQueryEx(process, p, &info, sizeof(info)) == sizeof(info))
+      {
+        p = (u8 *) info.BaseAddress;
+        chunk = (u8 *) malloc(info.RegionSize);
+        usize bytesRead;
+        if (ReadProcessMemory(
+                process, p, (u8 *) chunk + 0, info.RegionSize, &bytesRead))
+        {
+          for (usize i = 0; i < (bytesRead - len); ++i)
+          {
+            if (memcmp(data, (u8 *) chunk + i, len) == 0)
+            {
+              free(chunk);
+              if (curAttempt >= maxAttempts)
+              {
+                return (u8 *) p + i;
+              }
+              else
+              {
+                curAttempt += 1;
+              }
+            }
+          }
+        }
+        free(chunk);
+        p += info.RegionSize;
+      }
+    }
+  }
+  return 0;
+}
+
+usize
+GetEmuBaseAddress(char *szExeName, u8 maxAttempts)
+{
+  GetProcessIdFromName(&processID, szExeName);
+  u8 *ret = GetAddressOfData(processID, EMU_BASE_MAGIC_STRING,
+      sizeof(EMU_BASE_MAGIC_STRING), maxAttempts);
+
+  return (usize) ret;
 }
 
 #endif

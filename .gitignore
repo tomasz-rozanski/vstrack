@@ -104,6 +104,9 @@ setup.bat
 log.bat
 sub.bat
 
+# Old releases
+old_releases/
+
 # Misc
 changes.md
 TODO.md

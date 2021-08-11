@@ -2,11 +2,11 @@
 #define _VS_ROOMS_H
 
 // Location struct - 2 bytes
-#define OFFSET_LOCATION 0x800F1AB0
+#define OFFSET_LOCATION 0x0f1ab0
 
 // Room data (1 byte each)
-#define OFFSET_LOCATION_AREA_NUMBER 0x800F1AB0
-#define OFFSET_LOCATION_ROOM_NUMBER 0x800F1AB1
+#define OFFSET_LOCATION_AREA_NUMBER 0x0f1ab0
+#define OFFSET_LOCATION_ROOM_NUMBER 0x0f1ab1
 
 typedef struct
 {
