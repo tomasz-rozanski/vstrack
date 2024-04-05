@@ -9,14 +9,14 @@ u32 processVersion;
 u64 processBaseAddress;
 u64 emuBaseAddress;
 u8 emuBaseMaxAttempts;
-const u8 EMU_BASE_MAGIC_STRING[] =
-    "\x03\x00\x00\x00\x80\x0c\x5a\x27\x08\x00\x40\x03\x00\x00\x00";
 
-char szModuleName[MAX_PATH];
-char szExeName[MAX_PATH];
+// 16-bytes hex: 0x03000000800c5a270800400300000000
+const u8 EMU_BASE_MAGIC_STRING[] = "\x03\x00\x00\x00\x80\x0c\x5a\x27\x08\x00\x40\x03\x00\x00\x00\x00";
+
+wchar_t szModuleName[MAX_PATH];
+wchar_t szExeName[MAX_PATH];
 
 // In-game data
-
 u16 GameStatus;
 
 // Time
@@ -25,10 +25,13 @@ game_time GameTimePrev = { -1 };
 game_time GameTimeRecord = { -1 };
 
 // Equipment
-#define WEAPON_NAME_LENGTH 18
+#define WEAPON_NAME_HEX_LENGTH 24
+#define WEAPON_NAME_UNICODE_LENGTH 50
 
-char nameWeaponCur[WEAPON_NAME_LENGTH];
-char nameWeaponPrev[WEAPON_NAME_LENGTH];
+wchar_t NameBuffer[MAX_PATH];
+
+wchar_t nameWeaponCur[WEAPON_NAME_UNICODE_LENGTH];
+wchar_t nameWeaponPrev[WEAPON_NAME_UNICODE_LENGTH];
 
 usize WeaponNumber = 0;
 
@@ -90,8 +93,9 @@ status_effects effectsPlayerPrev;
 location LocationCur;
 location LocationPrev;
 
-char nameZone[MAX_PATH];
-char nameMap[MAX_PATH];
+#define LOCATION_MAX_NAME_LENGTH 64 
+wchar_t nameZone[LOCATION_MAX_NAME_LENGTH];
+wchar_t nameMap[LOCATION_MAX_NAME_LENGTH];
 
 // Gazette
 map_flag_mem MapFlagMemCur;
@@ -125,7 +129,8 @@ u16 ControllerInputPrev;
 buttons_timers ButtonsTimers;
 
 // Actors in the room
-#define ACTOR_NAME_LENGTH 20
-char ActorName[ACTOR_NAME_LENGTH];
+#define ACTOR_NAME_HEX_LENGTH 24
+#define ACTOR_NAME_UNICODE_LENGTH 50
+wchar_t ActorName[ACTOR_NAME_UNICODE_LENGTH];
 
 #endif

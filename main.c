@@ -1,3 +1,11 @@
+#ifndef UNICODE
+#define UNICODE
+#endif
+
+#ifndef _UNICODE
+#define _UNICODE
+#endif
+
 #include <windows.h>
 #include <psapi.h>
 #include <stdio.h>
@@ -5,6 +13,7 @@
 #include <stdlib.h>
 #include <tchar.h>
 #include <tlhelp32.h>
+#include <locale.h>
 
 #include "includes/vst_types.h"
 #include "includes/vst_init.h"
@@ -22,88 +31,77 @@
 #include "includes/vst_gazette.h"
 #include "includes/vst_debug.h"
 
-// Main
-int main(int argc, char *argv[]) {
-    char ver_s[3];
+int wmain(int argc, wchar_t *argv[]) {
+    _wsetlocale(LC_ALL, L".UTF8");
+
+    wchar_t ver_s[3];
     u8 ver_d = 0;
 
-    do // repeat until the user enters a valid option
-    {
+    do { // repeat until the user enters a valid option
         switch (argc) {
             case 1: {
-                system("cls");
+                        system("cls");
 
-                fprintf(stdout, "1. ePSXe\n");
-                fprintf(stdout, "2. BizHawk\n");
-                fprintf(stdout, "3. DuckStation (SDL)\n");
-                fprintf(stdout, "4. DuckStation (QT)\n");
-                fprintf(stdout, "5. pSX\n");
-                fprintf(stdout, "6. no$psx\n\n");
+                        fwprintf(stdout, L"1. ePSXe\n");
+                        fwprintf(stdout, L"2. BizHawk\n");
+                        fwprintf(stdout, L"3. DuckStation\n");
+                        fwprintf(stdout, L"4. pSX\n");
+                        fwprintf(stdout, L"5. no$psx\n\n");
 
-                fprintf(stdout, "0. Exit\n\n");
+                        fwprintf(stdout, L"0. Exit\n\n");
 
-                fprintf(stdout, ">>> ");
+                        fwprintf(stdout, L">>> ");
 
-                scanf_s("%2s", ver_s, (unsigned) _countof(ver_s));
+                        wscanf_s(L"%2s", ver_s, (unsigned) _countof(ver_s));
 
-                break;
-            }
+                        break;
+                    }
             case 2: {
-                sprintf_s(ver_s, _countof(ver_s), argv[1]);
-                break;
-            }
+                        swprintf_s(ver_s, _countof(ver_s), argv[1]);
+                        break;
+                    }
         }
-        ver_d = atoi(ver_s);
+        ver_d = _wtoi(ver_s);
 
         switch (ver_d) {
             case 0: {
-                exit(1);
-                break;
-            }
+                        exit(1);
+                        break;
+                    }
             case 1: {
-                emuBaseMaxAttempts = 1;
-                sprintf_s(szExeName, MAX_PATH, "ePSXe.exe");
-                sprintf_s(szModuleName, MAX_PATH, "");
-                break;
-            }
+                        emuBaseMaxAttempts = 1;
+                        swprintf_s(szExeName, MAX_PATH, L"ePSXe.exe");
+                        swprintf_s(szModuleName, MAX_PATH, L"");
+                        break;
+                    }
             case 2: {
-                emuBaseMaxAttempts = 1;
-                sprintf_s(szExeName, MAX_PATH, "EmuHawk.exe");
-                sprintf_s(szModuleName, MAX_PATH, "octoshock.dll");
-                break;
-            }
+                        emuBaseMaxAttempts = 1;
+                        swprintf_s(szExeName, MAX_PATH, L"EmuHawk.exe");
+                        swprintf_s(szModuleName, MAX_PATH, L"octoshock.dll");
+                        break;
+                    }
             case 3: {
-                emuBaseMaxAttempts = 1;
-                sprintf_s(szExeName, MAX_PATH, "duckstation-sdl-x64-ReleaseLTCG.exe");
-                sprintf_s(szModuleName, MAX_PATH, "");
-
-                break;
-            }
+                        emuBaseMaxAttempts = 1;
+                        swprintf_s(szExeName, MAX_PATH, L"duckstation-qt-x64-ReleaseLTCG.exe");
+                        swprintf_s(szModuleName, MAX_PATH, L"");
+                        break;
+                    }
             case 4: {
-                emuBaseMaxAttempts = 1;
-                sprintf_s(szExeName, MAX_PATH, "duckstation-qt-x64-ReleaseLTCG.exe");
-                sprintf_s(szModuleName, MAX_PATH, "");
-
-                break;
-            }
+                        emuBaseMaxAttempts = 1;
+                        swprintf_s(szExeName, MAX_PATH, L"psxfin.exe");
+                        swprintf_s(szModuleName, MAX_PATH, L"");
+                        break;
+                    }
             case 5: {
-                emuBaseMaxAttempts = 1;
-                sprintf_s(szExeName, MAX_PATH, "psxfin.exe");
-                sprintf_s(szModuleName, MAX_PATH, "");
-
-                break;
-            }
-            case 6: {
-                emuBaseMaxAttempts = 1;
-                sprintf_s(szExeName, MAX_PATH, "NO$PSX.EXE");
-                sprintf_s(szModuleName, MAX_PATH, "");
-
-                break;
-            }
+                        emuBaseMaxAttempts = 1;
+                        swprintf_s(szExeName, MAX_PATH, L"NO$PSX.EXE");
+                        swprintf_s(szModuleName, MAX_PATH, L"");
+                        break;
+                    }
             default: {
-                fprintf(stderr, "Wrong argument\n");
-                Sleep(1000);
-            }
+                         fwprintf(stderr, L"Wrong argument\n");
+                         Sleep(1000);
+                     }
         }
 
         emuBaseAddress = GetEmuBaseAddress(szExeName, emuBaseMaxAttempts);
@@ -111,25 +109,25 @@ int main(int argc, char *argv[]) {
     } while (!emuBaseAddress);
 
     /*
-    while (!(GetProcessIdFromName(&processID, szExeName)))
-    {
+       while (!(GetProcessIdFromName(&processID, szExeName)))
+       {
 
-      system("cls");
-      fprintf(stderr, "Error: Couldn't obtain process ID number.\n");
-      fprintf(stderr, "Check if the emulator is running.\n");
-      Sleep(1000);
-    };
-     system("cls");
+       system("cls");
+       fwprintf(stderr, L"Error: Couldn't obtain process ID number.\n");
+       fwprintf(stderr, L"Check if the emulator is running.\n");
+       Sleep(1000);
+       };
+       system("cls");
 
-    if (!strlen(szModuleName))
-    {
-      processBaseAddress = GetModuleDllBase(processID, szExeName);
-    }
-    else
-    {
-      processBaseAddress = FindDllAddress(processID, szModuleName);
-    }
-    */
+       if (!strlen(szModuleName))
+       {
+       processBaseAddress = GetModuleDllBase(processID, szExeName);
+       }
+       else
+       {
+       processBaseAddress = FindDllAddress(processID, szModuleName);
+       }
+       */
 
     // Setup the folders
     mkdir("debug");
@@ -148,10 +146,10 @@ int main(int argc, char *argv[]) {
     // PrintProcessVersion(processID);
     // PrintModuleFileName(processID);
     // EnumProcessModules2(processID);
-    // fprintf(stdout, "processID: %i\n", processID);
-    // fprintf(stdout, "processBaseAddress: 0x%llx\n", processBaseAddress);
+    // fwprintf(stdout, L"processID: %i\n", processID);
+    // fwprintf(stdout, L"processBaseAddress: 0x%llx\n", processBaseAddress);
 
-    // processBaseAddress = GetModuleDllBase(processID, "octoshock.dll");
+    // processBaseAddress = GetModuleDllBase(processID, L"octoshock.dll");
     // ListProcessThreads(processID);
     // ListProcessModules(processID);
 
@@ -177,11 +175,10 @@ int main(int argc, char *argv[]) {
         SetCursorPosition(hStdout, 0, 0);
         SetCursorPosition(hBackBuffer, 0, 0);
 
-        // WriteBladeInfo(processID);
-        // ReadPlayerStats(&statsPlayerCur);
 
-        if (1)
-        // if (CheckPlayerStats(&statsPlayerCur))
+        ReadPlayerStats(&statsPlayerCur);
+
+        if (CheckPlayerStats(&statsPlayerCur))
         {
             // TIME
             GameTimePrev = GameTimeCur;
@@ -210,7 +207,6 @@ int main(int argc, char *argv[]) {
 #ifdef DEBUG
                 GenerateMapCheckFlagList();
 #endif
-
                 ReadBladeData();
                 ReadWeaponData();
                 ReadShieldData();
@@ -336,10 +332,10 @@ int main(int argc, char *argv[]) {
             PrintBladeLeveling(WeaponNumber);
 #endif
             // Check if weapon leveling name changed
-            strncpy(nameWeaponPrev, nameWeaponCur, WEAPON_NAME_LENGTH);
+            wcsncpy(nameWeaponPrev, nameWeaponCur, WEAPON_NAME_UNICODE_LENGTH);
 
 #ifdef DEBUG
-            sprintf_s(szBuffer, _countof(szBuffer), "WEAPON NUMBER: %zi\n", WeaponNumber);
+            swprintf_s(szBuffer, _countof(szBuffer), L"WEAPON NUMBER: %zi\n", WeaponNumber);
             WriteToBackBuffer();
 #endif
 
@@ -402,13 +398,13 @@ int main(int argc, char *argv[]) {
             PrintWeaponName();
 #endif
         } else {
-            sprintf_s(szBuffer, _countof(szBuffer),
-                "============================\n"
-                "== VSTracker v0.5.0-alpha ==\n"
-                "============================\n");
+            swprintf_s(szBuffer, _countof(szBuffer),
+                    L"============================\n"
+                    L"== VSTracker v0.6.0-alpha ==\n"
+                    L"============================\n");
             WriteToBackBuffer();
 
-            sprintf_s(szBuffer, _countof(szBuffer), "\nWaiting for the game to load ...\n");
+            swprintf_s(szBuffer, _countof(szBuffer), L"\nWaiting for the game to load ...\n");
             WriteToBackBuffer();
         }
 
@@ -430,8 +426,9 @@ int main(int argc, char *argv[]) {
 
     PrintGameTimeRecord(&GameTimeRecord);
 
-    fprintf(stdout, "\nPress any key to exit the program...\n");
+    fwprintf(stdout, L"\nPress any key to exit the program...\n");
     getchar();
 
     return 0;
 }
+

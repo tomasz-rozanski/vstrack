@@ -2,63 +2,58 @@
 #define _VST_UTILS_H
 
 SYSTEMTIME stLocalTime;
-char szTimeStampDebug[64];
-char szTimeStampFile[64];
+wchar_t szTimeStampDebug[64];
+wchar_t szTimeStampFile[64];
 
 BOOL
-DataChanged(void *Struct1, void *Struct2, usize StructSize)
-{
-  u8 *pStruct1 = Struct1;
-  u8 *pStruct2 = Struct2;
+DataChanged(void *Struct1, void *Struct2, usize StructSize) {
+    u8 *pStruct1 = Struct1;
+    u8 *pStruct2 = Struct2;
 
-  for (int i = 0; i < StructSize; ++i)
-  {
-    if (*pStruct1++ != *pStruct2++)
-    {
-      return TRUE;
+    for (int i = 0; i < StructSize; ++i) {
+        if (*pStruct1++ != *pStruct2++) {
+            return TRUE;
+        }
     }
-  }
-  return FALSE;
+    return FALSE;
 }
 
 void
-WriteTimeStampDebugString()
-{
-  GetLocalTime(&stLocalTime);
+WriteTimeStampDebugString() {
+    GetLocalTime(&stLocalTime);
 
-  sprintf_s(szTimeStampDebug, _countof(szTimeStampDebug), //
-      "%04d-%02d-%02d %02d:%02d:%02d: ", //
-      stLocalTime.wYear, //
-      stLocalTime.wMonth, //
-      stLocalTime.wDay, //
-      stLocalTime.wHour, //
-      stLocalTime.wMinute, //
-      stLocalTime.wSecond);
+    swprintf_s(szTimeStampDebug, _countof(szTimeStampDebug), //
+            L"%04d-%02d-%02d %02d:%02d:%02d: ", //
+            stLocalTime.wYear, //
+            stLocalTime.wMonth, //
+            stLocalTime.wDay, //
+            stLocalTime.wHour, //
+            stLocalTime.wMinute, //
+            stLocalTime.wSecond);
 }
 
 void
-WriteTimeStampFileString()
-{
-  GetLocalTime(&stLocalTime);
+WriteTimeStampFileString() {
+    GetLocalTime(&stLocalTime);
 
-  sprintf_s(szTimeStampFile, _countof(szTimeStampFile), //
-      "%04d%02d%02dT%02d%02d%02d", //
-      stLocalTime.wYear, //
-      stLocalTime.wMonth, //
-      stLocalTime.wDay, //
-      stLocalTime.wHour, //
-      stLocalTime.wMinute, //
-      stLocalTime.wSecond);
+    swprintf_s(szTimeStampFile, _countof(szTimeStampFile), //
+            L"%04d%02d%02dT%02d%02d%02d", //
+            stLocalTime.wYear, //
+            stLocalTime.wMonth, //
+            stLocalTime.wDay, //
+            stLocalTime.wHour, //
+            stLocalTime.wMinute, //
+            stLocalTime.wSecond);
 }
 
 u16
-ErrorExit(char *Message)
-{
-  u32 ErrorCode = GetLastError();
+ErrorExit(wchar_t *Message) {
+    u32 ErrorCode = GetLastError();
 
-  fprintf(stderr, "\n\n%s failed with the error code %d", Message, ErrorCode);
+    fwprintf(stderr, L"\n\n%ls failed with the error code %d", Message, ErrorCode);
 
-  exit(ErrorCode);
+    exit(ErrorCode);
 }
 
 #endif
+

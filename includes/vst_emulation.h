@@ -29,43 +29,45 @@
 #define GAME_STATUS_USE_OPEN_DOOR 0x000b
 #define GAME_STATUS_END_OF_TURN 0x000c
 
-char *GameStatusNameList[17] = {
-  "Normal", // 1
-  "Battle", // 2
-  "Cut-scene", // 3
-  "???", // 4
-  "Menu Screen", // 5
-  "Quick Menu", // 6
-  "First Person View", // 7
-  "Activate Panel", // 8
-  "Open Container", // 9
-  "Draw Weapon", // 10
-  "Use Locked Door", // 11
-  "End of Turn", // 12
-  "???", // 13
-  "???", // 14
-  "???", // 15
-  "???", // 16
-  "???" // 17
+wchar_t *GameStatusNameList[18] = {
+    L"???",
+    L"Normal", // 1
+    L"Battle", // 2
+    L"Cut-scene", // 3
+    L"???", // 4
+    L"Menu Screen", // 5
+    L"Quick Menu", // 6
+    L"First Person View", // 7
+    L"Activate Panel", // 8
+    L"Open Container", // 9
+    L"Draw Weapon", // 10
+    L"Use Locked Door", // 11
+    L"End of Turn", // 12
+    L"???", // 13
+    L"???", // 14
+    L"???", // 15
+    L"???", // 16
+    L"???" // 17
 };
 
 void
-ReadGameStatus(u16 *GameStatus)
-{
+ReadGameStatus(u16 *GameStatus) {
   usize BytesToRead = sizeof(u16);
 
   ReadGameMemory(processID, OFFSET_GAME_STATUS, BytesToRead, GameStatus);
 }
 
 void
-PrintGameStatus(u16 *GameStatus)
-{
-  sprintf(szBuffer, "\nGAME STATUS:\n");
-  WriteToBackBuffer();
+PrintGameStatus(u16 *GameStatus) {
+    //if (*GameStatus == 0) return;
 
-  sprintf(szBuffer, "#%d -- %s\n", *GameStatus,
-      GameStatusNameList[*GameStatus - 1]);
-  WriteToBackBuffer();
+    swprintf_s(szBuffer, _countof(szBuffer), L"\nGAME STATUS:\n");
+    WriteToBackBuffer();
+
+    swprintf_s(szBuffer, _countof(szBuffer), L"#%d -- %s\n", *GameStatus,
+            GameStatusNameList[*GameStatus]);
+    WriteToBackBuffer();
 }
 
 #endif
+
