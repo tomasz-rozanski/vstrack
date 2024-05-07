@@ -8,6 +8,9 @@
 #define OFFSET_LOCATION_AREA_NUMBER 0x0f1ab0
 #define OFFSET_LOCATION_ROOM_NUMBER 0x0f1ab1
 
+// write 0x02 at this address, to teleport
+#define OFFSET_LOCATION_ROOM_TELEPORT 0x0f1a48
+
 typedef struct {
     u8 ZoneNumber;
     u8 MapNumber;

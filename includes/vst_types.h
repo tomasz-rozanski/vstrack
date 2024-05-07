@@ -168,9 +168,15 @@ typedef struct {
 
     u8 RunningSpeed;
 
-    u32 _padding2;
+    u8 _padding2[4];
 
     range Range;
+    
+    u8 _padding3[2372];
+
+    u16 PosX;
+    u16 PosZ;
+    u16 PosY;
 } player_stats;
 #pragma pack(pop)
 

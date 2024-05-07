@@ -14,8 +14,7 @@
 #define OFFSET_PLAYER_PTR_00_SHP_HDR 0x11fa34 // ptr00ShpHdr
 #define OFFSET_PLAYER_PTR_WEAPON_WEP_HDR 0x11fa38 // ptrWeaponWEPHdr
 #define OFFSET_PLAYER_PTR_00_SHP_DATA 0x11fa3c // ptr00ShpData
-#define OFFSET_PLAYER_CHARACTER_NAME \
-    0x11fa40 // CharacterName $18str "Ashley Riot"
+#define OFFSET_PLAYER_CHARACTER_NAME 0x11fa40 // CharacterName $18str "Ashley Riot"
 
 // Main stats
 #define OFFSET_PLAYER_HP_CURRENT 0x11fa58 // CurrentHP
@@ -29,6 +28,11 @@
 #define OFFSET_PLAYER_INT_ORIGINAL 0x11fa68 // OriginalINT
 #define OFFSET_PLAYER_AGL_EQUIPPED 0x11fa6a // EquippedAGL
 #define OFFSET_PLAYER_AGL_ORIGINAL 0x11fa6c // OriginalAGL
+
+// Movement
+#define OFFSET_PLAYER_POS_X 0x1203c0 // X coordinate
+#define OFFSET_PLAYER_POS_Z 0x1203c2 // Z coordinate
+#define OFFSET_PLAYER_POS_Y 0x1203c4 // Y coordinate
 #define OFFSET_PLAYER_WALKING_SPEED_WITH_BOX \
     0x11fa71 // WalkingSpeedWhenCarryingBoxes
 #define OFFSET_PLAYER_RUNNING_SPEED 0x11fa73 // RunningSpeed
@@ -156,6 +160,24 @@ WritePlayerStats(player_stats *PlayerStats) {
             PlayerStats->Range.y, PlayerStats->Range.z);
 
     fclose(fpPlayerStats);
+}
+
+void
+PrintPlayerPosition(player_stats *PlayerStats) {
+    player_stats Stats = *PlayerStats;
+
+    swprintf_s(szBuffer, _countof(szBuffer), L"\n\nPLAYER POSITION:\n");
+    WriteToBackBuffer();
+
+    swprintf_s(szBuffer, _countof(szBuffer),
+            L"X:%6i\n"
+            L"Y:%6i\n"
+            L"Z:%6i\n",
+            Stats.PosX,
+            Stats.PosY,
+            Stats.PosZ);
+
+    WriteToBackBuffer();
 }
 
 void

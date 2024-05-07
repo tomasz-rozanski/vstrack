@@ -20,9 +20,9 @@ WriteDebugInfo(void) {
     WriteDebugLog(szBuffer);
 
     // Emulator memory base offset
-    //swprintf_s(
-    //   szBuffer, _countof(szBuffer), "EmuBase address: 0x%08p\n", emuBaseAddress);
-    //WriteDebugLog(szBuffer);
+    swprintf_s(
+       szBuffer, _countof(szBuffer), L"EmuBase address: 0x%08p\n", (void *)emuBaseAddress);
+    WriteDebugLog(szBuffer);
 }
 
 #endif

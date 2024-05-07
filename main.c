@@ -264,6 +264,7 @@ int wmain(int argc, wchar_t *argv[]) {
             }
 #ifdef DEBUG
             // PrintPlayerStats(&statsPlayerCur);
+            PrintPlayerPosition(&statsPlayerCur);
 #endif
 
             effectsPlayerPrev = effectsPlayerCur;
